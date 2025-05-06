@@ -15,12 +15,14 @@ import {
   ChartPieIcon,
   DocumentTextIcon,
   Cog6ToothIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Register Candidate', href: '/register-candidate', icon: UserPlusIcon },
+  { name: 'Onboarding', href: '/onboarding', icon: UserGroupIcon },
   { name: 'Register Clients', href: '/register-clients', icon: BuildingOfficeIcon },
   { name: 'Create Projects', href: '/create-projects', icon: BriefcaseIcon },
   { name: 'Create Missions', href: '/create-missions', icon: RocketLaunchIcon },

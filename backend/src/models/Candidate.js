@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const candidateSchema = new mongoose.Schema({
   firstName: {
@@ -14,42 +14,48 @@ const candidateSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  password: {
+    type: String,
+    required: true
+  },
   phone: {
     type: String,
     required: true
   },
-  position: {
-    type: String,
-    required: true
+  location: {
+    city: String,
+    state: String,
+    country: String
   },
+  skills: [{
+    type: String
+  }],
   experience: {
-    type: String,
-    required: true
-  },
-  skills: {
-    type: String,
+    type: Number,
     required: true
   },
   education: {
-    type: String,
-    required: true
+    degree: String,
+    field: String,
+    institution: String,
+    graduationYear: Number
   },
+  currentRole: String,
+  expectedSalary: Number,
+  noticePeriod: Number,
   availability: {
     type: String,
-    required: true
+    enum: ['immediate', '1-week', '2-weeks', '1-month', 'more-than-1-month'],
+    default: '2-weeks'
   },
-  expectedSalary: {
+  status: {
     type: String,
-    required: true
+    enum: ['active', 'inactive', 'hired'],
+    default: 'active'
   },
-  workPreference: {
-    type: String,
-    required: true
-  },
-  location: {
-    type: String,
-    required: true
-  },
+  notes: String,
+  resume: String, // URL or path to resume file
+  linkedIn: String,
   portfolio: String,
   linkedin: String,
   github: String,
@@ -59,8 +65,9 @@ const candidateSchema = new mongoose.Schema({
     unique: true
   }
 }, {
-  timestamps: true,
-  collection: 'Candidate'
+  timestamps: true
 });
 
-module.exports = mongoose.model('Candidate', candidateSchema); 
+const Candidate = mongoose.model('Candidate', candidateSchema);
+
+export default Candidate; 

@@ -17,6 +17,7 @@ import Reports from './components/Reports';
 import Statistics from './components/Statistics';
 import DocumentSharing from './components/DocumentSharing';
 import Settings from './components/Settings';
+import Onboarding from './components/Onboarding';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/documents" element={<DocumentSharing />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/onboarding" element={<Onboarding />} />
           </Routes>
         </Layout>
       </Router>
