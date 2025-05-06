@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
 
 export default function RegisterCandidate() {
   const { isDarkMode } = useTheme();
   const [showForm, setShowForm] = useState(false);
+  const [candidates, setCandidates] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,8 +28,19 @@ export default function RegisterCandidate() {
     personId: '',
   });
 
-  // Placeholder for candidates data - replace with actual data from your backend
-  const [candidates, setCandidates] = useState([]);
+  // Fetch candidates on component mount
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  const fetchCandidates = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/candidates');
+      setCandidates(response.data);
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -87,7 +100,7 @@ export default function RegisterCandidate() {
            date <= today; // Ensure date is not in the future
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate Person ID
@@ -96,9 +109,36 @@ export default function RegisterCandidate() {
       return;
     }
     
-    console.log('Form submitted:', formData);
-    // Add API call here
-    setShowForm(false);
+    try {
+      console.log('Sending form data:', formData);
+      const response = await axios.post('http://localhost:5000/api/candidates', formData);
+      setCandidates(prev => [...prev, response.data]);
+      setShowForm(false);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        position: '',
+        experience: '',
+        skills: '',
+        education: '',
+        resume: null,
+        coverLetter: null,
+        availability: '',
+        expectedSalary: '',
+        workPreference: 'full-time',
+        location: '',
+        portfolio: '',
+        linkedin: '',
+        github: '',
+        personId: '',
+      });
+    } catch (error) {
+      console.error('Error adding candidate:', error);
+      console.error('Error details:', error.response?.data);
+      alert('Error adding candidate. Please try again.');
+    }
   };
 
   return (
@@ -114,17 +154,61 @@ export default function RegisterCandidate() {
         </button>
       </div>
 
-      {/* Candidate List */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Candidate List</h3>
-        </div>
-        <div className="border-t border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-5 sm:p-6">
-            {/* Placeholder for candidate list - replace with actual data */}
-            <p className="text-gray-500 dark:text-gray-400">No candidates registered yet.</p>
+      <div className="space-y-4">
+        {candidates.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">No candidates registered yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {candidates.map((candidate) => (
+              <div key={candidate._id} className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg w-full">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-12 w-12">
+                        <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                          <span className="text-blue-600 dark:text-blue-300 text-lg font-medium">
+                            {candidate.firstName[0]}{candidate.lastName[0]}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                          {candidate.firstName} {candidate.lastName}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center text-sm">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-300">{candidate.email}</span>
+                      </div>
+                      
+                      <div className="flex items-center text-sm">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-300">{candidate.phone}</span>
+                      </div>
+
+                      <div className="flex items-center text-sm">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a3 3 0 006 0h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 10-4.9 0h4.9zM12 9a1 1 0 100 2h3a1 1 0 100-2h-3zm-1 4a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-300">
+                          {candidate.personId ? candidate.personId.replace(/\d{4}$/, 'XXXX') : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal Overlay */}
@@ -154,7 +238,9 @@ export default function RegisterCandidate() {
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          First Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="firstName"
@@ -166,7 +252,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Last Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="lastName"
@@ -178,7 +266,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Email <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="email"
                           name="email"
@@ -190,7 +280,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Phone <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="tel"
                           name="phone"
@@ -202,7 +294,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Person ID</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Person ID <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="personId"
@@ -223,7 +317,9 @@ export default function RegisterCandidate() {
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Professional Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Position <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="position"
@@ -235,7 +331,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Years of Experience</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Years of Experience <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="number"
                           name="experience"
@@ -247,7 +345,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Skills</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Skills <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                           name="skills"
                           value={formData.skills}
@@ -266,7 +366,9 @@ export default function RegisterCandidate() {
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Education and Documents</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Education</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Education <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                           name="education"
                           value={formData.education}
@@ -278,7 +380,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resume</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Resume <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="file"
                           name="resume"
@@ -316,7 +420,9 @@ export default function RegisterCandidate() {
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Additional Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Availability</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Availability <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="date"
                           name="availability"
@@ -328,7 +434,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Salary</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Expected Salary <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="expectedSalary"
@@ -340,7 +448,9 @@ export default function RegisterCandidate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Work Preference</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Work Preference <span className="text-red-500">*</span>
+                        </label>
                         <select
                           name="workPreference"
                           value={formData.workPreference}
@@ -355,7 +465,9 @@ export default function RegisterCandidate() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Location <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           name="location"
