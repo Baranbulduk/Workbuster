@@ -1,261 +1,357 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import axios from 'axios';
+import { PlusIcon, XMarkIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function ScheduleManagement() {
   const { isDarkMode } = useTheme();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: 'Project Meeting',
-      date: '2024-03-15',
-      time: '10:00 AM',
-      duration: '1 hour',
-      type: 'meeting',
-      participants: ['John Doe', 'Jane Smith'],
-      location: 'Conference Room A'
-    },
-    {
-      id: 2,
-      title: 'Client Call',
-      date: '2024-03-15',
-      time: '2:00 PM',
-      duration: '30 minutes',
-      type: 'call',
-      participants: ['Mike Johnson'],
-      location: 'Online'
-    },
-    {
-      id: 3,
-      title: 'Team Review',
-      date: '2024-03-16',
-      time: '11:00 AM',
-      duration: '2 hours',
-      type: 'review',
-      participants: ['Team Alpha'],
-      location: 'Conference Room B'
-    }
-  ]);
-
-  const [showAddEvent, setShowAddEvent] = useState(false);
-  const [newEvent, setNewEvent] = useState({
+  const [schedules, setSchedules] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
     title: '',
-    date: '',
-    time: '',
-    duration: '1 hour',
+    description: '',
+    startTime: '',
+    endTime: '',
     type: 'meeting',
     participants: [],
     location: ''
   });
 
-  const handleAddEvent = (e) => {
-    e.preventDefault();
-    const event = {
-      id: events.length + 1,
-      ...newEvent
-    };
-    setEvents([...events, event]);
-    setShowAddEvent(false);
-    setNewEvent({
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  const fetchSchedules = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/schedule');
+      setSchedules(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      setError('Failed to fetch schedules');
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleUpdate = (schedule) => {
+    setSelectedSchedule(schedule);
+    setIsUpdating(true);
+    setFormData({
+      title: schedule.title,
+      description: schedule.description,
+      startTime: new Date(schedule.startTime).toISOString().slice(0, 16),
+      endTime: new Date(schedule.endTime).toISOString().slice(0, 16),
+      type: schedule.type,
+      participants: schedule.participants,
+      location: schedule.location
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/schedule/${id}`);
+      setSchedules(schedules.filter(schedule => schedule.id !== id));
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
       title: '',
-      date: '',
-      time: '',
-      duration: '1 hour',
+      description: '',
+      startTime: '',
+      endTime: '',
       type: 'meeting',
       participants: [],
       location: ''
     });
   };
 
-  const handleDeleteEvent = (id) => {
-    setEvents(events.filter(event => event.id !== id));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const url = isUpdating 
+        ? `http://localhost:5000/api/schedule/${selectedSchedule.id}`
+        : 'http://localhost:5000/api/schedule';
+      
+      const method = isUpdating ? 'put' : 'post';
+      
+      const response = await axios[method](url, formData);
 
-  const getEventsForDate = (date) => {
-    return events.filter(event => event.date === date);
-  };
-
-  const getEventTypeColor = (type) => {
-    switch (type) {
-      case 'meeting':
-        return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
-      case 'call':
-        return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
-      case 'review':
-        return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200';
-      default:
-        return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200';
+      if (response.status === 201 || response.status === 200) {
+        setShowForm(false);
+        resetForm();
+        setIsUpdating(false);
+        setSelectedSchedule(null);
+        fetchSchedules();
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      if (error.response) {
+        console.error('Server error response:', error.response.data);
+        alert(`Error: ${error.response.data.message || 'Failed to submit form. Please check your input and try again.'}`);
+      } else if (error.request) {
+        alert('No response from server. Please check your connection and try again.');
+      } else {
+        alert('Error setting up the request. Please try again.');
+      }
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Schedule Management</h1>
         <button
-          onClick={() => setShowAddEvent(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={() => {
+            setShowForm(true);
+            setIsUpdating(false);
+            resetForm();
+          }}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          Add Event
+          <PlusIcon className="h-5 w-5 mr-2" />
+          Add Schedule
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar View */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Calendar</h2>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 border dark:border-gray-600 rounded-md dark:text-white">Today</button>
-              <button className="px-3 py-1 border dark:border-gray-600 rounded-md dark:text-white">Week</button>
-              <button className="px-3 py-1 border dark:border-gray-600 rounded-md dark:text-white">Month</button>
-            </div>
-          </div>
-          {/* Calendar grid would go here */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* Calendar days would be rendered here */}
-          </div>
-        </div>
-
-        {/* Events List */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upcoming Events</h2>
-          <div className="space-y-4">
-            {events.map(event => (
-              <div
-                key={event.id}
-                className="border dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">{event.title}</h3>
+      <div className="space-y-4">
+        {schedules.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">No schedules found</p>
+        ) : (
+          schedules.map((schedule) => (
+            <div
+              key={schedule.id}
+              className="bg-white dark:bg-gray-800 shadow rounded-lg p-4"
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {schedule.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {schedule.description}
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Start: {new Date(schedule.startTime).toLocaleString()}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        End: {new Date(schedule.endTime).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Type: {schedule.type}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Location: {schedule.location}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {event.date} at {event.time}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Duration: {event.duration}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Location: {event.location}
+                      Participants: {schedule.participants.join(', ')}
                     </p>
                   </div>
+                </div>
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    onClick={() => handleUpdate(schedule)}
+                    className="p-1 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                   >
-                    Delete
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(schedule.id)}
+                    className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                  >
+                    <TrashIcon className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="mt-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.type)}`}>
-                    {event.type}
-                  </span>
-                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Add Event Modal */}
-      {showAddEvent && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Event</h2>
-            <form onSubmit={handleAddEvent} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={newEvent.title}
-                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  placeholder="Enter event title"
-                />
+      {showForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => {
+                setShowForm(false);
+                setSelectedSchedule(null);
+                setIsUpdating(false);
+              }}></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {isUpdating ? 'Update Schedule' : 'Add New Schedule'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowForm(false);
+                      setSelectedSchedule(null);
+                      setIsUpdating(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Start Time
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="startTime"
+                        value={formData.startTime}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        End Time
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="endTime"
+                        value={formData.endTime}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Type
+                    </label>
+                    <select
+                      name="type"
+                      value={formData.type}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="meeting">Meeting</option>
+                      <option value="presentation">Presentation</option>
+                      <option value="interview">Interview</option>
+                      <option value="training">Training</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Participants
+                    </label>
+                    <input
+                      type="text"
+                      name="participants"
+                      value={formData.participants.join(', ')}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        participants: e.target.value.split(',').map(p => p.trim())
+                      }))}
+                      placeholder="Enter participant names separated by commas"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="mt-5 sm:mt-6">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                    >
+                      {isUpdating ? 'Update Schedule' : 'Add Schedule'}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  placeholder="Select event date"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={newEvent.time}
-                  onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  placeholder="Select event time"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
-                <select
-                  name="duration"
-                  value={newEvent.duration}
-                  onChange={(e) => setNewEvent({ ...newEvent, duration: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                >
-                  <option value="30 minutes">30 minutes</option>
-                  <option value="1 hour">1 hour</option>
-                  <option value="2 hours">2 hours</option>
-                  <option value="3 hours">3 hours</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                <select
-                  name="type"
-                  value={newEvent.type}
-                  onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                >
-                  <option value="meeting">Meeting</option>
-                  <option value="call">Call</option>
-                  <option value="review">Review</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  value={newEvent.location}
-                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                  required
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  placeholder="Enter location or meeting link"
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddEvent(false)}
-                  className="px-4 py-2 border dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add Event
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

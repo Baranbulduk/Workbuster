@@ -1,291 +1,433 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import axios from 'axios';
+import { PlusIcon, XMarkIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function Attendance() {
   const { isDarkMode } = useTheme();
-  const [attendanceRecords, setAttendanceRecords] = useState([
-    {
-      id: 1,
-      employee: 'John Doe',
-      date: '2024-03-15',
-      checkIn: '09:00 AM',
-      checkOut: '05:30 PM',
-      status: 'present',
-      notes: 'Regular working hours'
-    },
-    {
-      id: 2,
-      employee: 'Jane Smith',
-      date: '2024-03-15',
-      checkIn: '09:15 AM',
-      checkOut: '05:45 PM',
-      status: 'present',
-      notes: 'Regular working hours'
-    },
-    {
-      id: 3,
-      employee: 'Mike Johnson',
-      date: '2024-03-15',
-      checkIn: '09:30 AM',
-      checkOut: '04:30 PM',
-      status: 'half-day',
-      notes: 'Left early for personal reasons'
-    }
-  ]);
-
-  const [showAddRecord, setShowAddRecord] = useState(false);
-  const [newRecord, setNewRecord] = useState({
-    employee: '',
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    employeeName: '',
     date: '',
     checkIn: '',
     checkOut: '',
     status: 'present',
+    workHours: '',
     notes: ''
   });
 
-  const [filter, setFilter] = useState({
-    date: '',
-    employee: '',
-    status: 'all'
-  });
+  useEffect(() => {
+    fetchAttendanceRecords();
+  }, []);
 
-  const handleAddRecord = (e) => {
-    e.preventDefault();
-    const record = {
-      id: attendanceRecords.length + 1,
-      ...newRecord
-    };
-    setAttendanceRecords([...attendanceRecords, record]);
-    setShowAddRecord(false);
-    setNewRecord({
-      employee: '',
+  const fetchAttendanceRecords = async () => {
+    try {
+      let url = 'http://localhost:5000/api/attendance';
+      if (dateRange.startDate && dateRange.endDate) {
+        url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+      }
+      const response = await axios.get(url);
+      setAttendanceRecords(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching attendance records:', error);
+      setError('Failed to fetch attendance records');
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDateRangeChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleUpdate = (record) => {
+    setSelectedRecord(record);
+    setIsUpdating(true);
+    setFormData({
+      employeeId: record.employeeId,
+      employeeName: record.employeeName,
+      date: record.date,
+      checkIn: record.checkIn,
+      checkOut: record.checkOut,
+      status: record.status,
+      workHours: record.workHours,
+      notes: record.notes
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/attendance/${id}`);
+      setAttendanceRecords(attendanceRecords.filter(record => record.id !== id));
+    } catch (error) {
+      console.error('Error deleting attendance record:', error);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      employeeId: '',
+      employeeName: '',
       date: '',
       checkIn: '',
       checkOut: '',
       status: 'present',
+      workHours: '',
       notes: ''
     });
   };
 
-  const handleDeleteRecord = (id) => {
-    setAttendanceRecords(attendanceRecords.filter(record => record.id !== id));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const url = isUpdating 
+        ? `http://localhost:5000/api/attendance/${selectedRecord.id}`
+        : 'http://localhost:5000/api/attendance';
+      
+      const method = isUpdating ? 'put' : 'post';
+      
+      const response = await axios[method](url, formData);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'present':
-        return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
-      case 'absent':
-        return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
-      case 'half-day':
-        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
-      case 'late':
-        return 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200';
-      default:
-        return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200';
+      if (response.status === 201 || response.status === 200) {
+        setShowForm(false);
+        resetForm();
+        setIsUpdating(false);
+        setSelectedRecord(null);
+        fetchAttendanceRecords();
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      if (error.response) {
+        console.error('Server error response:', error.response.data);
+        alert(`Error: ${error.response.data.message || 'Failed to submit form. Please check your input and try again.'}`);
+      } else if (error.request) {
+        alert('No response from server. Please check your connection and try again.');
+      } else {
+        alert('Error setting up the request. Please try again.');
+      }
     }
   };
 
-  const filteredRecords = attendanceRecords.filter(record => {
-    if (filter.date && record.date !== filter.date) return false;
-    if (filter.employee && !record.employee.toLowerCase().includes(filter.employee.toLowerCase())) return false;
-    if (filter.status !== 'all' && record.status !== filter.status) return false;
-    return true;
-  });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Attendance Management</h1>
         <button
-          onClick={() => setShowAddRecord(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={() => {
+            setShowForm(true);
+            setIsUpdating(false);
+            resetForm();
+          }}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
+          <PlusIcon className="h-5 w-5 mr-2" />
           Add Record
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-6 bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Filter Records</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Start Date
+            </label>
             <input
               type="date"
-              value={filter.date}
-              onChange={(e) => setFilter({ ...filter, date: e.target.value })}
-              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+              name="startDate"
+              value={dateRange.startDate}
+              onChange={handleDateRangeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Employee</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              End Date
+            </label>
             <input
-              type="text"
-              value={filter.employee}
-              onChange={(e) => setFilter({ ...filter, employee: e.target.value })}
-              placeholder="Search by name"
-              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+              type="date"
+              name="endDate"
+              value={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <select
-              value={filter.status}
-              onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-            >
-              <option value="all">All Status</option>
-              <option value="present">Present</option>
-              <option value="absent">Absent</option>
-              <option value="half-day">Half Day</option>
-              <option value="late">Late</option>
-            </select>
-          </div>
+        </div>
+        <div className="mt-4">
+          <button
+            onClick={fetchAttendanceRecords}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Apply Filter
+          </button>
         </div>
       </div>
 
-      {/* Attendance Records Table */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Employee</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Check In</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Check Out</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Notes</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredRecords.map((record) => (
-              <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                  {record.employee}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {record.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {record.checkIn}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {record.checkOut}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
-                    {record.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                  {record.notes}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+      <div className="space-y-4">
+        {attendanceRecords.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">No attendance records found</p>
+        ) : (
+          attendanceRecords.map((record) => (
+            <div
+              key={record.id}
+              className="bg-white dark:bg-gray-800 shadow rounded-lg p-4"
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {record.employeeName}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Employee ID: {record.employeeId}
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Date: {new Date(record.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Check In: {record.checkIn}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Check Out: {record.checkOut}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Status: {record.status}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Work Hours: {record.workHours}
+                      </p>
+                    </div>
+                  </div>
+                  {record.notes && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Notes: {record.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => handleDeleteRecord(record.id)}
-                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    onClick={() => handleUpdate(record)}
+                    className="p-1 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                   >
-                    Delete
+                    <PencilIcon className="h-5 w-5" />
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <button
+                    onClick={() => handleDelete(record.id)}
+                    className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Add Record Modal */}
-      {showAddRecord && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Attendance Record</h2>
-            <form onSubmit={handleAddRecord} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Employee</label>
-                <input
-                  type="text"
-                  value={newRecord.employee}
-                  onChange={(e) => setNewRecord({ ...newRecord, employee: e.target.value })}
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  required
-                  placeholder="Enter employee name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-                <input
-                  type="date"
-                  value={newRecord.date}
-                  onChange={(e) => setNewRecord({ ...newRecord, date: e.target.value })}
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                  required
-                  placeholder="Select date"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Check In</label>
-                  <input
-                    type="time"
-                    value={newRecord.checkIn}
-                    onChange={(e) => setNewRecord({ ...newRecord, checkIn: e.target.value })}
-                    className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                    required
-                    placeholder="Select check-in time"
-                  />
+      {showForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => {
+                setShowForm(false);
+                setSelectedRecord(null);
+                setIsUpdating(false);
+              }}></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {isUpdating ? 'Update Attendance Record' : 'Add New Attendance Record'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowForm(false);
+                      setSelectedRecord(null);
+                      setIsUpdating(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Check Out</label>
-                  <input
-                    type="time"
-                    value={newRecord.checkOut}
-                    onChange={(e) => setNewRecord({ ...newRecord, checkOut: e.target.value })}
-                    className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                    required
-                    placeholder="Select check-out time"
-                  />
-                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Employee ID
+                      </label>
+                      <input
+                        type="text"
+                        name="employeeId"
+                        value={formData.employeeId}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Employee Name
+                      </label>
+                      <input
+                        type="text"
+                        name="employeeName"
+                        value={formData.employeeName}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Check In
+                      </label>
+                      <input
+                        type="time"
+                        name="checkIn"
+                        value={formData.checkIn}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Check Out
+                      </label>
+                      <input
+                        type="time"
+                        name="checkOut"
+                        value={formData.checkOut}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="late">Late</option>
+                        <option value="half-day">Half Day</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Work Hours
+                      </label>
+                      <input
+                        type="text"
+                        name="workHours"
+                        value={formData.workHours}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Notes
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="mt-5 sm:mt-6">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                    >
+                      {isUpdating ? 'Update Record' : 'Add Record'}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                <select
-                  value={newRecord.status}
-                  onChange={(e) => setNewRecord({ ...newRecord, status: e.target.value })}
-                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                >
-                  <option value="present">Present</option>
-                  <option value="absent">Absent</option>
-                  <option value="half-day">Half Day</option>
-                  <option value="late">Late</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                <textarea
-                  value={newRecord.notes}
-                  onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                  className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
-                  rows={3}
-                  placeholder="Add any notes..."
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddRecord(false)}
-                  className="px-4 py-2 border dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add Record
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
