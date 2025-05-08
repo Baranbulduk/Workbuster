@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import { PlusIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import path from 'path';
+import { useNavigate } from 'react-router-dom';
 
 export default function RegisterCandidate() {
   const { isDarkMode } = useTheme();
@@ -11,6 +12,12 @@ export default function RegisterCandidate() {
   const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [filters, setFilters] = useState({
+    position: '',
+    experience: '',
+    availability: '',
+    workPreference: ''
+  });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -31,6 +38,7 @@ export default function RegisterCandidate() {
     github: '',
     personId: '',
   });
+  const navigate = useNavigate();
 
   // Fetch candidates on component mount
   useEffect(() => {
@@ -45,6 +53,23 @@ export default function RegisterCandidate() {
       console.error('Error fetching candidates:', error);
     }
   };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const filteredCandidates = candidates.filter(candidate => {
+    return (
+      (!filters.position || candidate.position.toLowerCase().includes(filters.position.toLowerCase())) &&
+      (!filters.experience || candidate.experience >= parseInt(filters.experience)) &&
+      (!filters.availability || candidate.availability === filters.availability) &&
+      (!filters.workPreference || candidate.workPreference === filters.workPreference)
+    );
+  });
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -108,24 +133,24 @@ export default function RegisterCandidate() {
     setSelectedCandidate(candidate);
     setIsUpdating(true);
     setFormData({
-      firstName: candidate.firstName,
-      lastName: candidate.lastName,
-      email: candidate.email,
-      phone: candidate.phone,
-      position: candidate.position,
-      experience: candidate.experience,
-      skills: candidate.skills,
-      education: candidate.education,
+      firstName: candidate.firstName || '',
+      lastName: candidate.lastName || '',
+      email: candidate.email || '',
+      phone: candidate.phone || '',
+      position: candidate.position || '',
+      experience: candidate.experience || '',
+      skills: candidate.skills || '',
+      education: candidate.education || '',
       resume: null,
       coverLetter: null,
-      availability: candidate.availability,
-      expectedSalary: candidate.expectedSalary,
-      workPreference: candidate.workPreference,
-      location: candidate.location,
-      portfolio: candidate.portfolio,
-      linkedin: candidate.linkedin,
-      github: candidate.github,
-      personId: candidate.personId,
+      availability: candidate.availability || '',
+      expectedSalary: candidate.expectedSalary || '',
+      workPreference: candidate.workPreference || 'full-time',
+      location: candidate.location || '',
+      portfolio: candidate.portfolio || '',
+      linkedin: candidate.linkedin || '',
+      github: candidate.github || '',
+      personId: candidate.personId || '',
     });
     setShowForm(true);
   };
@@ -306,18 +331,76 @@ export default function RegisterCandidate() {
     <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Candidates</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Register New Candidate
-        </button>
+        <div className="flex items-center space-x-4">
+          {/* Filters */}
+          <div className="flex items-center space-x-2">
+            <select
+              name="position"
+              value={filters.position}
+              onChange={handleFilterChange}
+              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Positions</option>
+              <option value="developer">Developer</option>
+              <option value="designer">Designer</option>
+              <option value="manager">Manager</option>
+              <option value="analyst">Analyst</option>
+            </select>
+
+            <select
+              name="experience"
+              value={filters.experience}
+              onChange={handleFilterChange}
+              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Experience</option>
+              <option value="0">0+ years</option>
+              <option value="2">2+ years</option>
+              <option value="5">5+ years</option>
+              <option value="10">10+ years</option>
+            </select>
+
+            <select
+              name="availability"
+              value={filters.availability}
+              onChange={handleFilterChange}
+              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Availability</option>
+              <option value="immediate">Immediate</option>
+              <option value="1-week">1 Week</option>
+              <option value="2-weeks">2 Weeks</option>
+              <option value="1-month">1 Month</option>
+              <option value="more-than-1-month">More than 1 Month</option>
+            </select>
+
+            <select
+              name="workPreference"
+              value={filters.workPreference}
+              onChange={handleFilterChange}
+              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Work Types</option>
+              <option value="full-time">Full Time</option>
+              <option value="part-time">Part Time</option>
+              <option value="contract">Contract</option>
+              <option value="freelance">Freelance</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Register New Candidate
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
-        {candidates.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">No candidates registered yet.</p>
+        {filteredCandidates.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">No candidates found matching the selected filters.</p>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -347,8 +430,12 @@ export default function RegisterCandidate() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {candidates.map((candidate) => (
-                  <tr key={candidate._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                {filteredCandidates.map((candidate) => (
+                  <tr 
+                    key={candidate._id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => navigate(`/candidates/${candidate._id}`)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -697,9 +784,13 @@ export default function RegisterCandidate() {
                           value={formData.education}
                           onChange={handleInputChange}
                           required
-                          rows={3}
+                          rows={4}
                           className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
-                          placeholder="Enter education details"
+                          placeholder="Enter education details in the following format:
+Degree (e.g., Bachelor's in Computer Science)
+Field of Study
+Institution Name
+Graduation Year"
                         />
                       </div>
                       <div>

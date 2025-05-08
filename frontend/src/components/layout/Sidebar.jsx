@@ -21,11 +21,11 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Register Candidate', href: '/register-candidate', icon: UserPlusIcon },
+  { name: 'Candidates', href: '/candidates', icon: UserPlusIcon },
   { name: 'Onboarding', href: '/onboarding', icon: UserGroupIcon },
-  { name: 'Register Clients', href: '/register-clients', icon: BuildingOfficeIcon },
-  { name: 'Create Projects', href: '/create-projects', icon: BriefcaseIcon },
-  { name: 'Create Missions', href: '/create-missions', icon: RocketLaunchIcon },
+  { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon },
+  { name: 'Projects', href: '/projects', icon: BriefcaseIcon },
+  { name: 'Missions', href: '/missions', icon: RocketLaunchIcon },
   { name: 'Messaging', href: '/messaging', icon: EnvelopeIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon },
   { name: 'Schedule Management', href: '/schedule', icon: CalendarIcon },
@@ -43,8 +43,12 @@ export default function Sidebar() {
   const location = useLocation();
 
   const handleLogout = () => {
-    // Implement logout logic here
-    console.log('Logout clicked');
+    // Clear any stored authentication data if needed
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('user');
+    
+    // Navigate to login page
+    navigate('/login');
   };
 
   const handleNavigation = (href) => {

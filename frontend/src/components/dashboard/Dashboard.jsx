@@ -1,21 +1,52 @@
-import React from 'react';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import {
   UserGroupIcon,
   BriefcaseIcon,
   DocumentTextIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline';
-
-const stats = [
-  { name: 'Total Candidates', value: '2,543', icon: UserGroupIcon },
-  { name: 'Active Projects', value: '12', icon: BriefcaseIcon },
-  { name: 'Pending Documents', value: '45', icon: DocumentTextIcon },
-  { name: 'Upcoming Meetings', value: '8', icon: CalendarIcon },
-];
+import axios from 'axios';
 
 export default function Dashboard() {
   const { isDarkMode } = useTheme();
+  const [stats, setStats] = useState({
+    totalCandidates: 0,
+    activeProjects: 0,
+    openPositions: 0,
+    newMessages: 0
+  });
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      // Fetch candidates
+      const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
+      const totalCandidates = candidatesResponse.data.length;
+
+      // Fetch projects
+      const projectsResponse = await axios.get('http://localhost:5000/api/projects');
+      const activeProjects = projectsResponse.data.filter(project => 
+        project.status === 'in-progress' || project.status === 'planning'
+      ).length;
+
+      // For messages, we'll use the length of the messages array from Messaging component
+      // This is a static example since we don't have a messages API endpoint yet
+      const newMessages = 3; // This matches the initial messages in Messaging.jsx
+
+      setStats({
+        totalCandidates,
+        activeProjects,
+        openPositions: 8, // This is still hardcoded as we don't have an API endpoint for positions
+        newMessages
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-6">
@@ -25,19 +56,19 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Total Candidates</h3>
-          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">150</p>
+          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalCandidates}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Active Projects</h3>
-          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">12</p>
+          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">{stats.activeProjects}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Open Positions</h3>
-          <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">8</p>
+          <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.openPositions}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Messages</h3>
-          <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">5</p>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">New Messages</h3>
+          <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.newMessages}</p>
         </div>
       </div>
 

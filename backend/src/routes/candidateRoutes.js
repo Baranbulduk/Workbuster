@@ -26,13 +26,26 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Configure nodemailer
+//const transporter = nodemailer.createTransport({
+//  service: 'gmail',
+//  auth: {
+//    user: 'rexettit@gmail.com',
+//    pass: 'prmursgwotixwilt'
+//  }, debug: true});
+
+
+// Configure nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
+    user: 'rexettit@gmail.com',
+    pass: 'prmursgwotixwilt'
+  },
+  debug: true
 });
+
 
 // Generate a random password
 const generatePassword = () => {
@@ -41,10 +54,11 @@ const generatePassword = () => {
 
 // Send welcome email with password
 const sendWelcomeEmail = async (email, firstName, password) => {
-  console.log(process.env.EMAIL_USER);
+  console.log(process.env.GMAIL_USER);
+  console.log(process.env.GOOGLE_APP_PASSWORD);
   console.log(email);
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.GMAIL_USER,
     to: email,
     subject: 'Welcome to Rexett - Your Account Details',
     html: `
@@ -59,10 +73,57 @@ const sendWelcomeEmail = async (email, firstName, password) => {
 
   try {
     await transporter.sendMail(mailOptions);
+    console.log(mailOptions);
     console.log('Welcome email sent successfully');
   } catch (error) {
     console.error('Error sending welcome email:', error);
     throw new Error('Failed to send welcome email');
+  }
+};
+
+// Send update notification email
+const sendUpdateNotificationEmail = async (email, firstName) => {
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: 'Your Rexett Profile Has Been Updated',
+    html: `
+      <h1>Hello ${firstName}!</h1>
+      <p>Your profile information has been updated in the Rexett system.</p>
+      <p>If you did not request these changes, please contact our support team immediately.</p>
+      <p>Best regards,<br>The Rexett Team</p>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Update notification email sent successfully');
+  } catch (error) {
+    console.error('Error sending update notification email:', error);
+    throw new Error('Failed to send update notification email');
+  }
+};
+
+// Send deletion notification email
+const sendDeletionNotificationEmail = async (email, firstName) => {
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: 'Your Rexett Account Has Been Deleted',
+    html: `
+      <h1>Hello ${firstName}!</h1>
+      <p>We are writing to inform you that your account has been deleted from the Rexett system.</p>
+      <p>If you did not request this deletion, please contact our support team immediately.</p>
+      <p>Best regards,<br>The Rexett Team</p>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Deletion notification email sent successfully');
+  } catch (error) {
+    console.error('Error sending deletion notification email:', error);
+    throw new Error('Failed to send deletion notification email');
   }
 };
 
@@ -114,9 +175,9 @@ router.post('/', upload.single('resume'), async (req, res) => {
     const formData = req.body;
     
     // Generate password and hash it
-    const plainPassword = generatePassword();
+    const userPassword = generatePassword();
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(plainPassword, salt);
+    const hashedPassword = await bcrypt.hash(userPassword, salt);
     
     // Convert experience and expectedSalary to numbers
     formData.experience = parseInt(formData.experience, 10);
@@ -148,8 +209,8 @@ router.post('/', upload.single('resume'), async (req, res) => {
 
     // Try to send welcome email, but don't fail if it doesn't work
     try {
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-        await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, plainPassword);
+      if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
+        await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
       } else {
         console.log('Email credentials not configured. Skipping welcome email.');
       }
@@ -192,6 +253,20 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
       delete formData['location[state]'];
       delete formData['location[country]'];
     }
+
+    // Handle education data
+    if (formData.education) {
+      // If education is a string, try to parse it into an object
+      if (typeof formData.education === 'string') {
+        const educationLines = formData.education.split('\n').filter(line => line.trim());
+        formData.education = {
+          degree: educationLines[0] || '',
+          field: educationLines[1] || '',
+          institution: educationLines[2] || '',
+          graduationYear: parseInt(educationLines[3]) || new Date().getFullYear()
+        };
+      }
+    }
     
     // Handle resume file
     if (req.file) {
@@ -200,6 +275,19 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
 
     Object.assign(candidate, formData);
     const updatedCandidate = await candidate.save();
+
+    // Try to send update notification email, but don't fail if it doesn't work
+    try {
+      if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
+        await sendUpdateNotificationEmail(updatedCandidate.email, updatedCandidate.firstName);
+      } else {
+        console.log('Email credentials not configured. Skipping update notification email.');
+      }
+    } catch (emailError) {
+      console.error('Error sending update notification email:', emailError);
+      // Don't throw the error, just log it
+    }
+
     res.json(updatedCandidate);
   } catch (error) {
     console.error('Error updating candidate:', error);
@@ -215,7 +303,26 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Candidate not found' });
     }
 
+    // Store candidate info before deletion for email
+    const candidateInfo = {
+      email: candidate.email,
+      firstName: candidate.firstName
+    };
+
     await candidate.deleteOne();
+
+    // Try to send deletion notification email, but don't fail if it doesn't work
+    try {
+      if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
+        await sendDeletionNotificationEmail(candidateInfo.email, candidateInfo.firstName);
+      } else {
+        console.log('Email credentials not configured. Skipping deletion notification email.');
+      }
+    } catch (emailError) {
+      console.error('Error sending deletion notification email:', emailError);
+      // Don't throw the error, just log it
+    }
+
     res.json({ message: 'Candidate deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
