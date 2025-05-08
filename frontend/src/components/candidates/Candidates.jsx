@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { PlusIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, XMarkIcon, ExclamationTriangleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import path from 'path';
 import { useNavigate } from 'react-router-dom';
@@ -327,6 +327,67 @@ export default function RegisterCandidate() {
     }
   };
 
+  const handleExportCSV = () => {
+    // Define CSV headers
+    const headers = [
+      'First Name',
+      'Last Name',
+      'Email',
+      'Phone',
+      'Position',
+      'Experience',
+      'Skills',
+      'Education',
+      'Availability',
+      'Expected Salary',
+      'Work Preference',
+      'Location',
+      'Portfolio',
+      'LinkedIn',
+      'GitHub',
+      'Person ID'
+    ];
+
+    // Convert candidates data to CSV format
+    const csvData = candidates.map(candidate => [
+      candidate.firstName,
+      candidate.lastName,
+      candidate.email,
+      candidate.phone,
+      candidate.position,
+      candidate.experience,
+      candidate.skills,
+      candidate.education,
+      new Date(candidate.availability).toLocaleDateString(),
+      candidate.expectedSalary,
+      candidate.workPreference,
+      typeof candidate.location === 'object' 
+        ? `${candidate.location.city},${candidate.location.state},${candidate.location.country}`
+        : candidate.location,
+      candidate.portfolio || '',
+      candidate.linkedin || '',
+      candidate.github || '',
+      candidate.personId
+    ]);
+
+    // Combine headers and data
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `candidates_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
       <div className="flex justify-between items-center mb-6">
@@ -387,6 +448,14 @@ export default function RegisterCandidate() {
               <option value="freelance">Freelance</option>
             </select>
           </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+          >
+            <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+            Export CSV
+          </button>
 
           <button
             onClick={() => setShowForm(true)}
