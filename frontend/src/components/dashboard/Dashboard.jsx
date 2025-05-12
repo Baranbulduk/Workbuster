@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import {
   UserGroupIcon,
   BriefcaseIcon,
@@ -10,6 +11,7 @@ import axios from 'axios';
 
 export default function Dashboard() {
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalCandidates: 0,
     activeProjects: 0,
@@ -110,16 +112,28 @@ export default function Dashboard() {
         <div className="p-6">
           <h2 className="text-lg font-medium text-gray-900 dark:text-white">Quick Actions</h2>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              Add Candidate
+            <button 
+              onClick={() => navigate('/candidates')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Register New Candidate
             </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-              Create Project
+            <button 
+              onClick={() => navigate('/projects')}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              Create New Project
             </button>
-            <button className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-              Schedule Interview
+            <button 
+              onClick={() => navigate('/schedule')}
+              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              Add Schedule
             </button>
-            <button className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button 
+              onClick={() => navigate('/messaging')}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
               Send Message
             </button>
           </div>

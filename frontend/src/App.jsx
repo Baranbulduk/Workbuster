@@ -21,6 +21,8 @@ import Settings from './components/settings/Settings';
 import Onboarding from './components/onboarding/Onboarding';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Employees from './components/employees/Employees';
+import EmployeeDetails from './components/employees/EmployeeDetails';
 
 // Layout wrapper component
 const LayoutWrapper = () => {
@@ -41,22 +43,24 @@ function App() {
           <Route path="/register" element={<Register />} />
           
           {/* Protected routes with layout */}
-          <Route element={<LayoutWrapper />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/candidates" element={<Candidates />} />
-            <Route path="/candidates/:id" element={<CandidateDetails />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/missions" element={<Missions />} />
-            <Route path="/messaging" element={<Messaging />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/schedule" element={<ScheduleManagement />} />
-            <Route path="/attendance" element={<Attendance />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/documents" element={<DocumentSharing />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="candidates" element={<Candidates />} />
+            <Route path="candidates/:id" element={<CandidateDetails />} />
+            <Route path="employees" element={<Employees />} />
+            <Route path="employees/:id" element={<EmployeeDetails />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="schedule" element={<ScheduleManagement />} />
+            <Route path="messaging" element={<Messaging />} />
+            <Route path="statistics" element={<Statistics />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="missions" element={<Missions />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="documents" element={<DocumentSharing />} />
+            <Route path="onboarding" element={<Onboarding />} />
           </Route>
 
           {/* Default redirect */}

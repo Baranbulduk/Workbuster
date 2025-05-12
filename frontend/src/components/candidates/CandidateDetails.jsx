@@ -514,7 +514,7 @@ export default function CandidateDetails() {
                 ) : (
                   schedules.map((schedule) => (
                     <div
-                      key={`schedule-${schedule._id}`}
+                      key={schedule._id}
                       className="border dark:border-gray-700 rounded-lg p-4"
                     >
                       <div className="flex justify-between items-start">

@@ -18,8 +18,8 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // For now, just navigate to dashboard without authentication
-    navigate('/dashboard');
+    // Navigate to the root path which is the dashboard
+    navigate('/');
   };
 
   return (
@@ -44,6 +44,7 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
+                required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={formData.email}
@@ -56,6 +57,7 @@ const Login = () => {
                 id="password"
                 name="password"
                 type="password"
+                required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={formData.password}

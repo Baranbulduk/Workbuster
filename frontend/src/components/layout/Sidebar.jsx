@@ -16,24 +16,31 @@ import {
   DocumentTextIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  ChatBubbleLeftRightIcon,
+  ClockIcon,
+  DocumentChartBarIcon,
+  ClipboardDocumentIcon
 } from '@heroicons/react/24/outline';
+import { FiHome, FiUsers, FiUserCheck, FiBriefcase, FiCalendar, FiMessageSquare, FiBarChart2, FiSettings } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Candidates', href: '/candidates', icon: UserPlusIcon },
-  { name: 'Onboarding', href: '/onboarding', icon: UserGroupIcon },
-  { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon },
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Candidates', href: '/candidates', icon: UserGroupIcon },
+  { name: 'Employees', href: '/employees', icon: UserGroupIcon },
   { name: 'Projects', href: '/projects', icon: BriefcaseIcon },
-  { name: 'Missions', href: '/missions', icon: RocketLaunchIcon },
-  { name: 'Messaging', href: '/messaging', icon: EnvelopeIcon },
-  { name: 'Notifications', href: '/notifications', icon: BellIcon },
-  { name: 'Schedule Management', href: '/schedule', icon: CalendarIcon },
-  { name: 'Attendance', href: '/attendance', icon: ClipboardDocumentCheckIcon },
-  { name: 'Reports', href: '/reports', icon: ChartBarIcon },
-  { name: 'Statistics', href: '/statistics', icon: ChartPieIcon },
-  { name: 'Document Sharing', href: '/documents', icon: DocumentTextIcon },
+  { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon },
+  { name: 'Schedule', href: '/schedule', icon: CalendarIcon },
+  { name: 'Messaging', href: '/messaging', icon: ChatBubbleLeftRightIcon },
+  { name: 'Statistics', href: '/statistics', icon: ChartBarIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+  { name: 'Missions', href: '/missions', icon: ClipboardDocumentIcon },
+  { name: 'Notifications', href: '/notifications', icon: BellIcon },
+  { name: 'Attendance', href: '/attendance', icon: ClockIcon },
+  { name: 'Reports', href: '/reports', icon: DocumentChartBarIcon },
+  { name: 'Documents', href: '/documents', icon: DocumentTextIcon },
+  { name: 'Onboarding', href: '/onboarding', icon: UserPlusIcon }
 ];
 
 export default function Sidebar() {
@@ -91,9 +98,9 @@ export default function Sidebar() {
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <button
+              <Link
                 key={item.name}
-                onClick={() => handleNavigation(item.href)}
+                to={item.href}
                 className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                   isActive
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-400'
@@ -116,7 +123,7 @@ export default function Sidebar() {
                     {item.name}
                   </div>
                 )}
-              </button>
+              </Link>
             );
           })}
         </div>
