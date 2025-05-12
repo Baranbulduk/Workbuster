@@ -1,156 +1,271 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import Employee from '../../models/Employee.js';
+import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
-// Sample onboarding data (replace with database in production)
-let onboardingSteps = [
-  {
-    id: 1,
-    title: 'Welcome to the Team',
-    description: 'Introduction to company culture and values',
-    type: 'welcome',
-    status: 'completed',
-    completedAt: '2024-03-01T10:00:00Z',
-    assignedTo: 'John Doe',
-    documents: [
-      {
-        name: 'Company Handbook',
-        type: 'pdf',
-        required: true
-      },
-      {
-        name: 'Code of Conduct',
-        type: 'pdf',
-        required: true
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: 'System Access Setup',
-    description: 'Setting up access to company systems and tools',
-    type: 'technical',
-    status: 'in_progress',
-    startedAt: '2024-03-02T09:00:00Z',
-    assignedTo: 'IT Support',
-    documents: [
-      {
-        name: 'System Access Form',
-        type: 'docx',
-        required: true
-      }
-    ]
+// Helper: Generate random password
+function generatePassword(length = 10) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let pass = '';
+  for (let i = 0; i < length; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-];
+  return pass;
+}
 
-// Get all onboarding steps
-router.get('/', (req, res) => {
+// Helper: Send email
+async function sendCredentialsEmail(to, employeeId, password) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'rexettit@gmail.com',
+      pass: 'prmursgwotixwilt'
+    }
+  });
+  const mailOptions = {
+    from: 'rexettit@gmail.com',
+    to,
+    subject: 'Your Employee Account Credentials',
+    text: `Welcome!\n\nYour Employee ID: ${employeeId}\nPassword: ${password}\n\nPlease log in and change your password after first login.`
+  };
+  await transporter.sendMail(mailOptions);
+}
+
+// Get all onboarding candidates
+router.get('/', async (req, res) => {
+  try {
   const { status, type } = req.query;
-  let filteredSteps = [...onboardingSteps];
+    let query = {};
 
   if (status) {
-    filteredSteps = filteredSteps.filter(step => step.status === status);
-  }
+      query.status = status;
+    }
 
-  if (type) {
-    filteredSteps = filteredSteps.filter(step => step.type === type);
-  }
+    const employees = await Employee.find(query).sort({ createdAt: -1 });
+    const formattedEmployees = employees.map(emp => ({
+      id: emp._id,
+      name: `${emp.firstName} ${emp.lastName}`,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email,
+      phone: emp.phone,
+      position: emp.position,
+      department: emp.department,
+      status: emp.status,
+      hireDate: emp.hireDate,
+      onboardingStep: emp.onboardingStep || 1,
+      welcomeSent: emp.welcomeSent || emp.hireDate,
+      formCompleted: emp.formCompleted || emp.hireDate,
+      tasks: emp.tasks || 0
+    }));
 
-  res.json(filteredSteps);
+    res.json(formattedEmployees);
+  } catch (error) {
+    console.error('Error fetching onboarding candidates:', error);
+    res.status(500).json({ message: 'Error fetching onboarding candidates' });
+  }
 });
 
-// Get a specific onboarding step
-router.get('/:id', (req, res) => {
-  const step = onboardingSteps.find(s => s.id === parseInt(req.params.id));
-  if (!step) {
-    return res.status(404).json({ message: 'Onboarding step not found' });
+// Get a specific onboarding candidate
+router.get('/:id', async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) {
+      return res.status(404).json({ message: 'Candidate not found' });
   }
-  res.json(step);
+
+    const formattedEmployee = {
+      id: employee._id,
+      name: `${employee.firstName} ${employee.lastName}`,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      phone: employee.phone,
+      position: employee.position,
+      department: employee.department,
+      status: employee.status,
+      hireDate: employee.hireDate,
+      onboardingStep: employee.onboardingStep || 1,
+      welcomeSent: employee.welcomeSent || employee.hireDate,
+      formCompleted: employee.formCompleted || employee.hireDate,
+      tasks: employee.tasks || 0
+    };
+
+    res.json(formattedEmployee);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Create a new onboarding step
-router.post('/', [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('type').isIn(['welcome', 'technical', 'training', 'documentation']).withMessage('Invalid step type'),
-  body('assignedTo').notEmpty().withMessage('Assigned to is required')
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+// Import candidates via CSV
+router.post('/import', async (req, res) => {
+  try {
+    const { candidates } = req.body;
+    
+    if (!Array.isArray(candidates) || candidates.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No candidates data provided' 
+      });
   }
 
-  const newStep = {
-    id: onboardingSteps.length + 1,
-    ...req.body,
-    status: 'pending',
-    documents: req.body.documents || []
-  };
+    const results = {
+      success: [],
+      failed: []
+    };
 
-  onboardingSteps.push(newStep);
-  res.status(201).json(newStep);
+    for (const candidate of candidates) {
+      try {
+        // Check if candidate with this email already exists
+        const existingEmployee = await Employee.findOne({ email: candidate.email });
+        if (existingEmployee) {
+          results.failed.push({
+            email: candidate.email,
+            reason: 'Email already exists'
+          });
+          continue;
+        }
+
+        // Generate employee ID
+        const lastEmployee = await Employee.findOne().sort({ employeeId: -1 });
+        const lastId = lastEmployee ? parseInt(lastEmployee.employeeId.slice(1)) : 0;
+        const newId = `E${(lastId + 1).toString().padStart(4, '0')}`;
+
+        // Generate random password
+        const password = generatePassword(8);
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new employee
+        const newEmployee = new Employee({
+          employeeId: newId,
+          password: hashedPassword,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          email: candidate.email,
+          phone: candidate.phone || '',
+          department: candidate.department || 'IT',
+          position: candidate.position || 'Employee',
+          status: candidate.status || 'Active',
+          hireDate: candidate.hireDate || new Date(),
+          salary: candidate.salary || 0,
+          address: {
+            street: candidate.address?.street || '',
+            city: candidate.address?.city || '',
+            state: candidate.address?.state || '',
+            zipCode: candidate.address?.zipCode || '',
+            country: candidate.address?.country || ''
+          },
+          onboardingStep: 1,
+          welcomeSent: candidate.hireDate || new Date(),
+          formCompleted: candidate.hireDate || new Date(),
+          tasks: 0
+        });
+
+        await newEmployee.save();
+
+        // Send credentials email
+        await sendCredentialsEmail(candidate.email, newId, password);
+
+        results.success.push({
+          employeeId: newId,
+          email: candidate.email
+        });
+      } catch (error) {
+        console.error(`Error processing candidate ${candidate.email}:`, error);
+        results.failed.push({
+          email: candidate.email,
+          reason: error.message
+        });
+  }
+    }
+
+    res.json({
+      success: true,
+      results,
+      message: `Successfully imported ${results.success.length} candidates. ${results.failed.length} failed.`
+    });
+  } catch (error) {
+    console.error('Error in bulk import:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to import candidates',
+      error: error.message
+    });
+  }
 });
 
-// Update an onboarding step
-router.put('/:id', [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('type').optional().isIn(['welcome', 'technical', 'training', 'documentation']).withMessage('Invalid step type'),
-  body('status').optional().isIn(['pending', 'in_progress', 'completed']).withMessage('Invalid status')
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+// Export candidates to CSV
+router.get('/export/csv', async (req, res) => {
+  try {
+    const employees = await Employee.find().sort({ createdAt: -1 });
+    
+    const headers = [
+      'First Name',
+      'Last Name',
+      'Email',
+      'Phone',
+      'Position',
+      'Department',
+      'Status',
+      'Hire Date',
+      'Onboarding Step',
+      'Welcome Sent',
+      'Form Completed',
+      'Tasks'
+    ];
+
+    const rows = employees.map(emp => [
+      emp.firstName,
+      emp.lastName,
+      emp.email,
+      emp.phone,
+      emp.position,
+      emp.department,
+      emp.status,
+      emp.hireDate.toISOString().split('T')[0],
+      emp.onboardingStep || 1,
+      emp.welcomeSent ? emp.welcomeSent.toISOString().split('T')[0] : '',
+      emp.formCompleted ? emp.formCompleted.toISOString().split('T')[0] : '',
+      emp.tasks || 0
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=onboarding_candidates_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Error exporting candidates:', error);
+    res.status(500).json({ message: 'Error exporting candidates' });
   }
-
-  const stepIndex = onboardingSteps.findIndex(s => s.id === parseInt(req.params.id));
-  if (stepIndex === -1) {
-    return res.status(404).json({ message: 'Onboarding step not found' });
-  }
-
-  const updatedStep = {
-    ...onboardingSteps[stepIndex],
-    ...req.body
-  };
-
-  if (req.body.status === 'completed' && !updatedStep.completedAt) {
-    updatedStep.completedAt = new Date().toISOString();
-  }
-
-  if (req.body.status === 'in_progress' && !updatedStep.startedAt) {
-    updatedStep.startedAt = new Date().toISOString();
-  }
-
-  onboardingSteps[stepIndex] = updatedStep;
-  res.json(updatedStep);
 });
 
-// Delete an onboarding step
-router.delete('/:id', (req, res) => {
-  const stepIndex = onboardingSteps.findIndex(s => s.id === parseInt(req.params.id));
-  if (stepIndex === -1) {
-    return res.status(404).json({ message: 'Onboarding step not found' });
+// Update onboarding status
+router.put('/:id/status', async (req, res) => {
+  try {
+    const { onboardingStep, welcomeSent, formCompleted, tasks } = req.body;
+    const employee = await Employee.findById(req.params.id);
+    
+    if (!employee) {
+      return res.status(404).json({ message: 'Candidate not found' });
   }
 
-  onboardingSteps = onboardingSteps.filter(s => s.id !== parseInt(req.params.id));
-  res.status(204).send();
-});
+    employee.onboardingStep = onboardingStep || employee.onboardingStep;
+    employee.welcomeSent = welcomeSent || employee.welcomeSent;
+    employee.formCompleted = formCompleted || employee.formCompleted;
+    employee.tasks = tasks || employee.tasks;
 
-// Mark a document as completed
-router.post('/:id/documents/:documentName/complete', (req, res) => {
-  const step = onboardingSteps.find(s => s.id === parseInt(req.params.id));
-  if (!step) {
-    return res.status(404).json({ message: 'Onboarding step not found' });
+    await employee.save();
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  const document = step.documents.find(d => d.name === req.params.documentName);
-  if (!document) {
-    return res.status(404).json({ message: 'Document not found' });
-  }
-
-  document.completed = true;
-  document.completedAt = new Date().toISOString();
-
-  res.json(document);
 });
 
 export default router; 

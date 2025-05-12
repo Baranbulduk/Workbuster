@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserGroupIcon, MagnifyingGlassIcon, ChevronDownIcon, CheckCircleIcon, ArrowUpTrayIcon, DocumentTextIcon, Bars3BottomLeftIcon, EnvelopeIcon, HashtagIcon, CurrencyDollarIcon, PencilSquareIcon, ListBulletIcon, HeartIcon, PhotoIcon, PhoneIcon, CalendarIcon, CalculatorIcon, ClockIcon, LinkIcon, ArrowUpOnSquareIcon, UserIcon, AdjustmentsHorizontalIcon, MagnifyingGlassCircleIcon, GlobeAltIcon, Squares2X2Icon, SquaresPlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, MagnifyingGlassIcon, ChevronDownIcon, CheckCircleIcon, ArrowUpTrayIcon, DocumentTextIcon, Bars3BottomLeftIcon, EnvelopeIcon, HashtagIcon, CurrencyDollarIcon, PencilSquareIcon, ListBulletIcon, HeartIcon, PhotoIcon, PhoneIcon, CalendarIcon, CalculatorIcon, ClockIcon, LinkIcon, ArrowUpOnSquareIcon, UserIcon, AdjustmentsHorizontalIcon, MagnifyingGlassCircleIcon, GlobeAltIcon, Squares2X2Icon, SquaresPlusIcon, TrashIcon, PencilIcon, ArrowDownTrayIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import OnboardingDetails from './OnboardingDetails';
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -39,10 +40,12 @@ const FIELD_TYPES = [
 
 export default function Onboarding() {
   const [search, setSearch] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [users, setUsers] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [activeTab, setActiveTab] = useState('candidates');
+  const [candidates, setCandidates] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [clients, setClients] = useState([]);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({
     candidateName: '',
     candidatePhoto: null,
@@ -77,49 +80,107 @@ export default function Onboarding() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchData();
+  }, [activeTab]);
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/employees');
-      const formattedUsers = response.data.map(emp => ({
-        id: emp._id,
-        name: `${emp.firstName} ${emp.lastName}`,
-        firstName: emp.firstName,
-        lastName: emp.lastName,
-        avatar: null,
-        arrivedDaysAgo: 0,
-        contractStart: emp.hireDate || new Date().toISOString().split('T')[0],
-        onboardingStep: 1,
-        welcomeSent: emp.hireDate || new Date().toISOString().split('T')[0],
-        formCompleted: emp.hireDate || new Date().toISOString().split('T')[0],
-        tasks: 0,
-        email: emp.email,
-        phone: emp.phone,
-        position: emp.position,
-        department: emp.department,
-        address: emp.address,
-        status: emp.status
-      }));
-      setUsers(formattedUsers);
-      if (formattedUsers.length > 0) {
-        setSelectedUser(formattedUsers[0]);
+      switch (activeTab) {
+        case 'candidates':
+          const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
+          setCandidates(candidatesResponse.data);
+          break;
+        case 'employees':
+          const employeesResponse = await axios.get('http://localhost:5000/api/employees');
+          setEmployees(employeesResponse.data);
+          break;
+        case 'clients':
+          const clientsResponse = await axios.get('http://localhost:5000/api/clients');
+          setClients(clientsResponse.data);
+          break;
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error(`Error fetching ${activeTab}:`, error);
     }
   };
 
-  const inProgress = users;
-  const toStart = [];
+  const handleImportCSV = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const text = e.target.result;
+          const rows = text.split('\n').filter(row => row.trim() !== '');
+          const headers = rows[0].split(',').map(header => header.trim());
+          
+          const newItems = rows.slice(1).map(row => {
+            const values = row.split(',').map(value => value.trim());
+            const itemData = {};
+            
+            headers.forEach((header, index) => {
+              itemData[header.toLowerCase().replace(/\s+/g, '')] = values[index] || '';
+            });
 
-  const handleFormChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
-    }));
+            return {
+              firstName: itemData.firstname || itemData.first_name || '',
+              lastName: itemData.lastname || itemData.last_name || '',
+              email: itemData.email || '',
+              phone: itemData.phone || '',
+              position: itemData.position || '',
+              department: itemData.department || '',
+              status: itemData.status || 'Active',
+              hireDate: itemData.hiredate || itemData.hire_date || new Date().toISOString().split('T')[0]
+            };
+          });
+
+          const response = await axios.post(`http://localhost:5000/api/${activeTab}/import`, { items: newItems });
+          
+          if (response.data.success) {
+            // Update only the relevant state based on activeTab
+            switch (activeTab) {
+              case 'candidates':
+                setCandidates(prev => [...prev, ...response.data.results.success]);
+                break;
+              case 'employees':
+                setEmployees(prev => [...prev, ...response.data.results.success]);
+                break;
+              case 'clients':
+                setClients(prev => [...prev, ...response.data.results.success]);
+                break;
+            }
+            alert(`Successfully imported ${response.data.results.success.length} ${activeTab}. ${response.data.results.failed.length} failed.`);
+          } else {
+            throw new Error(response.data.message || 'Failed to import items');
+          }
+        } catch (error) {
+          console.error('Error importing items:', error);
+          alert(`Error importing items: ${error.message}`);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const getCurrentItems = () => {
+    switch (activeTab) {
+      case 'candidates':
+        return candidates;
+      case 'employees':
+        return employees;
+      case 'clients':
+        return clients;
+      default:
+        return [];
+    }
+  };
+
+  const handleItemClick = (item) => {
+    if (selectedItem && selectedItem._id === item._id) {
+      setSelectedItem(null);
+    } else {
+      setSelectedItem(item);
+    }
   };
 
   // Drag and drop handlers
@@ -249,14 +310,67 @@ export default function Onboarding() {
     alert('Form submitted! (see console for payload)');
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/onboarding/export/csv', {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `onboarding_candidates_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error exporting candidates:', error);
+      alert('Failed to export candidates');
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Onboarding</h1>
+        <div className="flex gap-2">
+          <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <ArrowUpTrayIcon className="h-5 w-5" />
+            Import CSV
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
       <div className="flex h-[calc(100vh-2rem)] overflow-hidden">
         {/* Left Panel */}
         <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col">
+          {/* Navigation Tabs */}
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'candidates' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('candidates')}
+            >
+              Candidates
+            </button>
+            <button
+              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'employees' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('employees')}
+            >
+              Employees
+            </button>
+            <button
+              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'clients' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('clients')}
+            >
+              Clients
+            </button>
+          </div>
+
           <div className="p-4">
             <div className="relative">
               <input
@@ -269,35 +383,37 @@ export default function Onboarding() {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
             </div>
           </div>
-          <div className="px-4 pb-2">
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-              <span>To Start</span>
-              <span className="bg-gray-200 dark:bg-gray-700 rounded px-2 py-0.5">{toStart.length}</span>
-            </div>
-          </div>
-          <div className="px-4 pb-2">
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-              <span>In Progress</span>
-              <span className="bg-gray-200 dark:bg-gray-700 rounded px-2 py-0.5">{inProgress.length}</span>
-              <ChevronDownIcon className="h-4 w-4 ml-1 text-gray-400" />
-            </div>
-          </div>
+
           <div className="flex-1 overflow-y-auto px-2 pb-4">
-            {inProgress.filter(u => u.name.toLowerCase().includes(search.toLowerCase())).map(user => (
-              <div
-                key={user.id}
-                className={`flex items-center gap-3 p-2 rounded cursor-pointer mb-1 transition-colors ${selectedUser?.id === user.id ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                onClick={() => setSelectedUser(user)}
+            {getCurrentItems()
+              .filter(item => {
+                const searchTerm = search.toLowerCase();
+                return (
+                  item.name?.toLowerCase().includes(searchTerm) ||
+                  item.email?.toLowerCase().includes(searchTerm) ||
+                  item.firstName?.toLowerCase().includes(searchTerm) ||
+                  item.lastName?.toLowerCase().includes(searchTerm)
+                );
+              })
+              .map(item => (
+                <div
+                  key={item._id}
+                  className={`flex items-center gap-3 p-2 rounded cursor-pointer mb-1 transition-colors ${selectedItem?._id === item._id ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  onClick={() => handleItemClick(item)}
               >
                 <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                   <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
-                    {getInitials(user.firstName, user.lastName)}
+                      {getInitials(item.firstName, item.lastName)}
                   </span>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-800 dark:text-white">{user.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Arrived {user.arrivedDaysAgo} days ago</div>
-                </div>
+                    <div className="font-medium text-gray-800 dark:text-white">
+                      {item.name || `${item.firstName} ${item.lastName}`}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.email}
+                    </div>
+                  </div>
               </div>
             ))}
           </div>
@@ -305,127 +421,29 @@ export default function Onboarding() {
 
         {/* Main Panel */}
         <main className="flex-1 px-8 overflow-y-auto">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                className={`px-1 py-4 border-b-2 font-medium text-sm ${activeTab === 'overview' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                Overview
-              </button>
-              <button
-                className={`px-1 py-4 border-b-2 font-medium text-sm ${activeTab === 'form' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'}`}
-                onClick={() => setActiveTab('form')}
-              >
-                Form
-              </button>
-            </nav>
-          </div>
-          {/* Tab Content */}
-          {activeTab === 'overview' ? (
-            selectedUser ? (
-              <div className="max-w-3xl mx-auto space-y-6">
-                {/* User Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                        <span className="text-blue-600 dark:text-blue-300 text-xl font-medium">
-                          {getInitials(selectedUser.firstName, selectedUser.lastName)}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                          {selectedUser.name}
-                          <span className="text-gray-400 cursor-pointer" title="User info">?</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <button
-                        className="mb-2 bg-blue-600 text-white rounded px-4 py-1 hover:bg-blue-700 transition"
-                        onClick={() => navigate(`/employees/${selectedUser.id}`, { state: { fromOnboarding: true } })}
-                      >
-                        View Profile
-                      </button>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Contract Start Date</div>
-                      <div className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-3 py-1 rounded text-sm font-medium mt-1">
-                        {formatDate(selectedUser.contractStart)}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex-1 flex items-center">
-                      <div className="flex-1 h-1 bg-blue-200 dark:bg-blue-900 rounded-full relative">
-                        <div className="absolute left-0 top-0 h-1 bg-blue-500 dark:bg-blue-400 rounded-full" style={{ width: '33%' }} />
-                        <div className="absolute left-1/3 top-0 h-1 bg-blue-300 dark:bg-blue-600 rounded-full" style={{ width: '33%' }} />
-                      </div>
-                      <div className="flex gap-8 ml-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="text-blue-700 dark:text-blue-400 font-semibold">Onboarding Started</span>
-                        <span>Data Completed</span>
-                        <span>Onboarding Closed</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="mt-4 w-full border border-gray-300 dark:border-gray-700 rounded py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Interrupt Onboarding Procedure</button>
-                </div>
-
-                {/* Welcome Email */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-gray-800 dark:text-white">Welcome Email</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      Sent on:
-                      <span className="text-gray-700 dark:text-white font-medium">{formatDate(selectedUser.welcomeSent)}</span>
-                      <CheckCircleIcon className="h-4 w-4 text-green-500 ml-1" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Administrative Form */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-gray-800 dark:text-white">Administrative Data Form</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      Completed on:
-                      <span className="text-gray-700 dark:text-white font-medium">{formatDate(selectedUser.formCompleted)}</span>
-                      <CheckCircleIcon className="h-4 w-4 text-green-500 ml-1" />
-                    </div>
-                  </div>
-                  <a href="#" className="text-blue-600 dark:text-blue-400 underline text-sm">view the form</a>
-                </div>
-
-                {/* Tasks */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-                  <div className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
-                    Tasks
-                    <span className="bg-orange-400 text-white text-xs px-2 py-0.5 rounded-full">{selectedUser.tasks}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500 dark:text-gray-400">Select an employee to view their onboarding details</p>
-              </div>
-            )
+          {selectedItem ? (
+            <OnboardingDetails item={selectedItem} />
           ) : (
-            <div className="flex h-[calc(100vh-10rem)] w-full max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div className="flex h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
               {/* Add Field Section */}
-              <aside className="w-64 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col h-full bg-white dark:bg-gray-800">
+              <aside className="w-1/3 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col h-full bg-white dark:bg-gray-800">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Add Field</h3>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   {FIELD_TYPES.map(field => (
                     <button
                       key={field.label}
-                      className="flex items-center gap-2 border rounded px-2 py-1 text-xs bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                      className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
                       draggable
                       onDragStart={e => handleDragStart(e, field)}
                       type="button"
                     >
-                      {field.icon && <field.icon className="h-4 w-4 text-gray-400" />}
-                      {field.label}
+                      <div className="flex items-center justify-center w-6 h-6 text-gray-400">
+                        <Bars3Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex items-center justify-center w-8 h-8">
+                        {field.icon && <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />}
+                      </div>
+                      <span className="font-semibold">{field.label}</span>
                     </button>
                   ))}
                 </div>
@@ -487,7 +505,7 @@ export default function Onboarding() {
                       placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
                       value={bulkInput}
                       onChange={e => setBulkInput(e.target.value)}
-                      className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
                     />
                     <button
                       type="button"
@@ -502,7 +520,7 @@ export default function Onboarding() {
                       {recipients.map((r, idx) => (
                         <span key={idx} className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm">
                           {r.name ? `${r.name} ` : ''}{r.email}
-                          <button type="button" className="ml-2 text-red-500 hover:text-red-700" onClick={() => handleRemoveRecipient(idx)} title="Remove">
+                          <button type="button" className="ml-2 text-red-500 hover:text-red-700 " onClick={() => handleRemoveRecipient(idx)} title="Remove">
                             <TrashIcon className="h-4 w-4" />
                           </button>
                         </span>
@@ -520,6 +538,9 @@ export default function Onboarding() {
                       onDragOver={e => handleDragOverField(e, field.id)}
                       onDragEnd={handleDragEndField}
                     >
+                      <div className="flex items-center justify-center w-8 h-11 text-gray-400 cursor-move">
+                        <Bars3Icon className="h-5 w-5" />
+                      </div>
                       <div className="flex-1">
                         {editingLabelId === field.id ? (
                           <input
@@ -540,45 +561,110 @@ export default function Onboarding() {
                           </label>
                         )}
                         {field.type === 'text' && (
-                          <input type="text" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="text" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            placeholder="Enter text here..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'textarea' && (
-                          <textarea value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3" />
+                          <textarea 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            placeholder="Enter multiple lines of text..."
+                            className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3" 
+                          />
                         )}
                         {field.type === 'email' && (
-                          <input type="email" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="email" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            placeholder="Enter email address..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'number' && (
-                          <input type="number" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="number" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            placeholder="Enter a number..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'currency' && (
-                          <input type="text" placeholder="$" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="text" 
+                            placeholder="$" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'dropdown' && (
-                          <select value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3">
+                          <select 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select an option...</option>
                             <option>Option 1</option>
                             <option>Option 2</option>
                           </select>
                         )}
                         {field.type === 'date' && (
-                          <input type="date" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="date" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'datetime' && (
-                          <input type="datetime-local" value={field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" />
+                          <input 
+                            type="datetime-local" 
+                            value={field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
                         )}
                         {field.type === 'file' && (
-                          <input type="file" onChange={e => handleFieldChange(e, field.id)} className="mt-1 block w-full text-gray-700 dark:text-gray-300" />
+                          <input 
+                            type="file" 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1 block w-full text-gray-700 dark:text-gray-300" 
+                          />
                         )}
                         {field.type === 'radio' && (
-                          <div className="mt-1"><label><input type="radio" name={field.id} /> Option</label></div>
+                          <div className="mt-1">
+                            <label className="flex items-center gap-2">
+                              <input type="radio" name={field.id} />
+                              <span>Option</span>
+                            </label>
+                          </div>
                         )}
                         {field.type === 'checkbox' || field.type === 'decision' ? (
-                          <input type="checkbox" checked={!!field.value} onChange={e => handleFieldChange(e, field.id)} className="mt-1" />
+                          <input 
+                            type="checkbox" 
+                            checked={!!field.value} 
+                            onChange={e => handleFieldChange(e, field.id)} 
+                            className="mt-1" 
+                          />
                         ) : null}
                       </div>
-                      <button type="button" className="ml-2 mt-2 text-red-500 hover:text-red-700" onClick={() => handleDeleteField(field.id)} title="Delete field">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteField(field.id)}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
                         <TrashIcon className="h-5 w-5" />
+                          <span className="text-sm">Delete</span>
                       </button>
+                      </div>
                     </div>
                   ))}
                   <div className="col-span-2 flex justify-end mt-8">

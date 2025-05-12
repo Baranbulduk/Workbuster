@@ -25,6 +25,7 @@ const Employees = () => {
     lastName: '',
     email: '',
     phone: '',
+    position: '',
     address: '',
     postalCode: '',
     city: '',
@@ -154,7 +155,7 @@ const Employees = () => {
     e.preventDefault();
     setSuccessMsg('');
     setErrorMsg('');
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.address || !formData.postalCode || !formData.city || !formData.country) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.position || !formData.address || !formData.postalCode || !formData.city || !formData.country) {
       setErrorMsg('Please fill in all fields.');
       return;
     }
@@ -164,6 +165,7 @@ const Employees = () => {
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
+        position: formData.position,
         address: formData.address,
         postalCode: formData.postalCode,
         city: formData.city,
@@ -171,7 +173,7 @@ const Employees = () => {
       });
       setSuccessMsg('Employee created and credentials sent via email!');
       setShowForm(false);
-      setFormData({ firstName: '', lastName: '', email: '', phone: '', address: '', postalCode: '', city: '', country: '' });
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', position: '', address: '', postalCode: '', city: '', country: '' });
       fetchEmployees();
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Failed to create employee.');
@@ -182,7 +184,7 @@ const Employees = () => {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
-    <div className="p-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Employees</h1>
         <div className="flex items-center gap-2">
@@ -331,6 +333,17 @@ const Employees = () => {
                       required
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                    <input
+                      type="text"
+                      name="position"
+                      value={formData.position}
+                      onChange={handleFormChange}
+                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
               {/* Address Information */}
@@ -344,7 +357,7 @@ const Employees = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleFormChange}
-                      className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
                     />
                   </div>
@@ -355,7 +368,7 @@ const Employees = () => {
                       name="postalCode"
                       value={formData.postalCode}
                       onChange={handleFormChange}
-                      className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
                     />
                   </div>
@@ -366,7 +379,7 @@ const Employees = () => {
                       name="city"
                       value={formData.city}
                       onChange={handleFormChange}
-                      className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
                     />
                   </div>
@@ -377,7 +390,7 @@ const Employees = () => {
                       name="country"
                       value={formData.country}
                       onChange={handleFormChange}
-                      className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
                     />
                   </div>
@@ -425,11 +438,15 @@ const Employees = () => {
                   <td className="px-4 py-4 whitespace-nowrap flex items-center gap-3">
                     <img
                       className="h-10 w-10 rounded-full"
-                      src={employee.avatar || 'https://via.placeholder.com/40'}
-                      alt=""
+                      src={employee.avatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23CBD5E0'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E"}
+                      alt={employee.name || employee.fullName || 'Employee'}
                     />
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{employee.name || employee.fullName || '-'}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {employee.firstName && employee.lastName 
+                          ? `${employee.firstName} ${employee.lastName}`
+                          : employee.name || employee.fullName || '-'}
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{employee.position || '-'}</td>

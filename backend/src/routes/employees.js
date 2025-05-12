@@ -106,6 +106,98 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Bulk import employees
+router.post('/bulk', async (req, res) => {
+  try {
+    const { employees } = req.body;
+    
+    if (!Array.isArray(employees) || employees.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No employees data provided' 
+      });
+    }
+
+    const results = {
+      success: [],
+      failed: []
+    };
+
+    for (const emp of employees) {
+      try {
+        // Check if employee with this email already exists
+        const existingEmployee = await Employee.findOne({ email: emp.email });
+        if (existingEmployee) {
+          results.failed.push({
+            email: emp.email,
+            reason: 'Email already exists'
+          });
+          continue;
+        }
+
+        // Generate employee ID
+        const lastEmployee = await Employee.findOne().sort({ employeeId: -1 });
+        const lastId = lastEmployee ? parseInt(lastEmployee.employeeId.slice(1)) : 0;
+        const newId = `E${(lastId + 1).toString().padStart(4, '0')}`;
+
+        // Generate random password
+        const password = generatePassword(8);
+
+        // Create new employee
+        const newEmployee = new Employee({
+          employeeId: newId,
+          password,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          email: emp.email,
+          phone: emp.phone || '',
+          department: emp.department || 'IT',
+          position: emp.position || 'Employee',
+          status: emp.status || 'Active',
+          hireDate: emp.hireDate || new Date(),
+          salary: emp.salary || 0,
+          address: {
+            street: emp.address?.street || '',
+            city: emp.address?.city || '',
+            state: emp.address?.state || '',
+            zipCode: emp.address?.zipCode || '',
+            country: emp.address?.country || ''
+          }
+        });
+
+        await newEmployee.save();
+
+        // Send credentials email
+        await sendCredentialsEmail(emp.email, newId, password);
+
+        results.success.push({
+          employeeId: newId,
+          email: emp.email
+        });
+      } catch (error) {
+        console.error(`Error processing employee ${emp.email}:`, error);
+        results.failed.push({
+          email: emp.email,
+          reason: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      results,
+      message: `Successfully imported ${results.success.length} employees. ${results.failed.length} failed.`
+    });
+  } catch (error) {
+    console.error('Error in bulk import:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to import employees',
+      error: error.message
+    });
+  }
+});
+
 // Update employee
 router.put('/:id', async (req, res) => {
   try {

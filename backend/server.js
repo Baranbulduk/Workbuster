@@ -30,15 +30,9 @@ app.get('/', (req, res) => {
 // Import routes
 import candidateRoutes from './src/routes/candidateRoutes.js';
 import clientRoutes from './src/routes/clientRoutes.js';
-import missionRoutes from './src/routes/missionRoutes.js';
-import projectRoutes from './src/routes/projectRoutes.js';
+
 import teamMemberRoutes from './src/routes/teamMemberRoutes.js';
-import notificationRoutes from './src/routes/notificationRoutes.js';
-import scheduleRoutes from './src/routes/scheduleRoutes.js';
-import attendanceRoutes from './src/routes/attendanceRoutes.js';
-import reportRoutes from './src/routes/reportRoutes.js';
 import statisticsRoutes from './src/routes/statisticsRoutes.js';
-import documentRoutes from './src/routes/documentRoutes.js';
 import settingsRoutes from './src/routes/settingsRoutes.js';
 import onboardingRoutes from './src/routes/onboardingRoutes.js';
 import noteRoutes from './src/routes/noteRoutes.js';
@@ -49,15 +43,8 @@ import employeeRoutes from './src/routes/employees.js';
 // Routes
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/clients', clientRoutes);
-app.use('/api/missions', missionRoutes);
-app.use('/api/projects', projectRoutes);
 app.use('/api/team-members', teamMemberRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/schedule', scheduleRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/reports', reportRoutes);
 app.use('/api/statistics', statisticsRoutes);
-app.use('/api/documents', documentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/notes', noteRoutes);

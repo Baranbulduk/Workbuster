@@ -8,15 +8,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import Candidates from './components/candidates/Candidates';
 import CandidateDetails from './components/candidates/CandidateDetails';
 import Clients from './components/clients/Clients';
-import Projects from './components/projects/Projects';
-import Missions from './components/missions/Missions';
-import Messaging from './components/messaging/Messaging';
-import Notifications from './components/notifications/Notifications';
-import ScheduleManagement from './components/schedule/ScheduleManagement';
-import Attendance from './components/attendance/Attendance';
-import Reports from './components/reports/Reports';
 import Statistics from './components/statistics/Statistics';
-import DocumentSharing from './components/documents/DocumentSharing';
 import Settings from './components/settings/Settings';
 import Onboarding from './components/onboarding/Onboarding';
 import Login from './pages/Login';
@@ -49,17 +41,9 @@ function App() {
             <Route path="candidates/:id" element={<CandidateDetails />} />
             <Route path="employees" element={<Employees />} />
             <Route path="employees/:id" element={<EmployeeDetails />} />
-            <Route path="projects" element={<Projects />} />
             <Route path="clients" element={<Clients />} />
-            <Route path="schedule" element={<ScheduleManagement />} />
-            <Route path="messaging" element={<Messaging />} />
             <Route path="statistics" element={<Statistics />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="missions" element={<Missions />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="attendance" element={<Attendance />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="documents" element={<DocumentSharing />} />
             <Route path="onboarding" element={<Onboarding />} />
           </Route>
 

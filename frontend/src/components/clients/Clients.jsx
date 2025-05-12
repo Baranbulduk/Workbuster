@@ -156,7 +156,7 @@ export default function RegisterClients() {
   };
 
   return (
-    <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Clients</h1>
         <button
@@ -172,7 +172,7 @@ export default function RegisterClients() {
         {clients.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No clients registered yet.</p>
         ) : (
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto w-full dark:bg-gray-800 rounded-lg shadow">
             <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>

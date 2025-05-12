@@ -25,22 +25,15 @@ import {
 import { FiHome, FiUsers, FiUserCheck, FiBriefcase, FiCalendar, FiMessageSquare, FiBarChart2, FiSettings } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
+
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Candidates', href: '/candidates', icon: UserGroupIcon },
-  { name: 'Employees', href: '/employees', icon: UserGroupIcon },
-  { name: 'Projects', href: '/projects', icon: BriefcaseIcon },
-  { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon },
-  { name: 'Schedule', href: '/schedule', icon: CalendarIcon },
-  { name: 'Messaging', href: '/messaging', icon: ChatBubbleLeftRightIcon },
+  { name: 'Employees', href: '/employees', icon: UserGroupIcon }, 
+  { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon }, 
+  { name: 'Onboarding', href: '/onboarding', icon: UserPlusIcon }, 
   { name: 'Statistics', href: '/statistics', icon: ChartBarIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
-  { name: 'Missions', href: '/missions', icon: ClipboardDocumentIcon },
-  { name: 'Notifications', href: '/notifications', icon: BellIcon },
-  { name: 'Attendance', href: '/attendance', icon: ClockIcon },
-  { name: 'Reports', href: '/reports', icon: DocumentChartBarIcon },
-  { name: 'Documents', href: '/documents', icon: DocumentTextIcon },
-  { name: 'Onboarding', href: '/onboarding', icon: UserPlusIcon }
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
 ];
 
 export default function Sidebar() {

@@ -40,11 +40,6 @@ const Statistics = () => {
       placed: 0,
       inProgress: 0
     },
-    projects: {
-      total: 0,
-      active: 0,
-      completed: 0
-    },
     clients: {
       total: 0,
       active: 0,
@@ -74,10 +69,7 @@ const Statistics = () => {
       // Fetch candidates data
       const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
       const candidates = candidatesResponse.data;
-      
-      // Fetch projects data
-      const projectsResponse = await axios.get('http://localhost:5000/api/projects');
-      const projects = projectsResponse.data;
+    
       
       // Fetch clients data
       const clientsResponse = await axios.get('http://localhost:5000/api/clients');
@@ -91,11 +83,6 @@ const Statistics = () => {
         inProgress: candidates.filter(c => c.status === 'in-progress').length
       };
 
-      const projectStats = {
-        total: projects.length,
-        active: projects.filter(p => p.status === 'in-progress').length,
-        completed: projects.filter(p => p.status === 'completed').length
-      };
 
       const clientStats = {
         total: clients.length,
@@ -123,7 +110,6 @@ const Statistics = () => {
 
       setStatistics({
         candidates: candidateStats,
-        projects: projectStats,
         clients: clientStats,
         revenue: revenueData,
         performance: performanceData
@@ -170,21 +156,7 @@ const Statistics = () => {
     ]
   };
 
-  const projectData = {
-    labels: Object.keys(statistics.projects.byStatus || {}),
-    datasets: [
-      {
-        label: 'Projects by Status',
-        data: Object.values(statistics.projects.byStatus || {}),
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)'
-        ]
-      }
-    ]
-  };
+
 
   const revenueData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -216,7 +188,7 @@ const Statistics = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Statistics Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -232,20 +204,6 @@ const Statistics = () => {
             <p>Active Candidates: {statistics.candidates.active}</p>
             <p>Placed Candidates: {statistics.candidates.placed}</p>
             <p>In Progress: {statistics.candidates.inProgress}</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 
-            className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-            onClick={() => navigate('/projects')}
-          >
-            Project Overview
-          </h2>
-          <div className="space-y-2">
-            <p>Total Projects: {statistics.projects.total}</p>
-            <p>Active Projects: {statistics.projects.active}</p>
-            <p>Completed Projects: {statistics.projects.completed}</p>
           </div>
         </div>
 
@@ -285,11 +243,6 @@ const Statistics = () => {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">Candidates by Status</h2>
           <Pie data={candidateData} />
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Projects by Status</h2>
-          <Bar data={projectData} />
         </div>
       </div>
 
