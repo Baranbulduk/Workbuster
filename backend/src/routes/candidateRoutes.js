@@ -329,4 +329,93 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Import candidates from CSV
+router.post('/import', async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        message: 'Invalid input. Expected an array of candidate items.' 
+      });
+    }
+
+    const results = {
+      success: [],
+      failed: []
+    };
+
+    for (const item of items) {
+      try {
+        // Generate a unique personId for each candidate
+        const personId = `CAND-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        
+        // Generate password and hash it
+        const userPassword = generatePassword();
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(userPassword, salt);
+        
+        // Create candidate object
+        const candidateData = {
+          firstName: item.firstName || '',
+          lastName: item.lastName || '',
+          email: item.email || '',
+          phone: item.phone || '',
+          location: {
+            city: item.city || '',
+            state: item.state || '',
+            country: item.country || ''
+          },
+          skills: item.skills ? item.skills.split(',').map(skill => skill.trim()) : [],
+          experience: parseInt(item.experience) || 0,
+          currentRole: item.position || item.currentRole || '',
+          expectedSalary: parseInt(item.expectedSalary || item.salary || 0),
+          noticePeriod: parseInt(item.noticePeriod || 30),
+          availability: item.availability || '2-weeks',
+          status: item.status || 'active',
+          notes: item.notes || '',
+          password: hashedPassword,
+          personId: personId
+        };
+        
+        // Create and save the candidate
+        const candidate = new Candidate(candidateData);
+        const newCandidate = await candidate.save();
+        
+        // Try to send welcome email
+        try {
+          if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
+            await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
+          } else {
+            console.log('Email credentials not configured. Skipping welcome email.');
+          }
+        } catch (emailError) {
+          console.error('Error sending welcome email:', emailError);
+          // Don't throw the error, just log it
+        }
+        
+        results.success.push(newCandidate);
+      } catch (itemError) {
+        console.error('Error importing candidate item:', itemError);
+        results.failed.push({
+          item,
+          error: itemError.message
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Imported ${results.success.length} candidates. ${results.failed.length} failed.`,
+      results
+    });
+  } catch (error) {
+    console.error('Error importing candidates:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+});
+
 export default router; 

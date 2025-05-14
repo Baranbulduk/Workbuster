@@ -229,4 +229,97 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Import employees from CSV
+router.post('/import', async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No employee data provided' 
+      });
+    }
+
+    const results = {
+      success: [],
+      failed: []
+    };
+
+    for (const emp of items) {
+      try {
+        // Check if employee with this email already exists
+        const existingEmployee = await Employee.findOne({ email: emp.email });
+        if (existingEmployee) {
+          results.failed.push({
+            email: emp.email,
+            reason: 'Email already exists'
+          });
+          continue;
+        }
+
+        // Generate employee ID
+        const employeeId = await generateEmployeeId();
+
+        // Generate random password
+        const plainPassword = generatePassword(8);
+        const password = await bcrypt.hash(plainPassword, 10);
+
+        // Create new employee
+        const newEmployee = new Employee({
+          employeeId,
+          password,
+          firstName: emp.firstName || '',
+          lastName: emp.lastName || '',
+          email: emp.email || '',
+          phone: emp.phone || '',
+          department: emp.department || 'IT',
+          position: emp.position || 'Employee',
+          status: emp.status || 'Active',
+          hireDate: emp.hireDate || new Date(),
+          salary: emp.salary || 0,
+          address: {
+            street: emp.street || '',
+            city: emp.city || '',
+            state: emp.state || '',
+            zipCode: emp.zipCode || '',
+            country: emp.country || ''
+          },
+          skills: emp.skills ? emp.skills.split(',').map(skill => skill.trim()) : []
+        });
+
+        const savedEmployee = await newEmployee.save();
+
+        // Send credentials email
+        try {
+          await sendCredentialsEmail(emp.email, employeeId, plainPassword);
+        } catch (emailError) {
+          console.error(`Error sending credentials email to ${emp.email}:`, emailError);
+          // Don't fail if email sending fails
+        }
+
+        results.success.push(savedEmployee);
+      } catch (error) {
+        console.error(`Error processing employee ${emp.email || 'unknown'}:`, error);
+        results.failed.push({
+          item: emp,
+          error: error.message
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Imported ${results.success.length} employees. ${results.failed.length} failed.`,
+      results
+    });
+  } catch (error) {
+    console.error('Error importing employees:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+});
+
 export default router; 

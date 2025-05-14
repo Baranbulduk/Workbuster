@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { PlusIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function RegisterClients() {
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clients, setClients] = useState([
@@ -155,6 +157,10 @@ export default function RegisterClients() {
     }
   };
 
+  const handleClientClick = (clientId) => {
+    navigate(`/clients/${clientId}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -198,7 +204,11 @@ export default function RegisterClients() {
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {clients.map((client) => (
-                  <tr key={client._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr 
+                    key={client._id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => handleClientClick(client._id)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -233,7 +243,7 @@ export default function RegisterClients() {
                       <div className="text-sm text-gray-900 dark:text-white">{client.address}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => handleUpdate(client)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"

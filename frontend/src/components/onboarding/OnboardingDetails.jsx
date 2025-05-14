@@ -17,8 +17,12 @@ function getInitials(firstName, lastName) {
   return `${firstName[0]}${lastName[0]}`.toUpperCase();
 }
 
-export default function OnboardingDetails({ item }) {
+export default function OnboardingDetails({ item, type }) {
   const navigate = useNavigate();
+
+  const handleViewProfile = () => {
+    navigate(`/${type}/${item._id}`, { state: { fromOnboarding: true } });
+  };
 
   return (
     <div className="space-y-6">
@@ -42,7 +46,7 @@ export default function OnboardingDetails({ item }) {
           <div className="flex flex-col items-end">
             <button
               className="mb-2 bg-blue-600 text-white rounded px-4 py-1 hover:bg-blue-700 transition"
-              onClick={() => navigate(`/${item.type || 'employees'}/${item._id}`, { state: { fromOnboarding: true } })}
+              onClick={handleViewProfile}
             >
               View Profile
             </button>

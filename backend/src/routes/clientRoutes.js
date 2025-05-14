@@ -151,4 +151,89 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Import clients from CSV
+router.post('/import', async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No client data provided' 
+      });
+    }
+
+    const results = {
+      success: [],
+      failed: []
+    };
+
+    for (const item of items) {
+      try {
+        // Check if client with this email already exists
+        const existingClient = await Client.findOne({ email: item.email });
+        if (existingClient) {
+          results.failed.push({
+            email: item.email,
+            reason: 'Email already exists'
+          });
+          continue;
+        }
+
+        // Create client object
+        const clientData = {
+          companyName: item.companyName || item.company || '',
+          contactPerson: item.contactPerson || item.contact || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
+          email: item.email || '',
+          phone: item.phone || '',
+          address: {
+            street: item.street || '',
+            city: item.city || '',
+            state: item.state || '',
+            zipCode: item.zipCode || item.postalCode || '',
+            country: item.country || ''
+          },
+          industry: item.industry || 'Other',
+          companySize: item.companySize || item.size || '1-10',
+          website: item.website || '',
+          description: item.description || item.notes || '',
+          status: item.status || 'active'
+        };
+        
+        // Create and save the client
+        const client = new Client(clientData);
+        const newClient = await client.save();
+        
+        // Try to send registration email
+        try {
+          await sendRegistrationEmail(newClient);
+        } catch (emailError) {
+          console.error('Error sending registration email:', emailError);
+          // Don't throw the error, just log it
+        }
+        
+        results.success.push(newClient);
+      } catch (itemError) {
+        console.error('Error importing client item:', itemError);
+        results.failed.push({
+          item,
+          error: itemError.message
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Imported ${results.success.length} clients. ${results.failed.length} failed.`,
+      results
+    });
+  } catch (error) {
+    console.error('Error importing clients:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+});
+
 export default router; 

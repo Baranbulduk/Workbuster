@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Employee from '../../models/Employee.js';
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
+import { transporter } from '../config/email.js';
 
 const router = express.Router();
 
@@ -265,6 +265,67 @@ router.put('/:id/status', async (req, res) => {
     res.json(employee);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Send form data via email
+router.post('/send-form', async (req, res) => {
+  try {
+    const { formTitle, fields, recipients } = req.body;
+    // Create email content
+    const emailContent = `
+      <h1>${formTitle}</h1>
+      <div style="margin-top: 20px;">
+        ${fields.map(field => `
+          <div style="margin-bottom: 15px;">
+            <strong>${field.label}:</strong>
+            <div style="margin-top: 5px;">
+              ${field.type === 'file' && field.value ? 
+                `<a href="${field.value}" target="_blank">View File</a>` : 
+                field.type === 'checkbox' ? 
+                  (field.value ? 'Yes' : 'No') :
+                field.value || 'Not provided'}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    // Send email to each recipient and collect results
+    const results = [];
+    for (const recipient of recipients) {
+      const mailOptions = {
+        from: 'rexettit@gmail.com',
+        to: recipient.email,
+        subject: formTitle,
+        html: emailContent
+      };
+      try {
+        console.log(`Sending email to: ${recipient.email}`);
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent to: ${recipient.email}`);
+        results.push({ email: recipient.email, success: true });
+      } catch (err) {
+        console.error(`Error sending email to ${recipient.email}:`, err.message);
+        results.push({ email: recipient.email, success: false, error: err.message });
+      }
+    }
+
+    const failed = results.filter(r => !r.success);
+    if (failed.length > 0) {
+      console.log('Some emails failed to send:', failed);
+      return res.status(500).json({
+        success: false,
+        message: `Failed to send form to ${failed.length} recipient(s).`,
+        results
+      });
+    }
+
+    console.log('All emails sent successfully.');
+    res.json({ success: true, message: 'Form data sent successfully', results });
+  } catch (error) {
+    console.error('Error sending form data:', error);
+    res.status(500).json({ success: false, message: 'Failed to send form data', error: error.message });
   }
 });
 

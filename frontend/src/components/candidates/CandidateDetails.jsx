@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import {
@@ -23,9 +23,18 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
+// Helper function to get initials from name
+const getInitials = (firstName, lastName) => {
+  if (!firstName && !lastName) return '?';
+  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+  return `${firstInitial}${lastInitial}`;
+};
+
 export default function CandidateDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDarkMode } = useTheme();
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,6 +65,14 @@ export default function CandidateDetails() {
     fetchCandidateData();
   }, [id]);
 
+  const handleBack = () => {
+    if (location.state?.fromOnboarding) {
+      navigate('/onboarding');
+    } else {
+      navigate('/candidates');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -69,10 +86,10 @@ export default function CandidateDetails() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-500 mb-4">{error || 'Candidate not found'}</p>
         <button
-          onClick={() => navigate('/candidates')}
+          onClick={handleBack}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Back to Candidates
+          Back to {location.state?.fromOnboarding ? 'Onboarding' : 'Candidates'}
         </button>
       </div>
     );
@@ -248,74 +265,79 @@ export default function CandidateDetails() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
         <button
-          onClick={() => navigate('/candidates')}
-          className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+          onClick={handleBack}
+          className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Back to Candidates
+          Back to {location.state?.fromOnboarding ? 'Onboarding' : 'Candidates'}
         </button>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <span className="text-2xl font-semibold text-blue-600 dark:text-blue-300">
+                {getInitials(candidate.firstName, candidate.lastName)}
+              </span>
+            </div>
+            <div className="ml-6">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {candidate.firstName} {candidate.lastName}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">{candidate.position}</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate(`/candidates/${id}/edit`)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                <PencilSquareIcon className="h-5 w-5 mr-2" />
-                Edit Profile
-              </button>
+              <p className="text-lg text-gray-600 dark:text-gray-400">{candidate.position}</p>
             </div>
           </div>
-        </div>
-
-        <div className="border-t border-gray-200 dark:border-gray-700">
-          <nav className="flex">
+          <div className="flex items-center space-x-4">
             <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'overview'
-                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
+              onClick={() => navigate(`/candidates/${id}/edit`)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              Overview
+              <PencilSquareIcon className="h-5 w-5 mr-2" />
+              Edit Profile
             </button>
-            <button
-              onClick={() => setActiveTab('notes')}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'notes'
-                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              Notes
-            </button>
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'logs'
-                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              Activity Logs
-            </button>
-          </nav>
+          </div>
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+        <nav className="flex">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'overview'
+                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'notes'
+                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Notes
+          </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'logs'
+                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Activity Logs
+          </button>
+        </nav>
+      </div>
+
+      {/* Main Content */}
       {renderTabContent()}
     </div>
   );

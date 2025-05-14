@@ -1,83 +1,362 @@
-import React, { useState, useEffect } from 'react';
-import { UserGroupIcon, MagnifyingGlassIcon, ChevronDownIcon, CheckCircleIcon, ArrowUpTrayIcon, DocumentTextIcon, Bars3BottomLeftIcon, EnvelopeIcon, HashtagIcon, CurrencyDollarIcon, PencilSquareIcon, ListBulletIcon, HeartIcon, PhotoIcon, PhoneIcon, CalendarIcon, CalculatorIcon, ClockIcon, LinkIcon, ArrowUpOnSquareIcon, UserIcon, AdjustmentsHorizontalIcon, MagnifyingGlassCircleIcon, GlobeAltIcon, Squares2X2Icon, SquaresPlusIcon, TrashIcon, PencilIcon, ArrowDownTrayIcon, Bars3Icon } from '@heroicons/react/24/outline';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import OnboardingDetails from './OnboardingDetails';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  UserGroupIcon,
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  CheckCircleIcon,
+  ArrowUpTrayIcon,
+  DocumentTextIcon,
+  Bars3BottomLeftIcon,
+  EnvelopeIcon,
+  HashtagIcon,
+  CurrencyDollarIcon,
+  PencilSquareIcon,
+  ListBulletIcon,
+  HeartIcon,
+  PhotoIcon,
+  PhoneIcon,
+  CalendarIcon,
+  CalculatorIcon,
+  ClockIcon,
+  LinkIcon,
+  ArrowUpOnSquareIcon,
+  UserIcon,
+  AdjustmentsHorizontalIcon,
+  MagnifyingGlassCircleIcon,
+  GlobeAltIcon,
+  Squares2X2Icon,
+  SquaresPlusIcon,
+  TrashIcon,
+  PencilIcon,
+  ArrowDownTrayIcon,
+  Bars3Icon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import OnboardingDetails from "./OnboardingDetails";
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function getInitials(firstName, lastName) {
-  return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
 }
 
 const FIELD_TYPES = [
-  { type: 'text', label: 'Single Line', icon: DocumentTextIcon },
-  { type: 'textarea', label: 'Multi Line', icon: Bars3BottomLeftIcon },
-  { type: 'email', label: 'Email ID', icon: EnvelopeIcon },
-  { type: 'number', label: 'Number', icon: HashtagIcon },
-  { type: 'currency', label: 'Currency', icon: CurrencyDollarIcon },
-  { type: 'notes', label: 'Add Notes', icon: PencilSquareIcon },
-  { type: 'dropdown', label: 'Dropdown', icon: ListBulletIcon },
-  { type: 'blood', label: 'Blood Group', icon: HeartIcon },
-  { type: 'image', label: 'Image', icon: PhotoIcon },
-  { type: 'phone', label: 'Phone', icon: PhoneIcon },
-  { type: 'date', label: 'Date', icon: CalendarIcon },
-  { type: 'formula', label: 'Formula', icon: CalculatorIcon },
-  { type: 'datetime', label: 'Date - Time', icon: ClockIcon },
-  { type: 'url', label: 'Url', icon: LinkIcon },
-  { type: 'file', label: 'File upload', icon: ArrowUpOnSquareIcon },
-  { type: 'gender', label: 'Gender', icon: UserIcon },
-  { type: 'decimal', label: 'Decimal', icon: AdjustmentsHorizontalIcon },
-  { type: 'lookup', label: 'Lookup', icon: MagnifyingGlassCircleIcon },
-  { type: 'radio', label: 'Radio', icon: Squares2X2Icon },
-  { type: 'country', label: 'Country', icon: GlobeAltIcon },
-  { type: 'decision', label: 'Decision box', icon: CheckCircleIcon },
-  { type: 'multiselect', label: 'Multi-select', icon: SquaresPlusIcon },
+  { type: "text", label: "Single Line", icon: DocumentTextIcon },
+  { type: "textarea", label: "Multi Line", icon: Bars3BottomLeftIcon },
+  { type: "email", label: "Email ID", icon: EnvelopeIcon },
+  { type: "number", label: "Number", icon: HashtagIcon },
+  { type: "currency", label: "Currency", icon: CurrencyDollarIcon },
+  { type: "notes", label: "Add Notes", icon: PencilSquareIcon },
+  { type: "dropdown", label: "Dropdown", icon: ListBulletIcon },
+  { type: "blood", label: "Blood Group", icon: HeartIcon },
+  { type: "image", label: "Image", icon: PhotoIcon },
+  { type: "phone", label: "Phone", icon: PhoneIcon },
+  { type: "date", label: "Date", icon: CalendarIcon },
+  { type: "formula", label: "Formula", icon: CalculatorIcon },
+  { type: "datetime", label: "Date - Time", icon: ClockIcon },
+  { type: "url", label: "Url", icon: LinkIcon },
+  { type: "file", label: "File upload", icon: ArrowUpOnSquareIcon },
+  { type: "gender", label: "Gender", icon: UserIcon },
+  { type: "decimal", label: "Decimal", icon: AdjustmentsHorizontalIcon },
+  { type: "lookup", label: "Lookup", icon: MagnifyingGlassCircleIcon },
+  { type: "radio", label: "Radio", icon: Squares2X2Icon },
+  { type: "country", label: "Country", icon: GlobeAltIcon },
+  { type: "decision", label: "Decision box", icon: CheckCircleIcon },
+  { type: "multiselect", label: "Multi-select", icon: SquaresPlusIcon },
 ];
 
 export default function Onboarding() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [activeTab, setActiveTab] = useState('candidates');
+  const [activeTab, setActiveTab] = useState("candidates");
   const [candidates, setCandidates] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    candidateName: '',
+    candidateName: "",
     candidatePhoto: null,
-    personalMail: '',
-    officialMail: '',
+    personalMail: "",
+    officialMail: "",
     offerLetter: null,
-    contactNo: '',
-    dateOfJoining: '',
-    offerAccepted: false
+    contactNo: "",
+    dateOfJoining: "",
+    offerAccepted: false,
   });
   const [dynamicFields, setDynamicFields] = useState([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [formTitle, setFormTitle] = useState('Offer Letter Form Details');
+  const [formTitle, setFormTitle] = useState("Offer Letter Form Details");
   const [editingTitle, setEditingTitle] = useState(false);
   const [fields, setFields] = useState([
-    { id: 'candidateName', type: 'text', label: 'Candidate Name', value: '', required: true },
-    { id: 'candidatePhoto', type: 'file', label: 'Candidate Photograph', value: null },
-    { id: 'personalMail', type: 'email', label: 'Personal Mail ID', value: '', required: true },
-    { id: 'officialMail', type: 'email', label: 'Official Mail ID', value: '', required: true },
-    { id: 'offerLetter', type: 'file', label: 'Offer Letter', value: null },
-    { id: 'contactNo', type: 'text', label: 'Contact no', value: '', required: true },
-    { id: 'dateOfJoining', type: 'date', label: 'Date of Joining', value: '', required: true },
-    { id: 'offerAccepted', type: 'checkbox', label: 'Offer accepted', value: false },
+    {
+      id: "candidateName",
+      type: "text",
+      label: "Candidate Name",
+      value: "",
+      required: true,
+    },
+    {
+      id: "candidatePhoto",
+      type: "file",
+      label: "Candidate Photograph",
+      value: null,
+    },
+    {
+      id: "personalMail",
+      type: "email",
+      label: "Personal Mail ID",
+      value: "",
+      required: true,
+    },
+    {
+      id: "officialMail",
+      type: "email",
+      label: "Official Mail ID",
+      value: "",
+      required: true,
+    },
+    { id: "offerLetter", type: "file", label: "Offer Letter", value: null },
+    {
+      id: "contactNo",
+      type: "text",
+      label: "Contact no",
+      value: "",
+      required: true,
+    },
+    {
+      id: "dateOfJoining",
+      type: "date",
+      label: "Date of Joining",
+      value: "",
+      required: true,
+    },
+    {
+      id: "offerAccepted",
+      type: "checkbox",
+      label: "Offer accepted",
+      value: false,
+    },
   ]);
   const [editingLabelId, setEditingLabelId] = useState(null);
-  const [labelDraft, setLabelDraft] = useState('');
+  const [labelDraft, setLabelDraft] = useState("");
   const [draggedFieldId, setDraggedFieldId] = useState(null);
   const [recipients, setRecipients] = useState([]);
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [bulkInput, setBulkInput] = useState('');
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const [fieldOptions, setFieldOptions] = useState({});
+  const [editingOptions, setEditingOptions] = useState(null);
+  const [optionDraft, setOptionDraft] = useState("");
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const genders = ["Male", "Female", "Other", "Prefer not to say"];
+  const countries = [
+    "Afghanistan",
+    "Albania",
+    "Algeria",
+    "Andorra",
+    "Angola",
+    "Antigua and Barbuda",
+    "Argentina",
+    "Armenia",
+    "Australia",
+    "Austria",
+    "Azerbaijan",
+    "Bahamas",
+    "Bahrain",
+    "Bangladesh",
+    "Barbados",
+    "Belarus",
+    "Belgium",
+    "Belize",
+    "Benin",
+    "Bhutan",
+    "Bolivia",
+    "Bosnia and Herzegovina",
+    "Botswana",
+    "Brazil",
+    "Brunei",
+    "Bulgaria",
+    "Burkina Faso",
+    "Burundi",
+    "Cabo Verde",
+    "Cambodia",
+    "Cameroon",
+    "Canada",
+    "Central African Republic",
+    "Chad",
+    "Chile",
+    "China",
+    "Colombia",
+    "Comoros",
+    "Congo",
+    "Costa Rica",
+    "Croatia",
+    "Cuba",
+    "Cyprus",
+    "Czech Republic",
+    "Denmark",
+    "Djibouti",
+    "Dominica",
+    "Dominican Republic",
+    "Ecuador",
+    "Egypt",
+    "El Salvador",
+    "Equatorial Guinea",
+    "Eritrea",
+    "Estonia",
+    "Eswatini",
+    "Ethiopia",
+    "Fiji",
+    "Finland",
+    "France",
+    "Gabon",
+    "Gambia",
+    "Georgia",
+    "Germany",
+    "Ghana",
+    "Greece",
+    "Grenada",
+    "Guatemala",
+    "Guinea",
+    "Guinea-Bissau",
+    "Guyana",
+    "Haiti",
+    "Honduras",
+    "Hungary",
+    "Iceland",
+    "India",
+    "Indonesia",
+    "Iran",
+    "Iraq",
+    "Ireland",
+    "Israel",
+    "Italy",
+    "Jamaica",
+    "Japan",
+    "Jordan",
+    "Kazakhstan",
+    "Kenya",
+    "Kiribati",
+    "Kuwait",
+    "Kyrgyzstan",
+    "Laos",
+    "Latvia",
+    "Lebanon",
+    "Lesotho",
+    "Liberia",
+    "Libya",
+    "Liechtenstein",
+    "Lithuania",
+    "Luxembourg",
+    "Madagascar",
+    "Malawi",
+    "Malaysia",
+    "Maldives",
+    "Mali",
+    "Malta",
+    "Marshall Islands",
+    "Mauritania",
+    "Mauritius",
+    "Mexico",
+    "Micronesia",
+    "Moldova",
+    "Monaco",
+    "Mongolia",
+    "Montenegro",
+    "Morocco",
+    "Mozambique",
+    "Myanmar",
+    "Namibia",
+    "Nauru",
+    "Nepal",
+    "Netherlands",
+    "New Zealand",
+    "Nicaragua",
+    "Niger",
+    "Nigeria",
+    "North Korea",
+    "North Macedonia",
+    "Norway",
+    "Oman",
+    "Pakistan",
+    "Palau",
+    "Palestine",
+    "Panama",
+    "Papua New Guinea",
+    "Paraguay",
+    "Peru",
+    "Philippines",
+    "Poland",
+    "Portugal",
+    "Qatar",
+    "Romania",
+    "Russia",
+    "Rwanda",
+    "Saint Kitts and Nevis",
+    "Saint Lucia",
+    "Saint Vincent and the Grenadines",
+    "Samoa",
+    "San Marino",
+    "Sao Tome and Principe",
+    "Saudi Arabia",
+    "Senegal",
+    "Serbia",
+    "Seychelles",
+    "Sierra Leone",
+    "Singapore",
+    "Slovakia",
+    "Slovenia",
+    "Solomon Islands",
+    "Somalia",
+    "South Africa",
+    "South Korea",
+    "South Sudan",
+    "Spain",
+    "Sri Lanka",
+    "Sudan",
+    "Suriname",
+    "Sweden",
+    "Switzerland",
+    "Syria",
+    "Taiwan",
+    "Tajikistan",
+    "Tanzania",
+    "Thailand",
+    "Timor-Leste",
+    "Togo",
+    "Tonga",
+    "Trinidad and Tobago",
+    "Tunisia",
+    "Turkey",
+    "Turkmenistan",
+    "Tuvalu",
+    "Uganda",
+    "Ukraine",
+    "United Arab Emirates",
+    "United Kingdom",
+    "United States",
+    "Uruguay",
+    "Uzbekistan",
+    "Vanuatu",
+    "Vatican City",
+    "Venezuela",
+    "Vietnam",
+    "Yemen",
+    "Zambia",
+    "Zimbabwe",
+  ];
+  const formRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -86,16 +365,22 @@ export default function Onboarding() {
   const fetchData = async () => {
     try {
       switch (activeTab) {
-        case 'candidates':
-          const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
+        case "candidates":
+          const candidatesResponse = await axios.get(
+            "http://localhost:5000/api/candidates"
+          );
           setCandidates(candidatesResponse.data);
           break;
-        case 'employees':
-          const employeesResponse = await axios.get('http://localhost:5000/api/employees');
+        case "employees":
+          const employeesResponse = await axios.get(
+            "http://localhost:5000/api/employees"
+          );
           setEmployees(employeesResponse.data);
           break;
-        case 'clients':
-          const clientsResponse = await axios.get('http://localhost:5000/api/clients');
+        case "clients":
+          const clientsResponse = await axios.get(
+            "http://localhost:5000/api/clients"
+          );
           setClients(clientsResponse.data);
           break;
       }
@@ -111,50 +396,68 @@ export default function Onboarding() {
       reader.onload = async (e) => {
         try {
           const text = e.target.result;
-          const rows = text.split('\n').filter(row => row.trim() !== '');
-          const headers = rows[0].split(',').map(header => header.trim());
+          const rows = text.split("\n").filter((row) => row.trim() !== "");
+          const headers = rows[0].split(",").map((header) => header.trim());
           
-          const newItems = rows.slice(1).map(row => {
-            const values = row.split(',').map(value => value.trim());
+          const newItems = rows.slice(1).map((row) => {
+            const values = row.split(",").map((value) => value.trim());
             const itemData = {};
             
             headers.forEach((header, index) => {
-              itemData[header.toLowerCase().replace(/\s+/g, '')] = values[index] || '';
+              itemData[header.toLowerCase().replace(/\s+/g, "")] =
+                values[index] || "";
             });
 
             return {
-              firstName: itemData.firstname || itemData.first_name || '',
-              lastName: itemData.lastname || itemData.last_name || '',
-              email: itemData.email || '',
-              phone: itemData.phone || '',
-              position: itemData.position || '',
-              department: itemData.department || '',
-              status: itemData.status || 'Active',
-              hireDate: itemData.hiredate || itemData.hire_date || new Date().toISOString().split('T')[0]
+              firstName: itemData.firstname || itemData.first_name || "",
+              lastName: itemData.lastname || itemData.last_name || "",
+              email: itemData.email || "",
+              phone: itemData.phone || "",
+              position: itemData.position || "",
+              department: itemData.department || "",
+              status: itemData.status || "Active",
+              hireDate:
+                itemData.hiredate ||
+                itemData.hire_date ||
+                new Date().toISOString().split("T")[0],
             };
           });
 
-          const response = await axios.post(`http://localhost:5000/api/${activeTab}/import`, { items: newItems });
+          const response = await axios.post(
+            `http://localhost:5000/api/${activeTab}/import`,
+            { items: newItems }
+          );
           
           if (response.data.success) {
             // Update only the relevant state based on activeTab
             switch (activeTab) {
-              case 'candidates':
-                setCandidates(prev => [...prev, ...response.data.results.success]);
+              case "candidates":
+                setCandidates((prev) => [
+                  ...prev,
+                  ...response.data.results.success,
+                ]);
                 break;
-              case 'employees':
-                setEmployees(prev => [...prev, ...response.data.results.success]);
+              case "employees":
+                setEmployees((prev) => [
+                  ...prev,
+                  ...response.data.results.success,
+                ]);
                 break;
-              case 'clients':
-                setClients(prev => [...prev, ...response.data.results.success]);
+              case "clients":
+                setClients((prev) => [
+                  ...prev,
+                  ...response.data.results.success,
+                ]);
                 break;
             }
-            alert(`Successfully imported ${response.data.results.success.length} ${activeTab}. ${response.data.results.failed.length} failed.`);
+            alert(
+              `Successfully imported ${response.data.results.success.length} ${activeTab}. ${response.data.results.failed.length} failed.`
+            );
           } else {
-            throw new Error(response.data.message || 'Failed to import items');
+            throw new Error(response.data.message || "Failed to import items");
           }
         } catch (error) {
-          console.error('Error importing items:', error);
+          console.error("Error importing items:", error);
           alert(`Error importing items: ${error.message}`);
         }
       };
@@ -164,11 +467,11 @@ export default function Onboarding() {
 
   const getCurrentItems = () => {
     switch (activeTab) {
-      case 'candidates':
+      case "candidates":
         return candidates;
-      case 'employees':
+      case "employees":
         return employees;
-      case 'clients':
+      case "clients":
         return clients;
       default:
         return [];
@@ -185,14 +488,22 @@ export default function Onboarding() {
 
   // Drag and drop handlers
   const handleDragStart = (e, field) => {
-    e.dataTransfer.setData('fieldType', JSON.stringify(field));
+    e.dataTransfer.setData("fieldType", JSON.stringify(field));
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDraggingOver(false);
-    const field = JSON.parse(e.dataTransfer.getData('fieldType'));
-    setFields(prev => [...prev, { ...field, id: `${field.type}-${Date.now()}`, label: field.label, value: field.type === 'checkbox' ? false : '' }]);
+    const field = JSON.parse(e.dataTransfer.getData("fieldType"));
+    setFields((prev) => [
+      ...prev,
+      {
+        ...field,
+        id: `${field.type}-${Date.now()}`,
+        label: field.label,
+        value: field.type === "checkbox" ? false : "",
+      },
+    ]);
   };
 
   const handleDragOver = (e) => {
@@ -212,9 +523,9 @@ export default function Onboarding() {
   const handleDragOverField = (e, id) => {
     e.preventDefault();
     if (draggedFieldId === id) return;
-    setFields(prev => {
-      const draggedIdx = prev.findIndex(f => f.id === draggedFieldId);
-      const overIdx = prev.findIndex(f => f.id === id);
+    setFields((prev) => {
+      const draggedIdx = prev.findIndex((f) => f.id === draggedFieldId);
+      const overIdx = prev.findIndex((f) => f.id === id);
       if (draggedIdx === -1 || overIdx === -1) return prev;
       const newFields = [...prev];
       const [dragged] = newFields.splice(draggedIdx, 1);
@@ -238,19 +549,21 @@ export default function Onboarding() {
   };
 
   const handleLabelBlur = (id) => {
-    setFields(prev => prev.map(f => f.id === id ? { ...f, label: labelDraft } : f));
+    setFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, label: labelDraft } : f))
+    );
     setEditingLabelId(null);
   };
 
   const handleLabelKeyDown = (e, id) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleLabelBlur(id);
     }
   };
 
   // Delete field
   const handleDeleteField = (id) => {
-    setFields(prev => prev.filter(f => f.id !== id));
+    setFields((prev) => prev.filter((f) => f.id !== id));
   };
 
   // Edit form title
@@ -267,72 +580,229 @@ export default function Onboarding() {
   };
 
   const handleTitleKeyDown = (e) => {
-    if (e.key === 'Enter') setEditingTitle(false);
+    if (e.key === "Enter") setEditingTitle(false);
   };
 
   // Field value change
   const handleFieldChange = (e, id) => {
     const { type, value, checked, files } = e.target;
-    setFields(prev => prev.map(f =>
+    setFields((prev) =>
+      prev.map((f) =>
       f.id === id
-        ? { ...f, value: type === 'checkbox' ? checked : type === 'file' ? files[0] : value }
-        : f
-    ));
+          ? {
+              ...f,
+              value:
+                type === "checkbox"
+                  ? checked
+                  : type === "file"
+                  ? files[0]
+                  : type === "multiselect"
+                  ? (f.value || []).includes(value)
+                    ? (f.value || []).filter((v) => v !== value)
+                    : [...(f.value || []), value]
+                  : value,
+            }
+          : f
+      )
+    );
   };
 
   const handleAddRecipient = () => {
     if (!recipientEmail || !emailRegex.test(recipientEmail)) return;
-    setRecipients(prev => [...prev, { name: recipientName, email: recipientEmail }]);
-    setRecipientName('');
-    setRecipientEmail('');
+    setRecipients((prev) => [
+      ...prev,
+      { name: recipientName, email: recipientEmail },
+    ]);
+    setRecipientName("");
+    setRecipientEmail("");
   };
   const handleBulkAdd = () => {
-    const lines = bulkInput.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-    const newRecipients = lines.map(line => {
-      const [name, email] = line.includes('@') ? [null, line] : [line, null];
-      return emailRegex.test(email || name) ? { name: name || '', email: email || name } : null;
-    }).filter(Boolean);
-    setRecipients(prev => [...prev, ...newRecipients]);
-    setBulkInput('');
+    const lines = bulkInput
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const newRecipients = lines
+      .map((line) => {
+        const [name, email] = line.includes("@") ? [null, line] : [line, null];
+        return emailRegex.test(email || name)
+          ? { name: name || "", email: email || name }
+          : null;
+      })
+      .filter(Boolean);
+    setRecipients((prev) => [...prev, ...newRecipients]);
+    setBulkInput("");
   };
-  const handleRemoveRecipient = idx => {
-    setRecipients(prev => prev.filter((_, i) => i !== idx));
+  const handleRemoveRecipient = (idx) => {
+    setRecipients((prev) => prev.filter((_, i) => i !== idx));
   };
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Prepare payload
-    const payload = {
-      formTitle,
-      fields,
-      recipients
-    };
-    console.log('Submitting form:', payload);
-    alert('Form submitted! (see console for payload)');
+    
+    // Validate recipients
+    if (recipients.length === 0) {
+      alert('Please add at least one recipient to send the form to.');
+      return;
+    }
+
+    try {
+      // Prepare payload
+      const payload = {
+        formTitle,
+        fields,
+        recipients
+      };
+
+      console.log('Submitting onboarding form. Payload:', payload);
+
+      // Send to backend
+      const response = await axios.post('http://localhost:5000/api/onboarding/send-form', payload);
+      
+      console.log('Backend response:', response.data);
+
+      if (response.data.success) {
+        // Reset form state
+        setFormTitle("Offer Letter Form Details");
+        setFields([
+          {
+            id: "candidateName",
+            type: "text",
+            label: "Candidate Name",
+            value: "",
+            required: true,
+          },
+          {
+            id: "candidatePhoto",
+            type: "file",
+            label: "Candidate Photograph",
+            value: null,
+          },
+          {
+            id: "personalMail",
+            type: "email",
+            label: "Personal Mail ID",
+            value: "",
+            required: true,
+          },
+          {
+            id: "officialMail",
+            type: "email",
+            label: "Official Mail ID",
+            value: "",
+            required: true,
+          },
+          { 
+            id: "offerLetter", 
+            type: "file", 
+            label: "Offer Letter", 
+            value: null 
+          },
+          {
+            id: "contactNo",
+            type: "text",
+            label: "Contact no",
+            value: "",
+            required: true,
+          },
+          {
+            id: "dateOfJoining",
+            type: "date",
+            label: "Date of Joining",
+            value: "",
+            required: true,
+          },
+          {
+            id: "offerAccepted",
+            type: "checkbox",
+            label: "Offer accepted",
+            value: false,
+          },
+        ]);
+        setRecipients([]);
+        setFieldOptions({});
+        
+        alert('Form submitted successfully! The data has been sent to the specified recipients.');
+      } else {
+        console.error('Backend error:', response.data);
+        throw new Error(response.data.message || 'Failed to submit form');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert(`Error submitting form: ${error.message}`);
+    }
   };
 
   const handleExportCSV = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/onboarding/export/csv', {
-        responseType: 'blob'
-      });
+      const response = await axios.get(
+        "http://localhost:5000/api/onboarding/export/csv",
+        {
+          responseType: "blob",
+        }
+      );
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `onboarding_candidates_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `onboarding_candidates_${new Date().toISOString().split("T")[0]}.csv`
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error) {
-      console.error('Error exporting candidates:', error);
-      alert('Failed to export candidates');
+      console.error("Error exporting candidates:", error);
+      alert("Failed to export candidates");
     }
+  };
+
+  const handleViewProfile = (item) => {
+    switch (activeTab) {
+      case "employees":
+        navigate(`/employees/${item._id}`, { state: { fromOnboarding: true } });
+        break;
+      case "clients":
+        navigate(`/clients/${item._id}`, { state: { fromOnboarding: true } });
+        break;
+      case "candidates":
+        navigate(`/candidates/${item._id}`, {
+          state: { fromOnboarding: true },
+        });
+        break;
+    }
+  };
+
+  const handleAddOption = (fieldId) => {
+    if (!optionDraft.trim()) return;
+    setFieldOptions((prev) => ({
+      ...prev,
+      [fieldId]: [...(prev[fieldId] || []), optionDraft.trim()],
+    }));
+    setOptionDraft("");
+  };
+
+  const handleRemoveOption = (fieldId, optionIndex) => {
+    setFieldOptions((prev) => ({
+      ...prev,
+      [fieldId]: prev[fieldId].filter((_, idx) => idx !== optionIndex),
+    }));
+  };
+
+  const handleEditOptions = (fieldId) => {
+    setEditingOptions(fieldId);
+    setOptionDraft("");
+  };
+
+  const handleSaveOptions = (fieldId) => {
+    setEditingOptions(null);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Onboarding</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Onboarding
+        </h1>
         <div className="flex gap-2">
           <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
             <ArrowUpTrayIcon className="h-5 w-5" />
@@ -352,20 +822,32 @@ export default function Onboarding() {
           {/* Navigation Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
-              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'candidates' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('candidates')}
+              className={`flex-1 px-4 py-2 text-sm font-medium ${
+                activeTab === "candidates"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => setActiveTab("candidates")}
             >
               Candidates
             </button>
             <button
-              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'employees' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('employees')}
+              className={`flex-1 px-4 py-2 text-sm font-medium ${
+                activeTab === "employees"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => setActiveTab("employees")}
             >
               Employees
             </button>
             <button
-              className={`flex-1 px-4 py-2 text-sm font-medium ${activeTab === 'clients' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('clients')}
+              className={`flex-1 px-4 py-2 text-sm font-medium ${
+                activeTab === "clients"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => setActiveTab("clients")}
             >
               Clients
             </button>
@@ -377,7 +859,7 @@ export default function Onboarding() {
                 type="text"
                 placeholder="Search"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
@@ -386,7 +868,7 @@ export default function Onboarding() {
 
           <div className="flex-1 overflow-y-auto px-2 pb-4">
             {getCurrentItems()
-              .filter(item => {
+              .filter((item) => {
                 const searchTerm = search.toLowerCase();
                 return (
                   item.name?.toLowerCase().includes(searchTerm) ||
@@ -395,20 +877,28 @@ export default function Onboarding() {
                   item.lastName?.toLowerCase().includes(searchTerm)
                 );
               })
-              .map(item => (
+              .map((item) => (
                 <div
                   key={item._id}
-                  className={`flex items-center gap-3 p-2 rounded cursor-pointer mb-1 transition-colors ${selectedItem?._id === item._id ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center gap-3 p-2 rounded cursor-pointer mb-1 transition-colors ${
+                    selectedItem?._id === item._id
+                      ? "bg-blue-100 dark:bg-blue-900"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
                   onClick={() => handleItemClick(item)}
               >
                 <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                   <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
-                      {getInitials(item.firstName, item.lastName)}
+                      {activeTab === 'clients' 
+                        ? item.companyName?.substring(0, 2).toUpperCase()
+                        : getInitials(item.firstName, item.lastName)}
                   </span>
                 </div>
-                <div>
+                  <div className="flex-1">
                     <div className="font-medium text-gray-800 dark:text-white">
-                      {item.name || `${item.firstName} ${item.lastName}`}
+                      {activeTab === 'clients' 
+                        ? item.companyName 
+                        : item.name || `${item.firstName} ${item.lastName}`}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {item.email}
@@ -418,30 +908,38 @@ export default function Onboarding() {
             ))}
           </div>
         </aside>
-
         {/* Main Panel */}
-        <main className="flex-1 px-8 overflow-y-auto">
+        <main className="flex-1 pl-8 overflow-y-auto">
           {selectedItem ? (
-            <OnboardingDetails item={selectedItem} />
+            <OnboardingDetails item={selectedItem} type={activeTab} />
           ) : (
             <div className="flex h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
               {/* Add Field Section */}
-              <aside className="w-1/3 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col h-full bg-white dark:bg-gray-800">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Add Field</h3>
+              <aside
+                className="w-1/3 border-r 
+               dark:border-gray-700 p-8 flex flex-col h-full
+                bg-gray-100
+                dark:bg-gray-700 rounded-l-[5px]"
+              >
+                <h2 className="text-lg font-semibold   mt-2 mb-10 text-gray-900 dark:text-white">
+                  Add Field
+                </h2>
                 <div className="grid grid-cols-2 gap-4">
-                  {FIELD_TYPES.map(field => (
+                  {FIELD_TYPES.map((field) => (
                     <button
                       key={field.label}
-                      className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
+                      className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
                       draggable
-                      onDragStart={e => handleDragStart(e, field)}
+                      onDragStart={(e) => handleDragStart(e, field)}
                       type="button"
                     >
                       <div className="flex items-center justify-center w-6 h-6 text-gray-400">
-                        <Bars3Icon className="h-4 w-4" />
+                        <Bars3Icon className="h-6 w-6" />
                       </div>
                       <div className="flex items-center justify-center w-8 h-8">
-                        {field.icon && <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />}
+                        {field.icon && (
+                          <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                        )}
                       </div>
                       <span className="font-semibold">{field.label}</span>
                     </button>
@@ -450,15 +948,19 @@ export default function Onboarding() {
               </aside>
               {/* Form Section */}
               <div
-                className={`flex-1 p-8 overflow-y-auto transition-all duration-150 ${isDraggingOver ? 'border-2 border-blue-400 bg-blue-50 dark:bg-blue-900' : ''}`}
+                className={`flex-1 p-8 overflow-y-auto transition-all duration-150 ${
+                  isDraggingOver
+                    ? "border-2 border-blue-400 bg-blue-50 dark:bg-blue-900"
+                    : ""
+                }`}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
               >
-                <div className="mb-4">
+                <div className=" flex justify-between items-center mb-8">
                   {editingTitle ? (
                     <input
-                      className="text-xl font-semibold mb-4 text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
+                      className="text-xl font-semibold  text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
                       value={formTitle}
                       onChange={handleTitleChange}
                       onBlur={handleTitleBlur}
@@ -467,29 +969,38 @@ export default function Onboarding() {
                     />
                   ) : (
                     <h2
-                      className="text-xl font-semibold mb-4 text-gray-900 dark:text-white cursor-pointer"
+                      className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer"
                       onClick={handleTitleClick}
                     >
                       {formTitle}
                       <PencilIcon className="h-5 w-5 inline ml-2 text-gray-400" />
                     </h2>
                   )}
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onClick={() => formRef.current && formRef.current.requestSubmit()}
+                  >
+                    Submit
+                  </button>
                 </div>
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                  <div className="mb-2 font-semibold text-gray-800 dark:text-white">Send this form to:</div>
+                  <div className="mb-2 font-semibold text-gray-800 dark:text-white">
+                    Send this form to:
+                  </div>
                   <div className="flex flex-col md:flex-row gap-2 mb-2">
                     <input
                       type="text"
                       placeholder="Recipient name (optional)"
                       value={recipientName}
-                      onChange={e => setRecipientName(e.target.value)}
+                      onChange={(e) => setRecipientName(e.target.value)}
                       className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                     />
                     <input
                       type="email"
                       placeholder="Recipient email"
                       value={recipientEmail}
-                      onChange={e => setRecipientEmail(e.target.value)}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
                       className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                     />
                     <button
@@ -504,7 +1015,7 @@ export default function Onboarding() {
                     <textarea
                       placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
                       value={bulkInput}
-                      onChange={e => setBulkInput(e.target.value)}
+                      onChange={(e) => setBulkInput(e.target.value)}
                       className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
                     />
                     <button
@@ -518,9 +1029,18 @@ export default function Onboarding() {
                   {recipients.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {recipients.map((r, idx) => (
-                        <span key={idx} className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm">
-                          {r.name ? `${r.name} ` : ''}{r.email}
-                          <button type="button" className="ml-2 text-red-500 hover:text-red-700 " onClick={() => handleRemoveRecipient(idx)} title="Remove">
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm"
+                        >
+                          {r.name ? `${r.name} ` : ""}
+                          {r.email}
+                          <button
+                            type="button"
+                            className="ml-2 text-red-500 hover:text-red-700 "
+                            onClick={() => handleRemoveRecipient(idx)}
+                            title="Remove"
+                          >
                             <TrashIcon className="h-4 w-4" />
                           </button>
                         </span>
@@ -528,14 +1048,18 @@ export default function Onboarding() {
                     </div>
                   )}
                 </div>
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
+                <form
+                  ref={formRef}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  onSubmit={handleSubmit}
+                >
                   {fields.map((field, idx) => (
                     <div
                       key={field.id}
                       className="col-span-1 group flex items-start gap-2"
                       draggable
-                      onDragStart={e => handleDragStartField(e, field.id)}
-                      onDragOver={e => handleDragOverField(e, field.id)}
+                      onDragStart={(e) => handleDragStartField(e, field.id)}
+                      onDragOver={(e) => handleDragOverField(e, field.id)}
                       onDragEnd={handleDragEndField}
                     >
                       <div className="flex items-center justify-center w-8 h-11 text-gray-400 cursor-move">
@@ -548,112 +1072,609 @@ export default function Onboarding() {
                             value={labelDraft}
                             onChange={handleLabelChange}
                             onBlur={() => handleLabelBlur(field.id)}
-                            onKeyDown={e => handleLabelKeyDown(e, field.id)}
+                            onKeyDown={(e) => handleLabelKeyDown(e, field.id)}
                             autoFocus
                           />
                         ) : (
                           <label
                             className="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                            onClick={() => handleLabelClick(field.id, field.label)}
+                            onClick={() =>
+                              handleLabelClick(field.id, field.label)
+                            }
                           >
                             {field.label}
                             <PencilIcon className="h-4 w-4 inline ml-1 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
                           </label>
                         )}
-                        {field.type === 'text' && (
+
+                        {/* Field Type Specific Inputs */}
+                        {field.type === "image" && (
+                          <div className="mt-1">
+                          <input 
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            {field.value && (
+                              <img
+                                src={URL.createObjectURL(field.value)}
+                                alt="Preview"
+                                className="mt-2 h-32 w-32 object-cover rounded"
+                              />
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "file" && (
+                          <div className="mt-1">
+                            <input
+                              type="file"
+                              accept={
+                                field.id === "offerLetter"
+                                  ? ".pdf,.doc,.docx"
+                                  : undefined
+                              }
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            {field.value && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  {field.value.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "email" && (
+                          <input
+                            type="email"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder={
+                              field.id === "personalMail"
+                                ? "Enter personal email address..."
+                                : field.id === "officialMail"
+                                ? "Enter official email address..."
+                                : "Enter email address..."
+                            }
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "date" && (
+                          <input
+                            type="date"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "datetime" && (
+                          <input 
+                            type="datetime-local"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "checkbox" && (
+                          <div className="mt-1">
+                            <label className="inline-flex items-center">
+                          <input 
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={(e) => handleFieldChange(e, field.id)}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                {field.id === "offerAccepted"
+                                  ? "I accept the offer"
+                                  : field.label}
+                              </span>
+                            </label>
+                          </div>
+                        )}
+
+                        {field.type === "tel" && (
+                          <input
+                            type="tel"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter contact number..."
+                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "blood" && (
+                          <select
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select blood group</option>
+                            {bloodGroups.map((group) => (
+                              <option key={group} value={group}>
+                                {group}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
+                        {field.type === "dropdown" && (
+                          <div className="mt-1">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
                           <input 
                             type="text" 
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <select
                             value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
+                                  onChange={(e) =>
+                                    handleFieldChange(e, field.id)
+                                  }
+                                  className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                >
+                                  <option value="">Select an option</option>
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <option key={idx} value={option}>
+                                        {option}
+                                      </option>
+                                    )
+                                  )}
+                                </select>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "text" && (
+                          <input
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter text here..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
                           />
                         )}
-                        {field.type === 'textarea' && (
-                          <textarea 
-                            value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            placeholder="Enter multiple lines of text..."
-                            className="mt-1 block w-full h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3" 
+
+                        {field.type === "phone" && (
+                          <input
+                            type="tel"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter phone number..."
+                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                           />
                         )}
-                        {field.type === 'email' && (
-                          <input 
-                            type="email" 
-                            value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            placeholder="Enter email address..."
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+
+                        {field.type === "formula" && (
+                          <input
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter formula..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                           />
                         )}
-                        {field.type === 'number' && (
-                          <input 
-                            type="number" 
-                            value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            placeholder="Enter a number..."
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          />
-                        )}
-                        {field.type === 'currency' && (
-                          <input 
-                            type="text" 
-                            placeholder="$" 
-                            value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          />
-                        )}
-                        {field.type === 'dropdown' && (
+
+                        {field.type === "gender" && (
                           <select 
                             value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                           >
-                            <option value="">Select an option...</option>
-                            <option>Option 1</option>
-                            <option>Option 2</option>
+                            <option value="">Select gender</option>
+                            {genders.map((gender) => (
+                              <option key={gender} value={gender}>
+                                {gender}
+                              </option>
+                            ))}
                           </select>
                         )}
-                        {field.type === 'date' && (
+
+                        {field.type === "decimal" && (
                           <input 
-                            type="date" 
+                            type="number"
+                            step="0.01"
                             value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter decimal number..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
                           />
                         )}
-                        {field.type === 'datetime' && (
-                          <input 
-                            type="datetime-local" 
-                            value={field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          />
+
+                        {field.type === "country" && (
+                          <select
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select country</option>
+                            {countries.map((country) => (
+                              <option key={country} value={country}>
+                                {country}
+                              </option>
+                            ))}
+                          </select>
                         )}
-                        {field.type === 'file' && (
-                          <input 
-                            type="file" 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            className="mt-1 block w-full text-gray-700 dark:text-gray-300" 
-                          />
-                        )}
-                        {field.type === 'radio' && (
+
+                        {field.type === "multiselect" && (
                           <div className="mt-1">
-                            <label className="flex items-center gap-2">
-                              <input type="radio" name={field.id} />
-                              <span>Option</span>
-                            </label>
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) => setOptionDraft(e.target.value)}
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && optionDraft.trim()) {
+                                        handleAddOption(field.id);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map((option, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                    >
+                                      {option}
+                                      <button
+                                        onClick={() => handleRemoveOption(field.id, idx)}
+                                        className="ml-2 text-red-500 hover:text-red-700"
+                                      >
+                                        <XMarkIcon className="h-4 w-4" />
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map((option, idx) => (
+                                    <label
+                                      key={idx}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={(field.value || []).includes(option)}
+                                        onChange={(e) => {
+                                          const newValue = e.target.checked
+                                            ? [...(field.value || []), option]
+                                            : (field.value || []).filter(v => v !== option);
+                                          setFields(prev =>
+                                            prev.map(f =>
+                                              f.id === field.id
+                                                ? { ...f, value: newValue }
+                                                : f
+                                            )
+                                          );
+                                        }}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                      <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
-                        {field.type === 'checkbox' || field.type === 'decision' ? (
+
+                        {field.type === "lookup" && (
+                          <input
+                            type="text"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter lookup value..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "notes" && (
+                          <textarea
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Add notes..."
+                            rows={4}
+                            className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "url" && (
+                          <input 
+                            type="url"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter URL..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "radio" && (
+                          <div className="mt-1 space-y-2">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <label
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                      >
+                          <input 
+                            type="radio"
+                            name={field.id}
+                            value={option}
+                            checked={field.value === option}
+                            onChange={(e) =>
+                              handleFieldChange(e, field.id)
+                            }
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>{option}</span>
+                            </label>
+                                    )
+                                  )}
+                          </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "decision" && (
+                          <div className="mt-1 space-y-2">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <label
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                      >
                           <input 
                             type="checkbox" 
-                            checked={!!field.value} 
-                            onChange={e => handleFieldChange(e, field.id)} 
-                            className="mt-1" 
+                                          checked={field.value === option}
+                                          onChange={(e) =>
+                                            handleFieldChange(e, field.id)
+                                          }
+                                          className="text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span>{option}</span>
+                                      </label>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "textarea" && (
+                          <textarea
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter text here..."
+                            rows={4}
+                            className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                           />
-                        ) : null}
+                        )}
+
+                        {field.type === "number" && (
+                          <input
+                            type="number"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter number..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "currency" && (
+                          <div className="relative mt-1">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <span className="text-gray-500 dark:text-gray-400">
+                                $
+                              </span>
+                            </div>
+                            <input
+                              type="number"
+                              value={field.value}
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              placeholder="0.00"
+                              step="0.01"
+                              min="0"
+                              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -667,11 +1688,6 @@ export default function Onboarding() {
                       </div>
                     </div>
                   ))}
-                  <div className="col-span-2 flex justify-end mt-8">
-                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      Submit
-                    </button>
-                  </div>
                 </form>
               </div>
             </div>

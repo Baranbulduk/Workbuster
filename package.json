@@ -9,6 +9,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
-    "nodemailer": "^7.0.3"
+    "nodemailer": "^7.0.3",
+    "react-hot-toast": "^2.5.2",
+    "react-select": "^5.10.1"
   }
 }

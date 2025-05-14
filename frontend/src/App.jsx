@@ -8,6 +8,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import Candidates from './components/candidates/Candidates';
 import CandidateDetails from './components/candidates/CandidateDetails';
 import Clients from './components/clients/Clients';
+import ClientsDetails from './components/clients/ClientsDetails';
 import Statistics from './components/statistics/Statistics';
 import Settings from './components/settings/Settings';
 import Onboarding from './components/onboarding/Onboarding';
@@ -42,6 +43,7 @@ function App() {
             <Route path="employees" element={<Employees />} />
             <Route path="employees/:id" element={<EmployeeDetails />} />
             <Route path="clients" element={<Clients />} />
+            <Route path="clients/:id" element={<ClientsDetails />} />
             <Route path="statistics" element={<Statistics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="onboarding" element={<Onboarding />} />
