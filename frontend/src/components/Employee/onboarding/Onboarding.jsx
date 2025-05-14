@@ -368,16 +368,24 @@ export default function Onboarding() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
+    const email = params.get("email");
+    
     if (token) {
       setFormToken(token);
-      fetchFormData(token);
+      
+      // If email is provided in URL, set it directly
+      if (email) {
+        setRecipientEmail(email);
+      }
+      
+      fetchFormData(token, email);
     } else {
       setError("No form token provided. Please use the link from your email.");
       setLoading(false);
     }
   }, [location]);
 
-  const fetchFormData = async (token) => {
+  const fetchFormData = async (token, email) => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:5000/api/onboarding/form/${token}`);
@@ -395,11 +403,12 @@ export default function Onboarding() {
         
         setFields(resetFields);
         
-        const emailParam = new URLSearchParams(location.search).get("email");
-        if (emailParam) {
-          const matchingRecipient = recipients.find(r => r.email === emailParam);
-          if (matchingRecipient) {
-            setRecipientEmail(emailParam);
+        // Double-check if the email from URL actually exists in recipients
+        if (email) {
+          const matchingRecipient = recipients.find(r => r.email === email);
+          if (!matchingRecipient) {
+            console.warn("Email from URL doesn't match any recipient in the form");
+            setRecipientEmail(""); // Clear if not matching
           }
         }
         

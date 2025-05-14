@@ -210,7 +210,7 @@ export default function OnboardingDetails({ item, type }) {
                       
                       {status !== "Completed" && (
                         <a 
-                          href={`/employee/onboarding?token=${form.token}&email=${item.email}`}
+                          href={`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(item.email)}`}
                           className="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         >
                           {status === "Not Started" ? "Start Form" : "Continue Form"}

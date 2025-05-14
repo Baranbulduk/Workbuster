@@ -291,23 +291,23 @@ router.post('/send-form', async (req, res) => {
     await formData.save();
     console.log('Form data saved with token:', formToken);
     
-    // Create the employee dashboard onboarding URL with the form token
-    const employeeOnboardingUrl = `http://localhost:3000/employee/onboarding?token=${formToken}`;
-    
-    // Create email content with link to employee dashboard
-    const emailContent = `
-      <h1>${formTitle}</h1>
-      <p>You have been requested to complete an onboarding form. Please click the link below to access the form:</p>
-      <div style="margin: 20px 0;">
-        <a href="${employeeOnboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
-      </div>
-      <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
-      <p>${employeeOnboardingUrl}</p>
-    `;
-
     // Send email to each recipient and collect results
     const results = [];
     for (const recipient of recipients) {
+      // Create the employee dashboard onboarding URL with the form token and recipient email
+      const employeeOnboardingUrl = `http://localhost:3000/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      
+      // Create email content with link to employee dashboard
+      const emailContent = `
+        <h1>${formTitle}</h1>
+        <p>You have been requested to complete an onboarding form. Please click the link below to access the form:</p>
+        <div style="margin: 20px 0;">
+          <a href="${employeeOnboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
+        </div>
+        <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
+        <p>${employeeOnboardingUrl}</p>
+      `;
+      
       const mailOptions = {
         from: 'rexettit@gmail.com',
         to: recipient.email,
@@ -375,11 +375,27 @@ router.post('/submit/:token', async (req, res) => {
     const { token } = req.params;
     const { completedFields, recipientEmail } = req.body;
     
+    if (!token || !recipientEmail) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: token and recipientEmail are required' 
+      });
+    }
+    
     // Find the form by token
     const formData = await OnboardingForm.findOne({ token });
     
     if (!formData) {
       return res.status(404).json({ success: false, message: 'Form not found' });
+    }
+    
+    // Check if this email is actually a recipient for this form
+    const isRecipient = formData.recipients.some(r => r.email === recipientEmail);
+    if (!isRecipient) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'The provided email is not authorized to submit this form' 
+      });
     }
     
     // Mark this form as completed by this recipient
@@ -402,6 +418,54 @@ router.post('/submit/:token', async (req, res) => {
   } catch (error) {
     console.error('Error submitting form:', error);
     res.status(500).json({ success: false, message: 'Error submitting form', error: error.message });
+  }
+});
+
+// Fetch forms by recipient email (for admin view)
+router.get('/forms-by-recipient/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Find all forms where this email is a recipient
+    const forms = await OnboardingForm.find({ 
+      'recipients.email': email 
+    });
+    
+    if (!forms || forms.length === 0) {
+      return res.json({ success: true, forms: [] });
+    }
+    
+    res.json({ 
+      success: true, 
+      forms
+    });
+  } catch (error) {
+    console.error('Error fetching recipient forms:', error);
+    res.status(500).json({ success: false, message: 'Error fetching recipient forms', error: error.message });
+  }
+});
+
+// Fetch forms assigned to employee (for employee view)
+router.get('/my-forms/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Find all forms where this email is a recipient
+    const forms = await OnboardingForm.find({ 
+      'recipients.email': email 
+    });
+    
+    if (!forms || forms.length === 0) {
+      return res.json({ success: true, forms: [] });
+    }
+    
+    res.json({ 
+      success: true, 
+      forms
+    });
+  } catch (error) {
+    console.error('Error fetching employee forms:', error);
+    res.status(500).json({ success: false, message: 'Error fetching employee forms', error: error.message });
   }
 });
 
