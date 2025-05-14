@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
@@ -457,7 +457,7 @@ const Employees = () => {
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     <button
                       className="text-blue-600 hover:underline dark:text-blue-400"
-                      onClick={() => navigate(`/employees/${employee._id}`)}
+                      onClick={() => navigate(`/employee/employees/${employee._id}`)}
                     >
                       View more
                     </button>
@@ -479,7 +479,7 @@ const Employees = () => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => navigate(`/employees/${employee._id}`)}
+                      onClick={() => navigate(`/employee/employees/${employee._id}`)}
                       className="text-blue-600 hover:text-blue-900 mr-4 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       <FiEdit2 className="inline-block" />

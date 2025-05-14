@@ -661,66 +661,18 @@ export default function Onboarding() {
 
       if (response.data.success) {
         // Reset form state
-        setFormTitle("Offer Letter Form Details");
-        setFields([
-          {
-            id: "candidateName",
-            type: "text",
-            label: "Candidate Name",
-            value: "",
-            required: true,
-          },
-          {
-            id: "candidatePhoto",
-            type: "file",
-            label: "Candidate Photograph",
-            value: null,
-          },
-          {
-            id: "personalMail",
-            type: "email",
-            label: "Personal Mail ID",
-            value: "",
-            required: true,
-          },
-          {
-            id: "officialMail",
-            type: "email",
-            label: "Official Mail ID",
-            value: "",
-            required: true,
-          },
-          { 
-            id: "offerLetter", 
-            type: "file", 
-            label: "Offer Letter", 
-            value: null 
-          },
-          {
-            id: "contactNo",
-            type: "text",
-            label: "Contact no",
-            value: "",
-            required: true,
-          },
-          {
-            id: "dateOfJoining",
-            type: "date",
-            label: "Date of Joining",
-            value: "",
-            required: true,
-          },
-          {
-            id: "offerAccepted",
-            type: "checkbox",
-            label: "Offer accepted",
-            value: false,
-          },
-        ]);
+        const resetFields = fields.map(field => ({
+          ...field,
+          value: field.type === "checkbox" ? false : 
+                 field.type === "file" ? null : 
+                 field.type === "multiselect" ? [] : ""
+        }));
+        
+        setFields(resetFields);
         setRecipients([]);
         setFieldOptions({});
         
-        alert('Form submitted successfully! The data has been sent to the specified recipients.');
+        alert('Form submitted successfully! The recipients have been sent an email with a link to complete the form in the Employee Dashboard.');
       } else {
         console.error('Backend error:', response.data);
         throw new Error(response.data.message || 'Failed to submit form');
@@ -1056,7 +1008,7 @@ export default function Onboarding() {
                   {fields.map((field, idx) => (
                     <div
                       key={field.id}
-                      className="col-span-1 group flex items-start gap-2"
+                      className="col-span-1 group flex items-end gap-2"
                       draggable
                       onDragStart={(e) => handleDragStartField(e, field.id)}
                       onDragOver={(e) => handleDragOverField(e, field.id)}
@@ -1680,10 +1632,9 @@ export default function Onboarding() {
                         <button
                           type="button"
                           onClick={() => handleDeleteField(field.id)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          className="inline-flex items-center px-2.5 py-1.5 border w-11 h-11 border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         >
                         <TrashIcon className="h-5 w-5" />
-                          <span className="text-sm">Delete</span>
                       </button>
                       </div>
                     </div>

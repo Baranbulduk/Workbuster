@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
+const EmployeeLogin = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,18 +18,14 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    
-    // Check credentials to determine user type
-    if (formData.email === 'admin@rexett.com' && formData.password === 'admin123') {
-      // Admin login
-      navigate('/');
-    } else if (formData.email === 'employee@rexett.com' && formData.password === 'employee123') {
-      // Employee login
+    // For demo: hardcoded check
+    if (
+      formData.email === 'employee@rexett.com' &&
+      formData.password === 'employee123'
+    ) {
       navigate('/employee/employees');
     } else {
-      // Invalid credentials
-      setError('Invalid email or password');
+      alert('Invalid employee credentials');
     }
   };
 
@@ -39,21 +34,10 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Employee Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              create a new account
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">Email address</label>
@@ -82,27 +66,6 @@ const Login = () => {
               />
             </div>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-
           <div>
             <button
               type="submit"
@@ -117,4 +80,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default EmployeeLogin; 

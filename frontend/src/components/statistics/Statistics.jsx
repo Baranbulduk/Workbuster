@@ -55,11 +55,16 @@ const Statistics = () => {
       candidateSatisfaction: 0
     }
   });
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     fetchStatistics();
+    fetchEmployees();
     // Set up polling every 30 seconds to keep data fresh
-    const interval = setInterval(fetchStatistics, 30000);
+    const interval = setInterval(() => {
+      fetchStatistics();
+      fetchEmployees();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -120,6 +125,15 @@ const Statistics = () => {
       console.error('Error fetching statistics:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const employeesResponse = await axios.get('http://localhost:5000/api/employees');
+      setEmployees(employeesResponse.data);
+    } catch (err) {
+      console.error('Error fetching employees:', err);
     }
   };
 
@@ -187,6 +201,19 @@ const Statistics = () => {
     ]
   };
 
+  // Employee statistics
+  const employeeStats = {
+    total: employees.length,
+    byStatus: employees.reduce((acc, e) => {
+      acc[e.status] = (acc[e.status] || 0) + 1;
+      return acc;
+    }, {}),
+    byDepartment: employees.reduce((acc, e) => {
+      acc[e.department] = (acc[e.department] || 0) + 1;
+      return acc;
+    }, {}),
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Statistics Dashboard</h1>
@@ -220,36 +247,29 @@ const Statistics = () => {
             <p>New Clients: {statistics.clients.new}</p>
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Revenue Trend</h2>
-          <Line data={revenueData} />
-        </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Performance Metrics</h2>
+          <h2 
+            className="text-lg font-semibold mb-4 cursor-pointer hover:text-green-600 dark:hover:text-green-400"
+            onClick={() => navigate('/employees')}
+          >
+            Employee Overview
+          </h2>
           <div className="space-y-2">
-            <p>Placement Rate: {statistics.performance?.placementRate || 0}%</p>
-            <p>Average Time to Fill: {statistics.performance?.averageTimeToFill || 0} days</p>
-            <p>Client Satisfaction: {statistics.performance?.clientSatisfaction || 0}%</p>
-            <p>Candidate Satisfaction: {statistics.performance?.candidateSatisfaction || 0}%</p>
+            <p>Total Employees: {employeeStats.total}</p>
+            <p>By Status:</p>
+            <ul className="ml-4 list-disc">
+              {Object.entries(employeeStats.byStatus).map(([status, count]) => (
+                <li key={status}>{status}: {count}</li>
+              ))}
+            </ul>
+            <p>By Department:</p>
+            <ul className="ml-4 list-disc">
+              {Object.entries(employeeStats.byDepartment).map(([dept, count]) => (
+                <li key={dept}>{dept}: {count}</li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Candidates by Status</h2>
-          <Pie data={candidateData} />
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Clients by Industry</h2>
-          <Pie data={clientData} />
         </div>
       </div>
     </div>

@@ -1,8 +1,11 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Employee from '../../models/Employee.js';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { transporter } from '../config/email.js';
+import crypto from 'crypto';
+import OnboardingForm from '../models/OnboardingForm.js';
 
 const router = express.Router();
 
@@ -272,23 +275,34 @@ router.put('/:id/status', async (req, res) => {
 router.post('/send-form', async (req, res) => {
   try {
     const { formTitle, fields, recipients } = req.body;
-    // Create email content
+    
+    // Generate a unique token for this form submission
+    const formToken = crypto.randomBytes(16).toString('hex');
+    
+    // Store the form data in the database
+    const formData = new OnboardingForm({
+      token: formToken,
+      title: formTitle,
+      fields: fields,
+      recipients: recipients.map(r => ({ name: r.name, email: r.email })),
+      createdAt: new Date()
+    });
+    
+    await formData.save();
+    console.log('Form data saved with token:', formToken);
+    
+    // Create the employee dashboard onboarding URL with the form token
+    const employeeOnboardingUrl = `http://localhost:3000/employee/onboarding?token=${formToken}`;
+    
+    // Create email content with link to employee dashboard
     const emailContent = `
       <h1>${formTitle}</h1>
-      <div style="margin-top: 20px;">
-        ${fields.map(field => `
-          <div style="margin-bottom: 15px;">
-            <strong>${field.label}:</strong>
-            <div style="margin-top: 5px;">
-              ${field.type === 'file' && field.value ? 
-                `<a href="${field.value}" target="_blank">View File</a>` : 
-                field.type === 'checkbox' ? 
-                  (field.value ? 'Yes' : 'No') :
-                field.value || 'Not provided'}
-            </div>
-          </div>
-        `).join('')}
+      <p>You have been requested to complete an onboarding form. Please click the link below to access the form:</p>
+      <div style="margin: 20px 0;">
+        <a href="${employeeOnboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
       </div>
+      <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
+      <p>${employeeOnboardingUrl}</p>
     `;
 
     // Send email to each recipient and collect results
@@ -297,7 +311,7 @@ router.post('/send-form', async (req, res) => {
       const mailOptions = {
         from: 'rexettit@gmail.com',
         to: recipient.email,
-        subject: formTitle,
+        subject: `${formTitle} - Please Complete Your Onboarding Form`,
         html: emailContent
       };
       try {
@@ -326,6 +340,68 @@ router.post('/send-form', async (req, res) => {
   } catch (error) {
     console.error('Error sending form data:', error);
     res.status(500).json({ success: false, message: 'Failed to send form data', error: error.message });
+  }
+});
+
+// Fetch form data by token
+router.get('/form/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const formData = await OnboardingForm.findOne({ token });
+    
+    if (!formData) {
+      return res.status(404).json({ success: false, message: 'Form not found' });
+    }
+    
+    res.json({ 
+      success: true, 
+      form: {
+        title: formData.title,
+        fields: formData.fields,
+        recipients: formData.recipients,
+        createdAt: formData.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching form data:', error);
+    res.status(500).json({ success: false, message: 'Error fetching form data', error: error.message });
+  }
+});
+
+// Submit completed form
+router.post('/submit/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { completedFields, recipientEmail } = req.body;
+    
+    // Find the form by token
+    const formData = await OnboardingForm.findOne({ token });
+    
+    if (!formData) {
+      return res.status(404).json({ success: false, message: 'Form not found' });
+    }
+    
+    // Mark this form as completed by this recipient
+    const updatedForm = await OnboardingForm.findOneAndUpdate(
+      { token, 'recipients.email': recipientEmail },
+      { 
+        $set: { 
+          'recipients.$.completedAt': new Date(),
+          'recipients.$.completedFields': completedFields 
+        } 
+      },
+      { new: true }
+    );
+    
+    if (!updatedForm) {
+      return res.status(400).json({ success: false, message: 'Failed to update form completion status' });
+    }
+    
+    res.json({ success: true, message: 'Form submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    res.status(500).json({ success: false, message: 'Error submitting form', error: error.message });
   }
 });
 
