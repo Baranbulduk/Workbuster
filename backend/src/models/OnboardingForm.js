@@ -39,6 +39,10 @@ const fieldSchema = new mongoose.Schema({
   required: {
     type: Boolean,
     default: false
+  },
+  options: {
+    type: [String],
+    default: undefined
   }
 });
 

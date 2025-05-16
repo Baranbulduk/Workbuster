@@ -545,7 +545,7 @@ export default function RegisterCandidate() {
                       <div className="text-sm text-gray-500 dark:text-gray-400">Expected: {candidate.expectedSalary}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                         {candidate.resume ? (
                           <>
                             <button
@@ -597,10 +597,6 @@ export default function RegisterCandidate() {
                         ) : (
                           <span className="text-gray-400 dark:text-gray-500 text-xs">No CV available</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex space-x-2">
                         <button
                           onClick={() => handleUpdate(candidate)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"

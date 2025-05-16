@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,7 +9,9 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'user' // Default role
   });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,17 +24,37 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
       return;
     }
-    // TODO: Implement registration logic here
+
     try {
-      // Add your registration API call here
-      console.log('Registration attempt with:', formData);
-      navigate('/dashboard');
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role // Make sure to send the role
+      };
+
+      const response = await axios.post('http://localhost:5000/api/auth/register', userData);
+      const { token } = response.data;
+      
+      // Store the token and email in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('userEmail', formData.email);
+      
+      // Navigate based on role
+      if (formData.role === 'admin') {
+        navigate('/');
+      } else {
+        navigate('/employee/employees');
+      }
     } catch (error) {
-      console.error('Registration failed:', error);
+      setError(error.response?.data?.message || 'An error occurred during registration');
     }
   };
 
@@ -50,6 +73,11 @@ const Register = () => {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -91,6 +119,20 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
               />
+            </div>
+            <div>
+              <label htmlFor="role" className="sr-only">Role</label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="user">Employee</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">Password</label>

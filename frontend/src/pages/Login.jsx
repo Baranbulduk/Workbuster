@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -17,20 +18,26 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    // Check credentials to determine user type
-    if (formData.email === 'admin@rexett.com' && formData.password === 'admin123') {
-      // Admin login
-      navigate('/');
-    } else if (formData.email === 'employee@rexett.com' && formData.password === 'employee123') {
-      // Employee login
-      navigate('/employee/employees');
-    } else {
-      // Invalid credentials
-      setError('Invalid email or password');
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+      const { token, role } = response.data;
+      
+      // Store the token and email in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('userEmail', formData.email);
+      
+      // Navigate based on role
+      if (role === 'admin') {
+        navigate('/');
+      } else {
+        navigate('/employee/employees');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'An error occurred during login');
     }
   };
 

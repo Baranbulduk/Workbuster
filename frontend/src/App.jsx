@@ -26,7 +26,6 @@ import EmployeeLogin from './pages/EmployeeLogin';
 import EmployeeEmployees from './components/Employee/employees/Employees';
 import EmployeeEmployeeDetails from './components/Employee/employees/EmployeeDetails';
 import EmployeeOnboarding from './components/Employee/onboarding/Onboarding';
-import EmployeeOnboardingDetails from './components/Employee/onboarding/OnboardingDetails';
 
 // Layout wrapper component
 const LayoutWrapper = () => {
@@ -177,7 +176,6 @@ function App() {
             <Route path="employees" element={<EmployeeEmployees />} />
             <Route path="employees/:id" element={<EmployeeEmployeeDetails />} />
             <Route path="onboarding" element={<EmployeeOnboarding />} />
-            <Route path="onboarding/:id" element={<EmployeeOnboardingDetails />} />
           </Route>
 
           {/* Default redirect */}

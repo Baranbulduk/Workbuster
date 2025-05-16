@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { transporter } from '../config/email.js';
 import crypto from 'crypto';
 import OnboardingForm from '../models/OnboardingForm.js';
+import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
@@ -257,7 +258,7 @@ router.put('/:id/status', async (req, res) => {
     
     if (!employee) {
       return res.status(404).json({ message: 'Candidate not found' });
-  }
+    }
 
     employee.onboardingStep = onboardingStep || employee.onboardingStep;
     employee.welcomeSent = welcomeSent || employee.welcomeSent;
@@ -295,7 +296,7 @@ router.post('/send-form', async (req, res) => {
     const results = [];
     for (const recipient of recipients) {
       // Create the employee dashboard onboarding URL with the form token and recipient email
-      const employeeOnboardingUrl = `http://localhost:3000/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      const employeeOnboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
       
       // Create email content with link to employee dashboard
       const emailContent = `
@@ -466,6 +467,127 @@ router.get('/my-forms/:email', async (req, res) => {
   } catch (error) {
     console.error('Error fetching employee forms:', error);
     res.status(500).json({ success: false, message: 'Error fetching employee forms', error: error.message });
+  }
+});
+
+// Send onboarding form to employee
+router.post('/send-form/:employeeId', async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.employeeId);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Generate a unique token for this form
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Create or update onboarding form
+    let form = await OnboardingForm.findOne({ title: 'Employee Onboarding' });
+    if (!form) {
+      form = new OnboardingForm({
+        title: 'Employee Onboarding',
+        token,
+        fields: [
+          {
+            id: 'personal_info',
+            type: 'section',
+            label: 'Personal Information',
+            required: true
+          },
+          {
+            id: 'emergency_contact',
+            type: 'section',
+            label: 'Emergency Contact',
+            required: true
+          },
+          {
+            id: 'bank_details',
+            type: 'section',
+            label: 'Bank Details',
+            required: true
+          }
+        ]
+      });
+    }
+
+    // Add or update recipient
+    const recipientIndex = form.recipients.findIndex(r => r.email === employee.email);
+    if (recipientIndex === -1) {
+      form.recipients.push({
+        name: `${employee.firstName} ${employee.lastName}`,
+        email: employee.email
+      });
+    }
+
+    await form.save();
+
+    // Send email with form link
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'rexettit@gmail.com',
+        pass: 'prmursgwotixwilt'
+      }
+    });
+
+    const mailOptions = {
+      from: 'rexettit@gmail.com',
+      to: employee.email,
+      subject: 'Complete Your Onboarding Form',
+      html: `
+        <h1>Welcome to Rexett!</h1>
+        <p>Please complete your onboarding form by clicking the button below:</p>
+        <a href="http://localhost:5173/employee/onboarding?token=${token}&email=${encodeURIComponent(employee.email)}" 
+           style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">
+          Complete Onboarding Form
+        </a>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Onboarding form sent successfully' });
+  } catch (error) {
+    console.error('Error sending onboarding form:', error);
+    res.status(500).json({ message: 'Error sending onboarding form' });
+  }
+});
+
+// Get onboarding form by token
+router.get('/form/:token', async (req, res) => {
+  try {
+    const form = await OnboardingForm.findOne({ token: req.params.token });
+    if (!form) {
+      return res.status(404).json({ message: 'Form not found' });
+    }
+    res.json(form);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching form' });
+  }
+});
+
+// Submit onboarding form
+router.post('/submit-form/:token', async (req, res) => {
+  try {
+    const { email, completedFields } = req.body;
+    const form = await OnboardingForm.findOne({ token: req.params.token });
+    
+    if (!form) {
+      return res.status(404).json({ message: 'Form not found' });
+    }
+
+    const recipient = form.recipients.find(r => r.email === email);
+    if (!recipient) {
+      return res.status(403).json({ message: 'You are not authorized to submit this form' });
+    }
+
+    recipient.completedFields = completedFields;
+    recipient.completedAt = new Date();
+    await form.save();
+
+    res.json({ message: 'Form submitted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error submitting form' });
   }
 });
 

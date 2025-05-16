@@ -8,7 +8,7 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ email });
@@ -18,9 +18,10 @@ router.post('/register', async (req, res) => {
 
     // Create new user
     user = new User({
-      name,
+      name: `${firstName} ${lastName}`,
       email,
-      password
+      password,
+      role: role || 'user' // Use provided role or default to 'user'
     });
 
     // Hash password
@@ -33,7 +34,8 @@ router.post('/register', async (req, res) => {
     // Create JWT token
     const payload = {
       user: {
-        id: user.id
+        id: user.id,
+        role: user.role
       }
     };
 
@@ -43,7 +45,7 @@ router.post('/register', async (req, res) => {
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({ token, role: user.role });
       }
     );
   } catch (error) {
@@ -72,7 +74,8 @@ router.post('/login', async (req, res) => {
     // Create JWT token
     const payload = {
       user: {
-        id: user.id
+        id: user.id,
+        role: user.role
       }
     };
 
@@ -82,7 +85,10 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({ 
+          token,
+          role: user.role
+        });
       }
     );
   } catch (error) {

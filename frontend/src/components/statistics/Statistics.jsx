@@ -219,7 +219,7 @@ const Statistics = () => {
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Statistics Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2 
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
             onClick={() => navigate('/candidates')}
@@ -234,7 +234,7 @@ const Statistics = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2 
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
             onClick={() => navigate('/clients')}
@@ -248,7 +248,7 @@ const Statistics = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2 
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-green-600 dark:hover:text-green-400"
             onClick={() => navigate('/employees')}

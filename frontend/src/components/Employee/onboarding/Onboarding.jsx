@@ -34,8 +34,8 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import axios from "axios";
-import { useNavigate, useLocation } from "react-router-dom";
-import OnboardingDetails from "./OnboardingDetails";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -76,13 +76,13 @@ const FIELD_TYPES = [
 ];
 
 export default function Onboarding() {
-  const [search, setSearch] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [activeTab, setActiveTab] = useState("candidates");
-  const [candidates, setCandidates] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const [form, setForm] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     candidateName: "",
     candidatePhoto: null,
@@ -357,35 +357,24 @@ export default function Onboarding() {
     "Zimbabwe",
   ];
   const formRef = useRef(null);
-  const location = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formToken, setFormToken] = useState(null);
-  const [submissionStatus, setSubmissionStatus] = useState({ success: false, message: "" });
+  const [submissionStatus, setSubmissionStatus] = useState(null);
+  const [completionStatus, setCompletionStatus] = useState({
+    totalFields: 0,
+    completedFields: 0,
+    isComplete: false
+  });
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-    const email = params.get("email");
-    
     if (token) {
-      setFormToken(token);
-      
-      // If email is provided in URL, set it directly
-      if (email) {
-        setRecipientEmail(email);
-      }
-      
-      fetchFormData(token, email);
+      fetchFormData(token);
     } else {
-      setError("No form token provided. Please use the link from your email.");
+      setError('No form token provided. Please use the link from your email.');
       setLoading(false);
     }
-  }, [location]);
+  }, [token]);
 
-  const fetchFormData = async (token, email) => {
+  const fetchFormData = async (token) => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:5000/api/onboarding/form/${token}`);
@@ -402,16 +391,7 @@ export default function Onboarding() {
         }));
         
         setFields(resetFields);
-        
-        // Double-check if the email from URL actually exists in recipients
-        if (email) {
-          const matchingRecipient = recipients.find(r => r.email === email);
-          if (!matchingRecipient) {
-            console.warn("Email from URL doesn't match any recipient in the form");
-            setRecipientEmail(""); // Clear if not matching
-          }
-        }
-        
+        setRecipients(recipients);
         setLoading(false);
       } else {
         setError("Failed to fetch form data");
@@ -424,85 +404,103 @@ export default function Onboarding() {
     }
   };
 
-  const handleFieldChange = (e, id) => {
+  const handleFieldChange = (e, fieldId) => {
     const { type, value, checked, files } = e.target;
-    setFields((prev) =>
-      prev.map((f) =>
-        f.id === id
-          ? {
-              ...f,
-              value:
-                type === "checkbox"
-                  ? checked
-                  : type === "file"
-                  ? files[0]
-                  : type === "multiselect"
-                  ? (f.value || []).includes(value)
-                    ? (f.value || []).filter((v) => v !== value)
-                    : [...(f.value || []), value]
-                  : value,
-            }
-          : f
-      )
-    );
+    
+    setFields(prevFields => {
+      const updatedFields = prevFields.map(field => {
+        if (field.id === fieldId) {
+          let newValue;
+          
+          switch (field.type) {
+            case 'checkbox':
+              newValue = checked;
+              break;
+            case 'file':
+            case 'image':
+              newValue = files[0] || null;
+              break;
+            case 'multiselect':
+              newValue = Array.from(e.target.selectedOptions, option => option.value);
+              break;
+            default:
+              newValue = value;
+          }
+          
+          return {
+            ...field,
+            value: newValue
+          };
+        }
+        return field;
+      });
+
+      // Update completion status
+      const totalFields = updatedFields.length;
+      const completedFields = updatedFields.filter(field => {
+        if (field.type === 'checkbox') return true; // Checkboxes are always considered complete
+        if (field.type === 'file' || field.type === 'image') return field.value !== null;
+        if (field.type === 'multiselect') return field.value.length > 0;
+        return field.value !== '';
+      }).length;
+
+      setCompletionStatus({
+        totalFields,
+        completedFields,
+        isComplete: completedFields === totalFields
+      });
+
+      return updatedFields;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const missingFields = fields
-      .filter(field => field.required && !field.value)
-      .map(field => field.label);
-    
-    if (missingFields.length > 0) {
-      setSubmissionStatus({
-        success: false,
-        message: `Please fill in the following required fields: ${missingFields.join(', ')}`
-      });
-      return;
-    }
-    
-    if (!recipientEmail) {
-      setSubmissionStatus({
-        success: false,
-        message: "Please enter your email address to submit the form"
-      });
-      return;
-    }
-    
     try {
       setSubmitting(true);
       
-      const completedFields = fields.map(field => ({
-        id: field.id,
-        label: field.label,
-        type: field.type,
-        value: field.value
-      }));
+      // Only include fields that have values
+      const completedFields = fields
+        .filter(field => {
+          if (field.type === 'checkbox') return true;
+          if (field.type === 'file' || field.type === 'image') return field.value !== null;
+          if (field.type === 'multiselect') return field.value.length > 0;
+          return field.value !== '';
+        })
+        .map(field => ({
+          id: field.id,
+          label: field.label,
+          type: field.type,
+          value: field.value
+        }));
       
       const response = await axios.post(
-        `http://localhost:5000/api/onboarding/submit/${formToken}`, 
+        `http://localhost:5000/api/onboarding/submit/${token}`, 
         { 
           completedFields,
-          recipientEmail
+          recipientEmail: searchParams.get('email')
         }
       );
       
       if (response.data.success) {
-        setSuccess(true);
         setSubmissionStatus({
           success: true,
-          message: "Form submitted successfully! Thank you for completing your onboarding form."
+          message: completionStatus.isComplete 
+            ? "Form submitted successfully! Thank you for completing your onboarding form."
+            : "Form partially submitted. You can continue filling out the remaining fields later."
         });
-        
-        const resetFields = fields.map(field => ({
-          ...field,
-          value: field.type === "checkbox" ? false : 
-                field.type === "file" ? null : 
-                field.type === "multiselect" ? [] : ""
-        }));
-        
-        setFields(resetFields);
+
+        if (completionStatus.isComplete) {
+          // Reset form only if all fields are completed
+          const resetFields = fields.map(field => ({
+            ...field,
+            value: field.type === "checkbox" ? false : 
+                  field.type === "file" ? null : 
+                  field.type === "multiselect" ? [] : ""
+          }));
+          setFields(resetFields);
+        }
       } else {
         setSubmissionStatus({
           success: false,
@@ -545,7 +543,7 @@ export default function Onboarding() {
     );
   }
 
-  if (success) {
+  if (submissionStatus && submissionStatus.success && completionStatus.isComplete) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-green-50 dark:bg-green-900 p-6 rounded-lg text-center">
@@ -583,18 +581,22 @@ export default function Onboarding() {
                 >
                   {formTitle}
                 </h2>
-                
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onClick={() => formRef.current && formRef.current.requestSubmit()}
-                  disabled={submitting}
-                >
-                  {submitting ? 'Submitting...' : 'Submit'}
-                </button>
+                <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Progress: {completionStatus.completedFields}/{completionStatus.totalFields} fields completed
+          </div>
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={() => formRef.current && formRef.current.requestSubmit()}
+            disabled={submitting}
+          >
+            {submitting ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
               </div>
               
-              {submissionStatus.message && (
+              {submissionStatus && (
                 <div className={`mb-6 p-4 rounded-lg ${
                   submissionStatus.success 
                     ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200' 
@@ -603,25 +605,7 @@ export default function Onboarding() {
                   <p>{submissionStatus.message}</p>
                 </div>
               )}
-              
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="mb-2 font-semibold text-gray-800 dark:text-white">
-                  Your Email Address
-                </div>
-                <div className="flex flex-col md:flex-row gap-2">
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
-                    className="mt-1 block w-full md:w-1/2 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                    required
-                  />
-                </div>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Please enter the email address where you received the onboarding form link.
-                </p>
-              </div>
+          
   
               <form
                 ref={formRef}
@@ -885,19 +869,87 @@ export default function Onboarding() {
                           />
                         </div>
                       )}
+
+                      {field.type === "dropdown" && (
+                        <select
+                          value={field.value}
+                          onChange={(e) => handleFieldChange(e, field.id)}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          required={field.required}
+                        >
+                          <option value="">Select an option</option>
+                          {field.options?.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {field.type === "multiselect" && (
+                        <div className="mt-2 space-y-2">
+                          {field.options?.map((option) => (
+                            <label key={option} className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={(field.value || []).includes(option)}
+                                onChange={(e) => {
+                                  const newValue = e.target.checked
+                                    ? [...(field.value || []), option]
+                                    : (field.value || []).filter(v => v !== option);
+                                  setFields(prev =>
+                                    prev.map(f =>
+                                      f.id === field.id
+                                        ? { ...f, value: newValue }
+                                        : f
+                                    )
+                                  );
+                                }}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              />
+                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {field.type === "radio" && (
+                        <div className="mt-2 space-y-2">
+                          {field.options?.map((option) => (
+                            <label key={option} className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name={field.id}
+                                value={option}
+                                checked={field.value === option}
+                                onChange={(e) => handleFieldChange(e, field.id)}
+                                className="text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {field.type === "decision" && (
+                        <div className="mt-2 space-y-2">
+                          {field.options?.map((option) => (
+                            <label key={option} className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={field.value === option}
+                                onChange={(e) => handleFieldChange(e, field.id)}
+                                className="text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
-                
-                <div className="col-span-1 md:col-span-2 mt-6">
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Submitting...' : 'Submit Form'}
-                  </button>
-                </div>
+  
               </form>
             </div>
           </div>
