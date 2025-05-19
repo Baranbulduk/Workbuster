@@ -89,14 +89,7 @@ export default function OnboardingDetails({ item, type }) {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/onboarding', { replace: true })}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
+
             <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
               <span className="text-blue-600 dark:text-blue-300 text-xl font-medium">
                 {getInitials(item.firstName, item.lastName)}
@@ -105,7 +98,7 @@ export default function OnboardingDetails({ item, type }) {
             <div>
               <div className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
                 {item.name || `${item.firstName} ${item.lastName}`}
-                <span className="text-gray-400 cursor-pointer" title="User info">?</span>
+
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">{item.email}</div>
             </div>
@@ -158,20 +151,7 @@ export default function OnboardingDetails({ item, type }) {
           </div>
         </div>
         
-        {/* Progress Bar */}
-        <div className="flex items-center gap-4 mt-2">
-          <div className="flex-1 flex items-center">
-            <div className="flex-1 h-1 bg-blue-200 dark:bg-blue-900 rounded-full relative">
-              <div className="absolute left-0 top-0 h-1 bg-blue-500 dark:bg-blue-400 rounded-full" style={{ width: '33%' }} />
-              <div className="absolute left-1/3 top-0 h-1 bg-blue-300 dark:bg-blue-600 rounded-full" style={{ width: '33%' }} />
-            </div>
-            <div className="flex gap-8 ml-4 text-xs text-gray-500 dark:text-gray-400">
-              <span className="text-blue-700 dark:text-blue-400 font-semibold">Onboarding Started</span>
-              <span>Data Completed</span>
-              <span>Onboarding Closed</span>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Forms List */}

@@ -46,6 +46,11 @@ const employeeSchema = new mongoose.Schema({
     enum: ['Active', 'On Leave', 'Terminated'],
     default: 'Active'
   },
+  role: {
+    type: String,
+    enum: ['employee', 'admin'],
+    default: 'employee'
+  },
   hireDate: {
     type: Date,
     required: true

@@ -77,16 +77,17 @@ router.post('/', async (req, res) => {
     }
     const employeeId = await generateEmployeeId();
     const passwordPlain = generatePassword();
-    const password = await bcrypt.hash(passwordPlain, 10);
+    const hashedPassword = await bcrypt.hash(passwordPlain, 10);
     const newEmployee = new Employee({
       employeeId,
-      password,
+      password: hashedPassword,
       firstName,
       lastName,
       email,
       phone,
       department: department || 'IT',
       position: position || '-',
+      role: 'employee',
       address: {
         street: address || '',
         city: city || '',
@@ -140,19 +141,21 @@ router.post('/bulk', async (req, res) => {
         const lastId = lastEmployee ? parseInt(lastEmployee.employeeId.slice(1)) : 0;
         const newId = `E${(lastId + 1).toString().padStart(4, '0')}`;
 
-        // Generate random password
-        const password = generatePassword(8);
+        // Generate random password and hash it
+        const passwordPlain = generatePassword(8);
+        const hashedPassword = await bcrypt.hash(passwordPlain, 10);
 
         // Create new employee
         const newEmployee = new Employee({
           employeeId: newId,
-          password,
+          password: hashedPassword,
           firstName: emp.firstName,
           lastName: emp.lastName,
           email: emp.email,
           phone: emp.phone || '',
           department: emp.department || 'IT',
           position: emp.position || 'Employee',
+          role: 'employee',
           status: emp.status || 'Active',
           hireDate: emp.hireDate || new Date(),
           salary: emp.salary || 0,
@@ -168,7 +171,7 @@ router.post('/bulk', async (req, res) => {
         await newEmployee.save();
 
         // Send credentials email
-        await sendCredentialsEmail(emp.email, newId, password);
+        await sendCredentialsEmail(emp.email, newId, passwordPlain);
 
         results.success.push({
           employeeId: newId,
@@ -263,18 +266,19 @@ router.post('/import', async (req, res) => {
 
         // Generate random password
         const plainPassword = generatePassword(8);
-        const password = await bcrypt.hash(plainPassword, 10);
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
         // Create new employee
         const newEmployee = new Employee({
           employeeId,
-          password,
+          password: hashedPassword,
           firstName: emp.firstName || '',
           lastName: emp.lastName || '',
           email: emp.email || '',
           phone: emp.phone || '',
           department: emp.department || 'IT',
           position: emp.position || 'Employee',
+          role: 'employee',
           status: emp.status || 'Active',
           hireDate: emp.hireDate || new Date(),
           salary: emp.salary || 0,
@@ -319,6 +323,55 @@ router.post('/import', async (req, res) => {
       success: false,
       message: error.message 
     });
+  }
+});
+
+// Employee login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
+
+    // Find employee by email
+    const employee = await Employee.findOne({ email });
+    if (!employee) {
+      console.log('Employee not found with email:', email);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    console.log('Employee found:', {
+      id: employee._id,
+      email: employee.email,
+      role: employee.role
+    });
+
+    // Check if the user is an admin (they should use the admin login instead)
+    if (employee.role === 'admin') {
+      console.log('Admin user attempting to use employee login');
+      return res.status(403).json({ message: 'Please use the admin login page' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, employee.password);
+    console.log('Password match result:', isMatch);
+
+    if (!isMatch) {
+      console.log('Password mismatch for employee:', email);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Return employee data (excluding password)
+    const employeeData = employee.toObject();
+    delete employeeData.password;
+
+    console.log('Login successful for employee:', email);
+    res.json({
+      success: true,
+      employee: employeeData
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Error during login' });
   }
 });
 

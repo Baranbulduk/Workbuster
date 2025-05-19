@@ -998,17 +998,11 @@ export default function Onboarding() {
               <div className="flex-1 overflow-y-auto">
                 {activeView === "overview" ? (
                   <div className="p-6 space-y-6">
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Open Positions</h3>
-                        <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.openPositions}</p>
-                      </div>
-                    </div>
+
 
                     {/* Recent Activity */}
                     <div>
-                      <h2 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Recent Activity</h2>
+                      <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recent Logs</h2>
                       <div className="mt-4">
                         {recentActivity.length === 0 ? (
                           <div className="text-gray-500 dark:text-gray-400">No recent activity.</div>
@@ -1046,30 +1040,7 @@ export default function Onboarding() {
                         )}
                       </div>
                     </div>
-                    {/* Quick Actions */}
-                    <div>
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Quick Actions</h2>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <button 
-                            onClick={() => navigate('/candidates')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Register New Candidate
-                          </button>
-                          <button 
-                            onClick={() => navigate('/employees')}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                          >
-                            Add New Employee
-                          </button>
-                          <button 
-                            onClick={() => navigate('/clients')}
-                            className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                          >
-                            Register New Client
-                          </button>
-                        </div>
-                      </div>
+
                     </div>
                 ) : (
                   <div className="flex h-full">

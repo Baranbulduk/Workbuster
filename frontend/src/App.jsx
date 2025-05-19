@@ -22,7 +22,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Employees from './components/Admin/employees/Employees';
 import EmployeeDetails from './components/Admin/employees/EmployeeDetails';
-import EmployeeLogin from './pages/EmployeeLogin';
+import EmployeeLogin from './components/Employee/EmployeeLogin';
 import EmployeeEmployees from './components/Employee/employees/Employees';
 import EmployeeEmployeeDetails from './components/Employee/employees/EmployeeDetails';
 import EmployeeOnboarding from './components/Employee/onboarding/Onboarding';
