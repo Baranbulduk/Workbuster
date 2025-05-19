@@ -33,6 +33,7 @@ const Employees = () => {
   });
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [onboardingProgress, setOnboardingProgress] = useState({});
 
   useEffect(() => {
     fetchEmployees();
@@ -42,7 +43,35 @@ const Employees = () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/employees');
-      setEmployees(response.data);
+      
+      // Fetch forms data for each employee
+      const employeesWithForms = await Promise.all(
+        response.data.map(async (employee) => {
+          try {
+            const formsResponse = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`);
+            return {
+              ...employee,
+              forms: formsResponse.data.forms || []
+            };
+          } catch (error) {
+            console.error(`Error fetching forms for employee ${employee.email}:`, error);
+            return {
+              ...employee,
+              forms: []
+            };
+          }
+        })
+      );
+      
+      setEmployees(employeesWithForms);
+      
+      // Calculate onboarding progress for each employee
+      const progressMap = {};
+      employeesWithForms.forEach(employee => {
+        progressMap[employee._id] = calculateOnboardingProgress(employee);
+      });
+      setOnboardingProgress(progressMap);
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch employees');
@@ -50,6 +79,51 @@ const Employees = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateOnboardingProgress = (employee) => {
+    // Get the forms data for this employee
+    const formsData = employee.forms || [];
+    
+    // Calculate progress based on form completion
+    let notStarted = 0;
+    let inProgress = 0;
+    let completed = 0;
+    
+    formsData.forEach(form => {
+      const recipient = form.recipients?.find(r => r.email === employee.email);
+      if (!recipient) {
+        notStarted++;
+      } else if (recipient.completedAt) {
+        completed++;
+      } else if (recipient.completedFields) {
+        inProgress++;
+      } else {
+        notStarted++;
+      }
+    });
+    
+    const totalForms = formsData.length;
+    const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
+    
+    // Determine status based on progress
+    let status = 'Not Started';
+    if (progress === 100) {
+      status = 'Complete';
+    } else if (progress > 0) {
+      status = 'In Progress';
+    }
+
+    return {
+      progress,
+      status,
+      currentStep: employee.onboardingStep || 1,
+      welcomeSent: employee.welcomeSent,
+      formCompleted: completed > 0,
+      tasks: completed,
+      completed: completed,
+      totalForms: totalForms
+    };
   };
 
   const handleSearch = (e) => {
@@ -177,6 +251,30 @@ const Employees = () => {
       fetchEmployees();
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Failed to create employee.');
+    }
+  };
+
+  // Add function to update onboarding status
+  const updateOnboardingStatus = async (employeeId, updates) => {
+    try {
+      const response = await axios.put(`http://localhost:5000/api/onboarding/${employeeId}/status`, updates);
+      
+      // Update local state
+      setEmployees(prev => prev.map(emp => 
+        emp._id === employeeId ? { ...emp, ...updates } : emp
+      ));
+      
+      // Recalculate progress
+      const updatedEmployee = response.data;
+      setOnboardingProgress(prev => ({
+        ...prev,
+        [employeeId]: calculateOnboardingProgress(updatedEmployee)
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+      return false;
     }
   };
 
@@ -463,16 +561,26 @@ const Employees = () => {
                     </button>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    {/* Onboarding Workflow Progress Bar */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-[120px] max-w-[180px]">
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          <span>Onboarding</span>
-                          <span>Onboarding</span>
-                          <span>Complete</span>
+                          <span>{onboardingProgress[employee._id]?.status || 'Not Started'}</span>
+                          <span>{Math.round(onboardingProgress[employee._id]?.progress || 0)}%</span>
                         </div>
                         <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                          <div className="absolute left-0 top-0 h-2 bg-blue-500 rounded-full" style={{ width: '80%' }} />
+                          <div 
+                            className={`absolute left-0 top-0 h-2 rounded-full ${
+                              onboardingProgress[employee._id]?.progress === 100 
+                                ? 'bg-green-500' 
+                                : onboardingProgress[employee._id]?.progress > 0 
+                                  ? 'bg-blue-500' 
+                                  : 'bg-gray-400'
+                            }`} 
+                            style={{ width: `${onboardingProgress[employee._id]?.progress || 0}%` }} 
+                          />
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {onboardingProgress[employee._id]?.completed || 0} of {onboardingProgress[employee._id]?.totalForms || 0} forms completed
                         </div>
                       </div>
                     </div>

@@ -427,27 +427,34 @@ export default function Onboarding() {
         axios.get('http://localhost:5000/api/clients'),
       ]);
       const activities = [];
+      
       candidatesRes.data.forEach(c => activities.push({
         type: 'Candidate',
         name: `${c.firstName} ${c.lastName}`,
         email: c.email,
         action: 'Added/Updated Candidate',
-        time: c.updatedAt || c.createdAt
+        time: c.updatedAt || c.createdAt,
+        _id: c._id
       }));
+      
       employeesRes.data.forEach(e => activities.push({
         type: 'Employee',
         name: `${e.firstName} ${e.lastName}`,
         email: e.email,
         action: 'Added/Updated Employee',
-        time: e.updatedAt || e.createdAt
+        time: e.updatedAt || e.createdAt,
+        _id: e._id
       }));
+      
       clientsRes.data.forEach(cl => activities.push({
         type: 'Client',
         name: cl.companyName,
         email: cl.email,
         action: 'Added/Updated Client',
-        time: cl.updatedAt || cl.createdAt
+        time: cl.updatedAt || cl.createdAt,
+        _id: cl._id
       }));
+      
       activities.sort((a, b) => new Date(b.time) - new Date(a.time));
       setRecentActivity(activities.slice(0, 8));
     } catch (error) {
@@ -554,30 +561,54 @@ export default function Onboarding() {
 
   // Drag and drop handlers
   const handleDragStart = (e, field) => {
-    e.dataTransfer.setData("fieldType", JSON.stringify(field));
+    // Set the data being dragged
+    const fieldData = {
+      type: field.type,
+      label: field.label,
+      icon: field.icon
+    };
+    e.dataTransfer.setData('text/plain', JSON.stringify(fieldData));
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDraggingOver(false);
-    const field = JSON.parse(e.dataTransfer.getData("fieldType"));
-    setFields((prev) => [
-      ...prev,
-      {
-        ...field,
+    
+    try {
+      const fieldData = e.dataTransfer.getData('text/plain');
+      const field = JSON.parse(fieldData);
+      
+      // Create a new field with a unique ID
+      const newField = {
         id: `${field.type}-${Date.now()}`,
+        type: field.type,
         label: field.label,
-        value: field.type === "checkbox" ? false : "",
-      },
-    ]);
+        value: field.type === 'checkbox' ? false : '',
+        required: false
+      };
+      
+      // Add the new field to the fields array
+      setFields(prev => [...prev, newField]);
+    } catch (error) {
+      console.error('Error adding field:', error);
+    }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
     setIsDraggingOver(true);
   };
 
   const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  };
+
+  // Add this new function to handle drag end
+  const handleDragEnd = (e) => {
+    e.preventDefault();
     setIsDraggingOver(false);
   };
 
@@ -674,38 +705,49 @@ export default function Onboarding() {
   };
 
   const handleAddRecipient = () => {
-    if (!recipientEmail || !emailRegex.test(recipientEmail)) return;
-    setRecipients((prev) => [
-      ...prev,
-      { name: recipientName, email: recipientEmail },
-    ]);
-    setRecipientName("");
-    setRecipientEmail("");
+    if (!recipientEmail || !emailRegex.test(recipientEmail)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    setRecipients(prev => [...prev, { name: recipientName, email: recipientEmail }]);
+    setRecipientName('');
+    setRecipientEmail('');
   };
+
   const handleBulkAdd = () => {
     const lines = bulkInput
       .split(/[\n,;]+/)
-      .map((s) => s.trim())
+      .map(s => s.trim())
       .filter(Boolean);
+    
     const newRecipients = lines
-      .map((line) => {
-        const [name, email] = line.includes("@") ? [null, line] : [line, null];
+      .map(line => {
+        const [name, email] = line.includes('@') ? [null, line] : [line, null];
         return emailRegex.test(email || name)
-          ? { name: name || "", email: email || name }
+          ? { name: name || '', email: email || name }
           : null;
       })
       .filter(Boolean);
-    setRecipients((prev) => [...prev, ...newRecipients]);
-    setBulkInput("");
+
+    if (newRecipients.length === 0) {
+      alert('No valid email addresses found in the input');
+      return;
+    }
+
+    setRecipients(prev => [...prev, ...newRecipients]);
+    setBulkInput('');
   };
+
   const handleRemoveRecipient = (idx) => {
-    setRecipients((prev) => prev.filter((_, i) => i !== idx));
+    setRecipients(prev => prev.filter((_, i) => i !== idx));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate recipients
     if (recipients.length === 0) {
+      alert('Please add at least one recipient');
       return;
     }
 
@@ -720,28 +762,23 @@ export default function Onboarding() {
         recipients
       };
 
-      console.log('Submitting onboarding form. Payload:', payload);
-
       // Send to backend
       const response = await axios.post('http://localhost:5000/api/onboarding/send-form', payload);
-      
-      console.log('Backend response:', response.data);
 
       if (response.data.success) {
         // Reset form state
         const resetFields = fields.map(field => ({
           ...field,
-          value: field.type === "checkbox" ? false : 
-                 field.type === "file" ? null : 
-                 field.type === "multiselect" ? [] : ""
+          value: field.type === 'checkbox' ? false : 
+                 field.type === 'file' ? null : 
+                 field.type === 'multiselect' ? [] : ''
         }));
         
         setFields(resetFields);
         setRecipients([]);
         setFieldOptions({});
-        
+        alert('Form submitted successfully!');
       } else {
-        console.error('Backend error:', response.data);
         throw new Error(response.data.message || 'Failed to submit form');
       }
     } catch (error) {
@@ -905,14 +942,14 @@ export default function Onboarding() {
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   onClick={() => handleItemClick(item)}
-                >
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
+              >
+                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
                       {activeTab === 'clients' 
                         ? item.companyName?.substring(0, 2).toUpperCase()
                         : getInitials(item.firstName, item.lastName)}
-                    </span>
-                  </div>
+                  </span>
+                </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-800 dark:text-white">
                       {activeTab === 'clients' 
@@ -923,8 +960,8 @@ export default function Onboarding() {
                       {item.email}
                     </div>
                   </div>
-                </div>
-              ))}
+              </div>
+            ))}
           </div>
         </aside>
         {/* Main Panel */}
@@ -971,28 +1008,44 @@ export default function Onboarding() {
 
                     {/* Recent Activity */}
                     <div>
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Recent Activity</h2>
-                        <div className="mt-4 space-y-4">
-                          {recentActivity.length === 0 ? (
-                            <div className="text-gray-500 dark:text-gray-400">No recent activity.</div>
-                          ) : (
-                            recentActivity.map((activity, idx) => (
-                              <div key={idx} className="flex items-center space-x-4">
-                                <div className="flex-shrink-0">
-                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'Candidate' ? 'bg-blue-100 dark:bg-blue-900' : activity.type === 'Employee' ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
-                                    <span className={`font-medium ${activity.type === 'Candidate' ? 'text-blue-600 dark:text-blue-400' : activity.type === 'Employee' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{activity.type[0]}</span>
-                                  </div>
+                      <h2 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Recent Activity</h2>
+                      <div className="mt-4">
+                        {recentActivity.length === 0 ? (
+                          <div className="text-gray-500 dark:text-gray-400">No recent activity.</div>
+                        ) : (
+                          recentActivity.map((activity, idx) => (
+                            <div 
+                              key={idx} 
+                              className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                              onClick={() => {
+                                switch (activity.type) {
+                                  case 'Candidate':
+                                    navigate(`/candidates/${activity._id}`, { state: { fromOnboarding: true } });
+                                    break;
+                                  case 'Employee':
+                                    navigate(`/employees/${activity._id}`, { state: { fromOnboarding: true } });
+                                    break;
+                                  case 'Client':
+                                    navigate(`/clients/${activity._id}`, { state: { fromOnboarding: true } });
+                                    break;
+                                }
+                              }}
+                            >
+                              <div className="flex-shrink-0">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'Candidate' ? 'bg-blue-100 dark:bg-blue-900' : activity.type === 'Employee' ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
+                                  <span className={`font-medium ${activity.type === 'Candidate' ? 'text-blue-600 dark:text-blue-400' : activity.type === 'Employee' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{activity.type[0]}</span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.name}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{activity.action}</p>
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(activity.time).toLocaleString()}</div>
                               </div>
-                            ))
-                          )}
-                        </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.name}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{activity.action}</p>
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(activity.time).toLocaleString()}</div>
+                            </div>
+                          ))
+                        )}
                       </div>
+                    </div>
                     {/* Quick Actions */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Quick Actions</h2>
@@ -1022,764 +1075,770 @@ export default function Onboarding() {
                   <div className="flex h-full">
                     {/* Add Field Section */}
                     <aside className="w-1/3 border-r dark:border-gray-700 p-8 flex flex-col h-full bg-gray-100 dark:bg-gray-700 rounded-l-[5px]">
-                      <h2 className="text-lg font-semibold   mt-2 mb-10 text-gray-900 dark:text-white">
-                        Add Field
-                      </h2>
-                      <div className="grid grid-cols-2 gap-4">
-                        {FIELD_TYPES.map((field) => (
-                          <button
-                            key={field.label}
-                            className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, field)}
-                            type="button"
-                          >
-                            <div className="flex items-center justify-center w-6 h-6 text-gray-400">
-                              <Bars3Icon className="h-6 w-6" />
-                            </div>
-                            <div className="flex items-center justify-center w-8 h-8">
-                              {field.icon && (
-                                <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                              )}
-                            </div>
-                            <span className="font-semibold">{field.label}</span>
-                          </button>
-                        ))}
+                      <h2 className="text-lg font-semibold mt-2 mb-10 text-gray-900 dark:text-white">
+                  Add Field
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {FIELD_TYPES.map((field) => (
+                          <div
+                      key={field.label}
+                      className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, field)}
+                    >
+                      <div className="flex items-center justify-center w-6 h-6 text-gray-400">
+                        <Bars3Icon className="h-6 w-6" />
                       </div>
-                    </aside>
-                    {/* Form Section */}
-                    <div className="flex-1 p-8 overflow-y-auto">
-                      <div className=" flex justify-between items-center mb-8">
-                        {editingTitle ? (
+                      <div className="flex items-center justify-center w-8 h-8">
+                        {field.icon && (
+                          <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                        )}
+                      </div>
+                      <span className="font-semibold">{field.label}</span>
+                          </div>
+                  ))}
+                </div>
+              </aside>
+              {/* Form Section */}
+              <div
+                      className="flex-1 p-8 overflow-y-auto"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+              >
+                      <div className="flex justify-between items-center mb-8">
+                  {editingTitle ? (
+                    <input
+                      className="text-xl font-semibold  text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
+                      value={formTitle}
+                      onChange={handleTitleChange}
+                      onBlur={handleTitleBlur}
+                      onKeyDown={handleTitleKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    <h2
+                      className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer"
+                      onClick={handleTitleClick}
+                    >
+                      {formTitle}
+                      <PencilIcon className="h-5 w-5 inline ml-2 text-gray-400" />
+                    </h2>
+                  )}
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onClick={() => formRef.current && formRef.current.requestSubmit()}
+                  >
+                    Submit
+                  </button>
+                </div>
+                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-600">
+                  <div className="mb-2 font-semibold text-gray-800 dark:text-white">
+                    Send this form to:
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Recipient name (optional)"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Recipient email"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddRecipient}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2 mb-2">
+                    <textarea
+                      placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
+                      value={bulkInput}
+                      onChange={(e) => setBulkInput(e.target.value)}
+                      className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleBulkAdd}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 self-start"
+                    >
+                      Add Bulk
+                    </button>
+                  </div>
+                  {recipients.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {recipients.map((r, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm"
+                        >
+                          {r.name ? `${r.name} ` : ""}
+                          {r.email}
+                          <button
+                            type="button"
+                            className="ml-2 text-red-500 hover:text-red-700 "
+                            onClick={() => handleRemoveRecipient(idx)}
+                            title="Remove"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <form
+                  ref={formRef}
+                        className={`grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg transition-colors ${
+                          isDraggingOver ? 'bg-blue-50 dark:bg-blue-900 border-2 border-blue-500' : ''
+                        }`}
+                  onSubmit={handleSubmit}
+                >
+                  {fields.map((field, idx) => (
+                    <div
+                      key={field.id}
+                      className="col-span-1 group flex items-end gap-2"
+                      draggable
+                      onDragStart={(e) => handleDragStartField(e, field.id)}
+                      onDragOver={(e) => handleDragOverField(e, field.id)}
+                      onDragEnd={handleDragEndField}
+                    >
+                      <div className="flex items-center justify-center w-8 h-11 text-gray-400 cursor-move">
+                        <Bars3Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        {editingLabelId === field.id ? (
                           <input
-                            className="text-xl font-semibold  text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
-                            value={formTitle}
-                            onChange={handleTitleChange}
-                            onBlur={handleTitleBlur}
-                            onKeyDown={handleTitleKeyDown}
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 bg-transparent border-b border-blue-400 focus:outline-none"
+                            value={labelDraft}
+                            onChange={handleLabelChange}
+                            onBlur={() => handleLabelBlur(field.id)}
+                            onKeyDown={(e) => handleLabelKeyDown(e, field.id)}
                             autoFocus
                           />
                         ) : (
-                          <h2
-                            className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer"
-                            onClick={handleTitleClick}
+                          <label
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                            onClick={() =>
+                              handleLabelClick(field.id, field.label)
+                            }
                           >
-                            {formTitle}
-                            <PencilIcon className="h-5 w-5 inline ml-2 text-gray-400" />
-                          </h2>
+                            {field.label}
+                            <PencilIcon className="h-4 w-4 inline ml-1 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
+                          </label>
                         )}
-                        <button
-                          type="button"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          onClick={() => formRef.current && formRef.current.requestSubmit()}
-                        >
-                          Submit
-                        </button>
-                      </div>
-                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div className="mb-2 font-semibold text-gray-800 dark:text-white">
-                          Send this form to:
-                        </div>
-                        <div className="flex flex-col md:flex-row gap-2 mb-2">
-                          <input
-                            type="text"
-                            placeholder="Recipient name (optional)"
-                            value={recipientName}
-                            onChange={(e) => setRecipientName(e.target.value)}
-                            className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          />
+
+                        {/* Field Type Specific Inputs */}
+                        {field.type === "image" && (
+                          <div className="mt-1">
+                          <input 
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            {field.value && (
+                              <img
+                                src={URL.createObjectURL(field.value)}
+                                alt="Preview"
+                                className="mt-2 h-32 w-32 object-cover rounded"
+                              />
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "file" && (
+                          <div className="mt-1">
+                            <input
+                              type="file"
+                              accept={
+                                field.id === "offerLetter"
+                                  ? ".pdf,.doc,.docx"
+                                  : undefined
+                              }
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            {field.value && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  {field.value.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "email" && (
                           <input
                             type="email"
-                            placeholder="Recipient email"
-                            value={recipientEmail}
-                            onChange={(e) => setRecipientEmail(e.target.value)}
-                            className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder={
+                              field.id === "personalMail"
+                                ? "Enter personal email address..."
+                                : field.id === "officialMail"
+                                ? "Enter official email address..."
+                                : "Enter email address..."
+                            }
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
                           />
-                          <button
-                            type="button"
-                            onClick={handleAddRecipient}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="flex flex-col md:flex-row gap-2 mb-2">
-                          <textarea
-                            placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
-                            value={bulkInput}
-                            onChange={(e) => setBulkInput(e.target.value)}
-                            className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                        )}
+
+                        {field.type === "date" && (
+                          <input
+                            type="date"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                           />
-                          <button
-                            type="button"
-                            onClick={handleBulkAdd}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 self-start"
-                          >
-                            Add Bulk
-                          </button>
-                        </div>
-                        {recipients.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {recipients.map((r, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm"
-                              >
-                                {r.name ? `${r.name} ` : ""}
-                                {r.email}
-                                <button
-                                  type="button"
-                                  className="ml-2 text-red-500 hover:text-red-700 "
-                                  onClick={() => handleRemoveRecipient(idx)}
-                                  title="Remove"
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                </button>
+                        )}
+
+                        {field.type === "datetime" && (
+                          <input 
+                            type="datetime-local"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "checkbox" && (
+                          <div className="mt-1">
+                            <label className="inline-flex items-center">
+                          <input 
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={(e) => handleFieldChange(e, field.id)}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                {field.id === "offerAccepted"
+                                  ? "I accept the offer"
+                                  : field.label}
                               </span>
+                            </label>
+                          </div>
+                        )}
+
+                        {field.type === "tel" && (
+                          <input
+                            type="tel"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter contact number..."
+                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "blood" && (
+                          <select
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select blood group</option>
+                            {bloodGroups.map((group) => (
+                              <option key={group} value={group}>
+                                {group}
+                              </option>
                             ))}
+                          </select>
+                        )}
+
+                        {field.type === "dropdown" && (
+                          <div className="mt-1">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <select
+                            value={field.value} 
+                                  onChange={(e) =>
+                                    handleFieldChange(e, field.id)
+                                  }
+                                  className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                >
+                                  <option value="">Select an option</option>
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <option key={idx} value={option}>
+                                        {option}
+                                      </option>
+                                    )
+                                  )}
+                                </select>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "text" && (
+                          <input
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter text here..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "phone" && (
+                          <input
+                            type="tel"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter phone number..."
+                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "formula" && (
+                          <input
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter formula..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "gender" && (
+                          <select 
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select gender</option>
+                            {genders.map((gender) => (
+                              <option key={gender} value={gender}>
+                                {gender}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
+                        {field.type === "decimal" && (
+                          <input 
+                            type="number"
+                            step="0.01"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter decimal number..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "country" && (
+                          <select
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          >
+                            <option value="">Select country</option>
+                            {countries.map((country) => (
+                              <option key={country} value={country}>
+                                {country}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
+                        {field.type === "multiselect" && (
+                          <div className="mt-1">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) => setOptionDraft(e.target.value)}
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && optionDraft.trim()) {
+                                        handleAddOption(field.id);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map((option, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                    >
+                                      {option}
+                                      <button
+                                        onClick={() => handleRemoveOption(field.id, idx)}
+                                        className="ml-2 text-red-500 hover:text-red-700"
+                                      >
+                                        <XMarkIcon className="h-4 w-4" />
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map((option, idx) => (
+                                    <label
+                                      key={idx}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={(field.value || []).includes(option)}
+                                        onChange={(e) => {
+                                          const newValue = e.target.checked
+                                            ? [...(field.value || []), option]
+                                            : (field.value || []).filter(v => v !== option);
+                                          setFields(prev =>
+                                            prev.map(f =>
+                                              f.id === field.id
+                                                ? { ...f, value: newValue }
+                                                : f
+                                            )
+                                          );
+                                        }}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                      <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "lookup" && (
+                          <input
+                            type="text"
+                            value={field.value} 
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter lookup value..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                          />
+                        )}
+
+                        {field.type === "notes" && (
+                          <textarea
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Add notes..."
+                            rows={4}
+                            className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "url" && (
+                          <input 
+                            type="url"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter URL..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "radio" && (
+                          <div className="mt-1 space-y-2">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <label
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                      >
+                          <input 
+                            type="radio"
+                            name={field.id}
+                            value={option}
+                            checked={field.value === option}
+                            onChange={(e) =>
+                              handleFieldChange(e, field.id)
+                            }
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>{option}</span>
+                            </label>
+                                    )
+                                  )}
+                          </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "decision" && (
+                          <div className="mt-1 space-y-2">
+                            {editingOptions === field.id ? (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={optionDraft}
+                                    onChange={(e) =>
+                                      setOptionDraft(e.target.value)
+                                    }
+                                    placeholder="Add new option..."
+                                    className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  />
+                                  <button
+                                    onClick={() => handleAddOption(field.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                      >
+                                        {option}
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveOption(field.id, idx)
+                                          }
+                                          className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                          <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleSaveOptions(field.id)}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                >
+                                  Done
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  {(fieldOptions[field.id] || []).map(
+                                    (option, idx) => (
+                                      <label
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                      >
+                          <input 
+                            type="checkbox" 
+                                          checked={field.value === option}
+                                          onChange={(e) =>
+                                            handleFieldChange(e, field.id)
+                                          }
+                                          className="text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span>{option}</span>
+                                      </label>
+                                    )
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleEditOptions(field.id)}
+                                  className="text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  Edit Options
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {field.type === "textarea" && (
+                          <textarea
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter text here..."
+                            rows={4}
+                            className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "number" && (
+                          <input
+                            type="number"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter number..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          />
+                        )}
+
+                        {field.type === "currency" && (
+                          <div className="relative mt-1">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <span className="text-gray-500 dark:text-gray-400">
+                                $
+                              </span>
+                            </div>
+                            <input
+                              type="number"
+                              value={field.value}
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              placeholder="0.00"
+                              step="0.01"
+                              min="0"
+                              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
+                            />
                           </div>
                         )}
                       </div>
-                      <form
-                        ref={formRef}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                        onSubmit={handleSubmit}
-                      >
-                        {fields.map((field, idx) => (
-                          <div
-                            key={field.id}
-                            className="col-span-1 group flex items-end gap-2"
-                            draggable
-                            onDragStart={(e) => handleDragStartField(e, field.id)}
-                            onDragOver={(e) => handleDragOverField(e, field.id)}
-                            onDragEnd={handleDragEndField}
-                          >
-                            <div className="flex items-center justify-center w-8 h-11 text-gray-400 cursor-move">
-                              <Bars3Icon className="h-5 w-5" />
-                            </div>
-                            <div className="flex-1">
-                              {editingLabelId === field.id ? (
-                                <input
-                                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 bg-transparent border-b border-blue-400 focus:outline-none"
-                                  value={labelDraft}
-                                  onChange={handleLabelChange}
-                                  onBlur={() => handleLabelBlur(field.id)}
-                                  onKeyDown={(e) => handleLabelKeyDown(e, field.id)}
-                                  autoFocus
-                                />
-                              ) : (
-                                <label
-                                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                                  onClick={() =>
-                                    handleLabelClick(field.id, field.label)
-                                  }
-                                >
-                                  {field.label}
-                                  <PencilIcon className="h-4 w-4 inline ml-1 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
-                                </label>
-                              )}
-
-                              {/* Field Type Specific Inputs */}
-                              {field.type === "image" && (
-                                <div className="mt-1">
-                                  <input 
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleFieldChange(e, field.id)}
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                  />
-                                  {field.value && (
-                                    <img
-                                      src={URL.createObjectURL(field.value)}
-                                      alt="Preview"
-                                      className="mt-2 h-32 w-32 object-cover rounded"
-                                    />
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "file" && (
-                                <div className="mt-1">
-                                  <input
-                                    type="file"
-                                    accept={
-                                      field.id === "offerLetter"
-                                        ? ".pdf,.doc,.docx"
-                                        : undefined
-                                    }
-                                    onChange={(e) => handleFieldChange(e, field.id)}
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                  />
-                                  {field.value && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                      <DocumentTextIcon className="h-5 w-5 text-gray-400" />
-                                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        {field.value.name}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "email" && (
-                                <input
-                                  type="email"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder={
-                                    field.id === "personalMail"
-                                      ? "Enter personal email address..."
-                                      : field.id === "officialMail"
-                                      ? "Enter official email address..."
-                                      : "Enter email address..."
-                                  }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "date" && (
-                                <input
-                                  type="date"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "datetime" && (
-                                <input 
-                                  type="datetime-local"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "checkbox" && (
-                                <div className="mt-1">
-                                  <label className="inline-flex items-center">
-                                    <input 
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={(e) => handleFieldChange(e, field.id)}
-                                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    />
-                                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                      {field.id === "offerAccepted"
-                                        ? "I accept the offer"
-                                        : field.label}
-                                    </span>
-                                  </label>
-                                </div>
-                              )}
-
-                              {field.type === "tel" && (
-                                <input
-                                  type="tel"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter contact number..."
-                                  pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "blood" && (
-                                <select
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                >
-                                  <option value="">Select blood group</option>
-                                  {bloodGroups.map((group) => (
-                                    <option key={group} value={group}>
-                                      {group}
-                                    </option>
-                                  ))}
-                                </select>
-                              )}
-
-                              {field.type === "dropdown" && (
-                                <div className="mt-1">
-                                  {editingOptions === field.id ? (
-                                    <div className="space-y-2">
-                                      <div className="flex gap-2">
-                                        <input 
-                                          type="text" 
-                                          value={optionDraft}
-                                          onChange={(e) =>
-                                            setOptionDraft(e.target.value)
-                                          }
-                                          placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                        />
-                                        <button
-                                          onClick={() => handleAddOption(field.id)}
-                                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                        >
-                                          Add
-                                        </button>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
-                                            >
-                                              {option}
-                                              <button
-                                                onClick={() =>
-                                                  handleRemoveOption(field.id, idx)
-                                                }
-                                                className="ml-2 text-red-500 hover:text-red-700"
-                                              >
-                                                <XMarkIcon className="h-4 w-4" />
-                                              </button>
-                                            </span>
-                                          )
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleSaveOptions(field.id)}
-                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                                      >
-                                        Done
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <select
-                                        value={field.value} 
-                                        onChange={(e) =>
-                                          handleFieldChange(e, field.id)
-                                        }
-                                        className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                      >
-                                        <option value="">Select an option</option>
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <option key={idx} value={option}>
-                                              {option}
-                                            </option>
-                                          )
-                                        )}
-                                      </select>
-                                      <button
-                                        onClick={() => handleEditOptions(field.id)}
-                                        className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                                      >
-                                        Edit Options
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "text" && (
-                                <input
-                                  type="text"
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter text here..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "phone" && (
-                                <input
-                                  type="tel"
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter phone number..."
-                                  pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "formula" && (
-                                <input
-                                  type="text"
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter formula..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "gender" && (
-                                <select 
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                >
-                                  <option value="">Select gender</option>
-                                  {genders.map((gender) => (
-                                    <option key={gender} value={gender}>
-                                      {gender}
-                                    </option>
-                                  ))}
-                                </select>
-                              )}
-
-                              {field.type === "decimal" && (
-                                <input 
-                                  type="number"
-                                  step="0.01"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter decimal number..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "country" && (
-                                <select
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                >
-                                  <option value="">Select country</option>
-                                  {countries.map((country) => (
-                                    <option key={country} value={country}>
-                                      {country}
-                                    </option>
-                                  ))}
-                                </select>
-                              )}
-
-                              {field.type === "multiselect" && (
-                                <div className="mt-1">
-                                  {editingOptions === field.id ? (
-                                    <div className="space-y-2">
-                                      <div className="flex gap-2">
-                                        <input
-                                          type="text"
-                                          value={optionDraft}
-                                          onChange={(e) => setOptionDraft(e.target.value)}
-                                          placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && optionDraft.trim()) {
-                                              handleAddOption(field.id);
-                                            }
-                                          }}
-                                        />
-                                        <button
-                                          onClick={() => handleAddOption(field.id)}
-                                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                        >
-                                          Add
-                                        </button>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        {(fieldOptions[field.id] || []).map((option, idx) => (
-                                          <span
-                                            key={idx}
-                                            className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
-                                          >
-                                            {option}
-                                            <button
-                                              onClick={() => handleRemoveOption(field.id, idx)}
-                                              className="ml-2 text-red-500 hover:text-red-700"
-                                            >
-                                              <XMarkIcon className="h-4 w-4" />
-                                            </button>
-                                          </span>
-                                        ))}
-                                      </div>
-                                      <button
-                                        onClick={() => handleSaveOptions(field.id)}
-                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                                      >
-                                        Done
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="space-y-2">
-                                        {(fieldOptions[field.id] || []).map((option, idx) => (
-                                          <label
-                                            key={idx}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={(field.value || []).includes(option)}
-                                              onChange={(e) => {
-                                                const newValue = e.target.checked
-                                                  ? [...(field.value || []), option]
-                                                  : (field.value || []).filter(v => v !== option);
-                                                setFields(prev =>
-                                                  prev.map(f =>
-                                                    f.id === field.id
-                                                      ? { ...f, value: newValue }
-                                                      : f
-                                                  )
-                                                );
-                                              }}
-                                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                            />
-                                            <span className="text-gray-700 dark:text-gray-300">{option}</span>
-                                          </label>
-                                        ))}
-                                      </div>
-                                      <button
-                                        onClick={() => handleEditOptions(field.id)}
-                                        className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                                      >
-                                        Edit Options
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "lookup" && (
-                                <input
-                                  type="text"
-                                  value={field.value} 
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter lookup value..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                                />
-                              )}
-
-                              {field.type === "notes" && (
-                                <textarea
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Add notes..."
-                                  rows={4}
-                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "url" && (
-                                <input 
-                                  type="url"
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter URL..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "radio" && (
-                                <div className="mt-1 space-y-2">
-                                  {editingOptions === field.id ? (
-                                    <div className="space-y-2">
-                                      <div className="flex gap-2">
-                                        <input
-                                          type="text"
-                                          value={optionDraft}
-                                          onChange={(e) =>
-                                            setOptionDraft(e.target.value)
-                                          }
-                                          placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                        />
-                                        <button
-                                          onClick={() => handleAddOption(field.id)}
-                                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                        >
-                                          Add
-                                        </button>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
-                                            >
-                                              {option}
-                                              <button
-                                                onClick={() =>
-                                                  handleRemoveOption(field.id, idx)
-                                                }
-                                                className="ml-2 text-red-500 hover:text-red-700"
-                                              >
-                                                <XMarkIcon className="h-4 w-4" />
-                                              </button>
-                                            </span>
-                                          )
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleSaveOptions(field.id)}
-                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                                      >
-                                        Done
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="space-y-2">
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <label
-                                              key={idx}
-                                              className="flex items-center gap-2"
-                                            >
-                                              <input 
-                                                type="radio"
-                                                name={field.id}
-                                                value={option}
-                                                checked={field.value === option}
-                                                onChange={(e) =>
-                                                  handleFieldChange(e, field.id)
-                                                }
-                                                className="text-blue-600 focus:ring-blue-500"
-                                              />
-                                              <span>{option}</span>
-                                            </label>
-                                          )
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleEditOptions(field.id)}
-                                        className="text-sm text-blue-600 hover:text-blue-800"
-                                      >
-                                        Edit Options
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "decision" && (
-                                <div className="mt-1 space-y-2">
-                                  {editingOptions === field.id ? (
-                                    <div className="space-y-2">
-                                      <div className="flex gap-2">
-                                        <input
-                                          type="text"
-                                          value={optionDraft}
-                                          onChange={(e) =>
-                                            setOptionDraft(e.target.value)
-                                          }
-                                          placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                        />
-                                        <button
-                                          onClick={() => handleAddOption(field.id)}
-                                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                        >
-                                          Add
-                                        </button>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
-                                            >
-                                              {option}
-                                              <button
-                                                onClick={() =>
-                                                  handleRemoveOption(field.id, idx)
-                                                }
-                                                className="ml-2 text-red-500 hover:text-red-700"
-                                              >
-                                                <XMarkIcon className="h-4 w-4" />
-                                              </button>
-                                            </span>
-                                          )
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleSaveOptions(field.id)}
-                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                                      >
-                                        Done
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="space-y-2">
-                                        {(fieldOptions[field.id] || []).map(
-                                          (option, idx) => (
-                                            <label
-                                              key={idx}
-                                              className="flex items-center gap-2"
-                                            >
-                                              <input 
-                                                type="checkbox" 
-                                                checked={field.value === option}
-                                                onChange={(e) =>
-                                                  handleFieldChange(e, field.id)
-                                                }
-                                                className="text-blue-600 focus:ring-blue-500"
-                                              />
-                                              <span>{option}</span>
-                                            </label>
-                                          )
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleEditOptions(field.id)}
-                                        className="text-sm text-blue-600 hover:text-blue-800"
-                                      >
-                                        Edit Options
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-
-                              {field.type === "textarea" && (
-                                <textarea
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter text here..."
-                                  rows={4}
-                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "number" && (
-                                <input
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) => handleFieldChange(e, field.id)}
-                                  placeholder="Enter number..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                                />
-                              )}
-
-                              {field.type === "currency" && (
-                                <div className="relative mt-1">
-                                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                      $
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="number"
-                                    value={field.value}
-                                    onChange={(e) => handleFieldChange(e, field.id)}
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                    className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteField(field.id)}
-                                className="inline-flex items-center px-2.5 py-1.5 border w-11 h-11 border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                              >
-                                <TrashIcon className="h-5 w-5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </form>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteField(field.id)}
+                          className="inline-flex items-center px-2.5 py-1.5 border w-11 h-11 border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                      </div>
+                    </div>
+                  ))}
+                </form>
                     </div>
                   </div>
                 )}

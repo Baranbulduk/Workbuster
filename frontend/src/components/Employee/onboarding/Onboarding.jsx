@@ -366,6 +366,33 @@ export default function Onboarding() {
   });
 
   useEffect(() => {
+    const employeeToken = localStorage.getItem('employeeToken');
+    if (!employeeToken) {
+      navigate(`/employee/login?token=${token}`);
+      return;
+    }
+
+    const verifyToken = async () => {
+      try {
+        const response = await axios.post('http://localhost:5000/api/employee/verify-token', {
+          token: employeeToken
+        });
+        
+        if (!response.data.valid) {
+          localStorage.removeItem('employeeToken');
+          navigate(`/employee/login?token=${token}`);
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('employeeToken');
+        navigate(`/employee/login?token=${token}`);
+      }
+    };
+
+    verifyToken();
+  }, [token, navigate]);
+
+  useEffect(() => {
     if (token) {
       fetchFormData(token);
     } else {
@@ -460,6 +487,11 @@ export default function Onboarding() {
     try {
       setSubmitting(true);
       
+      const employeeToken = localStorage.getItem('employeeToken');
+      if (!employeeToken) {
+        throw new Error('Authentication required');
+      }
+
       // Only include fields that have values
       const completedFields = fields
         .filter(field => {
@@ -480,6 +512,11 @@ export default function Onboarding() {
         { 
           completedFields,
           recipientEmail: searchParams.get('email')
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`
+          }
         }
       );
       
@@ -492,6 +529,8 @@ export default function Onboarding() {
         });
 
         if (completionStatus.isComplete) {
+          localStorage.removeItem('employeeToken');
+          
           // Reset form only if all fields are completed
           const resetFields = fields.map(field => ({
             ...field,
@@ -509,10 +548,14 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      setSubmissionStatus({
-        success: false,
-        message: "Error submitting form. Please try again or contact support."
-      });
+      if (error.message === 'Authentication required') {
+        navigate(`/employee/login?token=${token}`);
+      } else {
+        setSubmissionStatus({
+          success: false,
+          message: "Error submitting form. Please try again or contact support."
+        });
+      }
     } finally {
       setSubmitting(false);
     }

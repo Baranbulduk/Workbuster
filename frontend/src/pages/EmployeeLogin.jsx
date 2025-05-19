@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 
 const EmployeeLogin = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const onboardingToken = searchParams.get('token');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,16 +21,36 @@ const EmployeeLogin = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For demo: hardcoded check
-    if (
-      formData.email === 'employee@rexett.com' &&
-      formData.password === 'employee123'
-    ) {
-      navigate('/employee/employees');
-    } else {
-      alert('Invalid employee credentials');
+    setLoading(true);
+    setError('');
+
+    try {
+      // Call your backend API to verify employee credentials
+      const response = await axios.post('http://localhost:5000/api/employee/login', {
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (response.data.success) {
+        // Store the employee token in localStorage
+        localStorage.setItem('employeeToken', response.data.token);
+        
+        // If there's an onboarding token, redirect to onboarding with both tokens
+        if (onboardingToken) {
+          navigate(`/employee/onboarding?token=${onboardingToken}`);
+        } else {
+          navigate('/employee/employees');
+        }
+      } else {
+        setError('Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,7 +61,17 @@ const EmployeeLogin = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Employee Login
           </h2>
+          {onboardingToken && (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Please login to access your onboarding form
+            </p>
+          )}
         </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
@@ -69,9 +104,10 @@ const EmployeeLogin = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign in
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>
