@@ -78,6 +78,7 @@ const FIELD_TYPES = [
 export default function Onboarding() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const email = searchParams.get('email');
   const [form, setForm] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +104,6 @@ export default function Onboarding() {
       type: "text",
       label: "Candidate Name",
       value: "",
-      required: true,
     },
     {
       id: "candidatePhoto",
@@ -116,29 +116,30 @@ export default function Onboarding() {
       type: "email",
       label: "Personal Mail ID",
       value: "",
-      required: true,
     },
     {
       id: "officialMail",
       type: "email",
       label: "Official Mail ID",
       value: "",
-      required: true,
     },
-    { id: "offerLetter", type: "file", label: "Offer Letter", value: null },
+    { 
+      id: "offerLetter", 
+      type: "file", 
+      label: "Offer Letter", 
+      value: null 
+    },
     {
       id: "contactNo",
       type: "text",
       label: "Contact no",
       value: "",
-      required: true,
     },
     {
       id: "dateOfJoining",
       type: "date",
       label: "Date of Joining",
       value: "",
-      required: true,
     },
     {
       id: "offerAccepted",
@@ -368,7 +369,7 @@ export default function Onboarding() {
   useEffect(() => {
     const employeeToken = localStorage.getItem('employeeToken');
     if (!employeeToken) {
-      navigate(`/employee/login?token=${token}`);
+      navigate(`/employee/login?token=${token}${email ? `&email=${email}` : ''}`);
       return;
     }
 
@@ -380,17 +381,15 @@ export default function Onboarding() {
         
         if (!response.data.valid) {
           localStorage.removeItem('employeeToken');
-          navigate(`/employee/login?token=${token}`);
+          navigate(`/employee/login?token=${token}${email ? `&email=${email}` : ''}`);
         }
       } catch (error) {
         console.error('Token verification failed:', error);
-        localStorage.removeItem('employeeToken');
-        navigate(`/employee/login?token=${token}`);
       }
     };
 
     verifyToken();
-  }, [token, navigate]);
+  }, [token, email, navigate]);
 
   useEffect(() => {
     if (token) {
@@ -608,6 +607,12 @@ export default function Onboarding() {
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           Onboarding
         </h1>
+        <button
+          onClick={() => navigate(`/employee/employees${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          View Employees
+        </button>
       </div>
       
       <div className="flex">
@@ -625,18 +630,32 @@ export default function Onboarding() {
                   {formTitle}
                 </h2>
                 <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Progress: {completionStatus.completedFields}/{completionStatus.totalFields} fields completed
-          </div>
-          <button
-            type="button"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => formRef.current && formRef.current.requestSubmit()}
-            disabled={submitting}
-          >
-            {submitting ? 'Submitting...' : 'Submit'}
-          </button>
-        </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Progress: {completionStatus.completedFields}/{completionStatus.totalFields} fields completed
+                  </div>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onClick={() => formRef.current && formRef.current.requestSubmit()}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(completionStatus.completedFields / completionStatus.totalFields) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  <span>{Math.round((completionStatus.completedFields / completionStatus.totalFields) * 100)}% Complete</span>
+                  <span>{completionStatus.completedFields} of {completionStatus.totalFields} fields filled</span>
+                </div>
               </div>
               
               {submissionStatus && (
@@ -662,10 +681,14 @@ export default function Onboarding() {
                   >
                     <div className="flex-1">
                       <label
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2"
                       >
                         {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                        {field.value !== '' && field.value !== null && field.value !== false && field.value.length !== 0 ? (
+                          <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XMarkIcon className="h-5 w-5 text-red-500" />
+                        )}
                       </label>
 
                       {/* Field Type Specific Inputs */}
@@ -722,8 +745,7 @@ export default function Onboarding() {
                               ? "Enter official email address..."
                               : "Enter email address..."
                           }
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          required={field.required}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
@@ -733,7 +755,6 @@ export default function Onboarding() {
                           value={field.value} 
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         />
                       )}
 
@@ -742,8 +763,7 @@ export default function Onboarding() {
                           type="datetime-local"
                           value={field.value} 
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          required={field.required}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
@@ -755,7 +775,6 @@ export default function Onboarding() {
                               checked={field.value}
                               onChange={(e) => handleFieldChange(e, field.id)}
                               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                              required={field.required}
                             />
                             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                               {field.id === "offerAccepted"
@@ -773,8 +792,7 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter contact number..."
                           pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          required={field.required}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
@@ -783,7 +801,6 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         >
                           <option value="">Select blood group</option>
                           {bloodGroups.map((group) => (
@@ -800,8 +817,7 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter text here..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          required={field.required}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
@@ -812,7 +828,6 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter phone number..."
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         />
                       )}
 
@@ -821,7 +836,6 @@ export default function Onboarding() {
                           value={field.value} 
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         >
                           <option value="">Select gender</option>
                           {genders.map((gender) => (
@@ -839,8 +853,7 @@ export default function Onboarding() {
                           value={field.value} 
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter decimal number..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
-                          required={field.required}
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
@@ -849,7 +862,6 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         >
                           <option value="">Select country</option>
                           {countries.map((country) => (
@@ -867,7 +879,6 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter URL..."
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         />
                       )}
 
@@ -878,7 +889,6 @@ export default function Onboarding() {
                           placeholder="Enter text here..."
                           rows={4}
                           className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         />
                       )}
 
@@ -889,7 +899,6 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter number..."
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         />
                       )}
 
@@ -908,7 +917,6 @@ export default function Onboarding() {
                             step="0.01"
                             min="0"
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
-                            required={field.required}
                           />
                         </div>
                       )}
@@ -918,7 +926,6 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                          required={field.required}
                         >
                           <option value="">Select an option</option>
                           {field.options?.map((option) => (

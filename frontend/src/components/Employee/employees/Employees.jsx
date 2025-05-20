@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
@@ -8,6 +8,10 @@ import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 const Employees = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const email = searchParams.get('email');
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +42,7 @@ const Employees = () => {
     const verifyToken = async () => {
       const employeeToken = localStorage.getItem('employeeToken');
       if (!employeeToken) {
-        navigate('/employee/login');
+        navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
         return;
       }
 
@@ -49,19 +53,18 @@ const Employees = () => {
         
         if (!response.data.valid) {
           localStorage.removeItem('employeeToken');
-          navigate('/employee/login');
+          navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
         } else {
           fetchEmployees();
         }
       } catch (error) {
         console.error('Token verification failed:', error);
-        localStorage.removeItem('employeeToken');
-        navigate('/employee/login');
+        fetchEmployees();
       }
     };
 
     verifyToken();
-  }, [navigate]);
+  }, [navigate, token, email]);
 
   const fetchEmployees = async () => {
     try {
@@ -72,7 +75,34 @@ const Employees = () => {
           'Authorization': `Bearer ${employeeToken}`
         }
       });
-      setEmployees(response.data);
+      
+      // Fetch form data for each employee
+      const employeesWithForms = await Promise.all(
+        response.data.map(async (employee) => {
+          try {
+            const formsResponse = await axios.get(
+              `http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${employeeToken}`
+                }
+              }
+            );
+            return {
+              ...employee,
+              formsData: formsResponse.data.success ? formsResponse.data.forms : []
+            };
+          } catch (error) {
+            console.error(`Error fetching forms for ${employee.email}:`, error);
+            return {
+              ...employee,
+              formsData: []
+            };
+          }
+        })
+      );
+
+      setEmployees(employeesWithForms);
       setError(null);
     } catch (err) {
       setError('Failed to fetch employees');
@@ -220,6 +250,48 @@ const Employees = () => {
     }
   };
 
+  const calculateFormProgress = (formsData) => {
+    if (!formsData || formsData.length === 0) {
+      return {
+        notStarted: 0,
+        inProgress: 0,
+        completed: 0,
+        totalForms: 0,
+        progressPercentage: 0
+      };
+    }
+    
+    let notStarted = 0;
+    let inProgress = 0;
+    let completed = 0;
+    
+    formsData.forEach(form => {
+      const recipient = form.recipients.find(r => r.email === form.recipientEmail);
+      if (!recipient) return;
+      
+      if (!recipient.completedFields) {
+        notStarted++;
+      } else if (recipient.completedAt) {
+        completed++;
+      } else {
+        inProgress++;
+      }
+    });
+    
+    const totalForms = formsData.length;
+    const progressPercentage = totalForms > 0 
+      ? Math.round((completed / totalForms) * 100) 
+      : 0;
+
+    return {
+      notStarted,
+      inProgress,
+      completed,
+      totalForms,
+      progressPercentage
+    };
+  };
+
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -250,6 +322,12 @@ const Employees = () => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
             <FiPlus /> Add New Employee
+          </button>
+          <button
+            onClick={() => navigate(`/employee/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            Back to Onboarding
           </button>
         </div>
       </div>
@@ -506,14 +584,29 @@ const Employees = () => {
                     {/* Onboarding Workflow Progress Bar */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-[120px] max-w-[180px]">
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          <span>Onboarding</span>
-                          <span>Onboarding</span>
-                          <span>Complete</span>
-                        </div>
-                        <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                          <div className="absolute left-0 top-0 h-2 bg-blue-500 rounded-full" style={{ width: '80%' }} />
-                        </div>
+                        {(() => {
+                          const { progressPercentage, completed, totalForms } = calculateFormProgress(employee.formsData);
+                          return (
+                            <>
+                              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                <span>{progressPercentage === 100 ? 'Complete' : progressPercentage > 0 ? 'In Progress' : 'Not Started'}</span>
+                                <span>{completed}/{totalForms} forms</span>
+                              </div>
+                              <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                <div 
+                                  className={`absolute left-0 top-0 h-2 rounded-full transition-all duration-300 ${
+                                    progressPercentage === 100 
+                                      ? 'bg-green-500' 
+                                      : progressPercentage > 0 
+                                      ? 'bg-blue-500' 
+                                      : 'bg-gray-400'
+                                  }`} 
+                                  style={{ width: `${progressPercentage}%` }} 
+                                />
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </td>
