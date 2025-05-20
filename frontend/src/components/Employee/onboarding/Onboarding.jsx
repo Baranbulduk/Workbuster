@@ -82,7 +82,6 @@ export default function Onboarding() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
   const [formData, setFormData] = useState({
     candidateName: "",
     candidatePhoto: null,
@@ -644,18 +643,6 @@ export default function Onboarding() {
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           Onboarding
         </h1>
-        <button
-          onClick={() =>
-            navigate(
-              `/employee/employees${
-                token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
-              }`
-            )
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          View Employees
-        </button>
       </div>
 
       <div className="flex">

@@ -584,7 +584,7 @@ const Employees = () => {
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     <button
                       className="text-blue-600 hover:underline dark:text-blue-400"
-                      onClick={() => navigate(`/employee/employees/${employee._id}`)}
+                      onClick={() => navigate(`/employee/employees/${employee._id}${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
                     >
                       View more
                     </button>
@@ -623,7 +623,7 @@ const Employees = () => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => navigate(`/employee/employees/${employee._id}`)}
+                      onClick={() => navigate(`/employee/employees/${employee._id}${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
                       className="text-blue-600 hover:text-blue-900 mr-4 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       <FiEdit2 className="inline-block" />

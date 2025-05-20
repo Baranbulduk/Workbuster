@@ -42,10 +42,21 @@ const EmployeeLayout = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get('token');
+  const email = searchParams.get('email');
 
   const navigation = [
-    { name: 'Employees', href: '/employee/employees', icon: UserGroupIcon },
-    { name: 'Onboarding', href: '/employee/onboarding', icon: UserPlusIcon }
+    { 
+      name: 'Employees', 
+      href: `/employee/employees${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, 
+      icon: UserGroupIcon 
+    },
+    { 
+      name: 'Onboarding', 
+      href: `/employee/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, 
+      icon: UserPlusIcon 
+    }
   ];
 
   const handleLogout = () => {
@@ -84,7 +95,8 @@ const EmployeeLayout = () => {
         <nav className="flex-1 overflow-y-auto">
           <div className="space-y-1 px-2 py-4">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
+              const itemPath = item.href.split('?')[0]; // Get pathname without query params
+              const isActive = location.pathname === itemPath || location.pathname.startsWith(itemPath + '/');
               return (
                 <Link
                   key={item.name}
