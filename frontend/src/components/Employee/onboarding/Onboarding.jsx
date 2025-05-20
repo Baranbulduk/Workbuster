@@ -31,11 +31,10 @@ import {
   ArrowDownTrayIcon,
   Bars3Icon,
   PlusIcon,
-  XMarkIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -77,8 +76,8 @@ const FIELD_TYPES = [
 
 export default function Onboarding() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
   const [form, setForm] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +97,7 @@ export default function Onboarding() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [formTitle, setFormTitle] = useState("Offer Letter Form Details");
   const [editingTitle, setEditingTitle] = useState(false);
+
   const [fields, setFields] = useState([
     {
       id: "candidateName",
@@ -123,11 +123,11 @@ export default function Onboarding() {
       label: "Official Mail ID",
       value: "",
     },
-    { 
-      id: "offerLetter", 
-      type: "file", 
-      label: "Offer Letter", 
-      value: null 
+    {
+      id: "offerLetter",
+      type: "file",
+      label: "Offer Letter",
+      value: null,
     },
     {
       id: "contactNo",
@@ -363,28 +363,39 @@ export default function Onboarding() {
   const [completionStatus, setCompletionStatus] = useState({
     totalFields: 0,
     completedFields: 0,
-    isComplete: false
+    isComplete: false,
   });
 
+  const percentage =
+    (completionStatus.completedFields / completionStatus.totalFields) * 100 ||
+    0;
+
   useEffect(() => {
-    const employeeToken = localStorage.getItem('employeeToken');
+    const employeeToken = localStorage.getItem("employeeToken");
     if (!employeeToken) {
-      navigate(`/employee/login?token=${token}${email ? `&email=${email}` : ''}`);
+      navigate(
+        `/employee/login?token=${token}${email ? `&email=${email}` : ""}`
+      );
       return;
     }
 
     const verifyToken = async () => {
       try {
-        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
-          token: employeeToken
-        });
-        
+        const response = await axios.post(
+          "http://localhost:5000/api/employees/verify-token",
+          {
+            token: employeeToken,
+          }
+        );
+
         if (!response.data.valid) {
-          localStorage.removeItem('employeeToken');
-          navigate(`/employee/login?token=${token}${email ? `&email=${email}` : ''}`);
+          localStorage.removeItem("employeeToken");
+          navigate(
+            `/employee/login?token=${token}${email ? `&email=${email}` : ""}`
+          );
         }
       } catch (error) {
-        console.error('Token verification failed:', error);
+        console.error("Token verification failed:", error);
       }
     };
 
@@ -395,7 +406,7 @@ export default function Onboarding() {
     if (token) {
       fetchFormData(token);
     } else {
-      setError('No form token provided. Please use the link from your email.');
+      setError("No form token provided. Please use the link from your email.");
       setLoading(false);
     }
   }, [token]);
@@ -403,19 +414,26 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/onboarding/form/${token}`);
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/onboarding/form/${token}`
+      );
+
       if (response.data.success) {
         const { title, fields, recipients } = response.data.form;
         setFormTitle(title);
-        
-        const resetFields = fields.map(field => ({
+
+        const resetFields = fields.map((field) => ({
           ...field,
-          value: field.type === "checkbox" ? false : 
-                field.type === "file" ? null : 
-                field.type === "multiselect" ? [] : ""
+          value:
+            field.type === "checkbox"
+              ? false
+              : field.type === "file"
+              ? null
+              : field.type === "multiselect"
+              ? []
+              : "",
         }));
-        
+
         setFields(resetFields);
         setRecipients(recipients);
         setLoading(false);
@@ -432,30 +450,33 @@ export default function Onboarding() {
 
   const handleFieldChange = (e, fieldId) => {
     const { type, value, checked, files } = e.target;
-    
-    setFields(prevFields => {
-      const updatedFields = prevFields.map(field => {
+
+    setFields((prevFields) => {
+      const updatedFields = prevFields.map((field) => {
         if (field.id === fieldId) {
           let newValue;
-          
+
           switch (field.type) {
-            case 'checkbox':
+            case "checkbox":
               newValue = checked;
               break;
-            case 'file':
-            case 'image':
+            case "file":
+            case "image":
               newValue = files[0] || null;
               break;
-            case 'multiselect':
-              newValue = Array.from(e.target.selectedOptions, option => option.value);
+            case "multiselect":
+              newValue = Array.from(
+                e.target.selectedOptions,
+                (option) => option.value
+              );
               break;
             default:
               newValue = value;
           }
-          
+
           return {
             ...field,
-            value: newValue
+            value: newValue,
           };
         }
         return field;
@@ -463,17 +484,18 @@ export default function Onboarding() {
 
       // Update completion status
       const totalFields = updatedFields.length;
-      const completedFields = updatedFields.filter(field => {
-        if (field.type === 'checkbox') return true; // Checkboxes are always considered complete
-        if (field.type === 'file' || field.type === 'image') return field.value !== null;
-        if (field.type === 'multiselect') return field.value.length > 0;
-        return field.value !== '';
+      const completedFields = updatedFields.filter((field) => {
+        if (field.type === "checkbox") return true; // Checkboxes are always considered complete
+        if (field.type === "file" || field.type === "image")
+          return field.value !== null;
+        if (field.type === "multiselect") return field.value.length > 0;
+        return field.value !== "";
       }).length;
 
       setCompletionStatus({
         totalFields,
         completedFields,
-        isComplete: completedFields === totalFields
+        isComplete: completedFields === totalFields,
       });
 
       return updatedFields;
@@ -482,77 +504,84 @@ export default function Onboarding() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
-      
-      const employeeToken = localStorage.getItem('employeeToken');
+
+      const employeeToken = localStorage.getItem("employeeToken");
       if (!employeeToken) {
-        throw new Error('Authentication required');
+        throw new Error("Authentication required");
       }
 
       // Only include fields that have values
       const completedFields = fields
-        .filter(field => {
-          if (field.type === 'checkbox') return true;
-          if (field.type === 'file' || field.type === 'image') return field.value !== null;
-          if (field.type === 'multiselect') return field.value.length > 0;
-          return field.value !== '';
+        .filter((field) => {
+          if (field.type === "checkbox") return true;
+          if (field.type === "file" || field.type === "image")
+            return field.value !== null;
+          if (field.type === "multiselect") return field.value.length > 0;
+          return field.value !== "";
         })
-        .map(field => ({
+        .map((field) => ({
           id: field.id,
           label: field.label,
           type: field.type,
-          value: field.value
+          value: field.value,
         }));
-      
+
       const response = await axios.post(
-        `http://localhost:5000/api/onboarding/submit/${token}`, 
-        { 
+        `http://localhost:5000/api/onboarding/submit/${token}`,
+        {
           completedFields,
-          recipientEmail: searchParams.get('email')
+          recipientEmail: searchParams.get("email"),
         },
         {
           headers: {
-            'Authorization': `Bearer ${employeeToken}`
-          }
+            Authorization: `Bearer ${employeeToken}`,
+          },
         }
       );
-      
+
       if (response.data.success) {
         setSubmissionStatus({
           success: true,
-          message: completionStatus.isComplete 
+          message: completionStatus.isComplete
             ? "Form submitted successfully! Thank you for completing your onboarding form."
-            : "Form partially submitted. You can continue filling out the remaining fields later."
+            : "Form partially submitted. You can continue filling out the remaining fields later.",
         });
 
         if (completionStatus.isComplete) {
-          localStorage.removeItem('employeeToken');
-          
+          localStorage.removeItem("employeeToken");
+
           // Reset form only if all fields are completed
-          const resetFields = fields.map(field => ({
+          const resetFields = fields.map((field) => ({
             ...field,
-            value: field.type === "checkbox" ? false : 
-                  field.type === "file" ? null : 
-                  field.type === "multiselect" ? [] : ""
+            value:
+              field.type === "checkbox"
+                ? false
+                : field.type === "file"
+                ? null
+                : field.type === "multiselect"
+                ? []
+                : "",
           }));
           setFields(resetFields);
         }
       } else {
         setSubmissionStatus({
           success: false,
-          message: response.data.message || "Failed to submit form"
+          message: response.data.message || "Failed to submit form",
         });
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      if (error.message === 'Authentication required') {
+      if (error.message === "Authentication required") {
         navigate(`/employee/login?token=${token}`);
       } else {
         setSubmissionStatus({
           success: false,
-          message: "Error submitting form. Please try again or contact support."
+          message:
+            "Error submitting form. Please try again or contact support.",
         });
       }
     } finally {
@@ -565,7 +594,9 @@ export default function Onboarding() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-700 dark:text-gray-300">Loading your onboarding form...</p>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">
+            Loading your onboarding form...
+          </p>
         </div>
       </div>
     );
@@ -575,7 +606,9 @@ export default function Onboarding() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-red-50 dark:bg-red-900 p-6 rounded-lg">
-          <h2 className="text-lg font-medium text-red-800 dark:text-red-200">Error</h2>
+          <h2 className="text-lg font-medium text-red-800 dark:text-red-200">
+            Error
+          </h2>
           <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>
           <p className="mt-4">
             Please check your link or contact your administrator for assistance.
@@ -585,7 +618,11 @@ export default function Onboarding() {
     );
   }
 
-  if (submissionStatus && submissionStatus.success && completionStatus.isComplete) {
+  if (
+    submissionStatus &&
+    submissionStatus.success &&
+    completionStatus.isComplete
+  ) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-green-50 dark:bg-green-900 p-6 rounded-lg text-center">
@@ -608,38 +645,39 @@ export default function Onboarding() {
           Onboarding
         </h1>
         <button
-          onClick={() => navigate(`/employee/employees${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
+          onClick={() =>
+            navigate(
+              `/employee/employees${
+                token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
+              }`
+            )
+          }
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           View Employees
         </button>
       </div>
-      
+
       <div className="flex">
         {/* Main Panel */}
         <main className="flex-1 overflow-y-auto">
           <div className="flex h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
             {/* Form Section */}
-            <div
-              className="flex-1 p-8 overflow-y-auto transition-all duration-150"
-            >
+            <div className="flex-1 p-8 overflow-y-auto transition-all duration-150">
               <div className="flex justify-between items-center mb-8">
-                <h2
-                  className="text-xl font-semibold text-gray-900 dark:text-white"
-                >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {formTitle}
                 </h2>
                 <div className="flex items-center gap-4">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Progress: {completionStatus.completedFields}/{completionStatus.totalFields} fields completed
-                  </div>
                   <button
                     type="button"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onClick={() => formRef.current && formRef.current.requestSubmit()}
+                    onClick={() =>
+                      formRef.current && formRef.current.requestSubmit()
+                    }
                     disabled={submitting}
                   >
-                    {submitting ? 'Submitting...' : 'Submit'}
+                    {submitting ? "Submitting..." : "Submit"}
                   </button>
                 </div>
               </div>
@@ -647,28 +685,70 @@ export default function Onboarding() {
               {/* Progress Bar */}
               <div className="mb-6">
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${(completionStatus.completedFields / completionStatus.totalFields) * 100}%` }}
+                  <div
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      percentage < 40
+                        ? "bg-red-500"
+                        : percentage < 99.99
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                    }`}
+                    style={{ width: `${percentage}%` }}
                   ></div>
                 </div>
-                <div className="flex justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  <span>{Math.round((completionStatus.completedFields / completionStatus.totalFields) * 100)}% Complete</span>
-                  <span>{completionStatus.completedFields} of {completionStatus.totalFields} fields filled</span>
+                <div className="flex justify-between items-center mt-2 text-sm text-gray-600 dark:text-gray-400 h-8">
+                  {completionStatus.completedFields === 0 ? (
+                    <span>
+                      <span
+                        className="text-red-500 
+                      text-2xl font-bold"
+                      >
+                        0
+                      </span>{" "}
+                      % Complete
+                    </span>
+                  ) : (
+                    <span>
+                      <span
+                        className={`text-2xl font-bold ${
+                          percentage < 40
+                            ? "text-red-500"
+                            : percentage < 99.99
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                        }`}
+                      >
+                        {Math.round(percentage)}
+                      </span>{" "}
+                      % Complete
+                    </span>
+                  )}
+
+                  <span>
+                    <span className="text-xl font-bold">
+                      {completionStatus.completedFields}
+                    </span>{" "}
+                    of{" "}
+                    <span className="text-xl font-bold">
+                      {completionStatus.totalFields}
+                    </span>{" "}
+                    fields filled
+                  </span>
                 </div>
               </div>
-              
+
               {submissionStatus && (
-                <div className={`mb-6 p-4 rounded-lg ${
-                  submissionStatus.success 
-                    ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                    : 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200'
-                }`}>
+                <div
+                  className={`mb-6 p-4 rounded-lg ${
+                    submissionStatus.success
+                      ? "bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200"
+                      : "bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200"
+                  }`}
+                >
                   <p>{submissionStatus.message}</p>
                 </div>
               )}
-          
-  
+
               <form
                 ref={formRef}
                 className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -680,21 +760,22 @@ export default function Onboarding() {
                     className="col-span-1 group flex items-end gap-2"
                   >
                     <div className="flex-1">
-                      <label
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                      >
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                         {field.label}
-                        {field.value !== '' && field.value !== null && field.value !== false && field.value.length !== 0 ? (
-                          <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                        {field.value !== "" &&
+                        field.value !== null &&
+                        field.value !== false &&
+                        field.value.length !== 0 ? (
+                          <CheckCircleIcon className="h-6 w-6 text-green-500" />
                         ) : (
-                          <XMarkIcon className="h-5 w-5 text-red-500" />
+                          <XCircleIcon className="h-6 w-6 text-red-500" />
                         )}
                       </label>
 
                       {/* Field Type Specific Inputs */}
                       {field.type === "image" && (
                         <div className="mt-1">
-                          <input 
+                          <input
                             type="file"
                             accept="image/*"
                             onChange={(e) => handleFieldChange(e, field.id)}
@@ -736,7 +817,7 @@ export default function Onboarding() {
                       {field.type === "email" && (
                         <input
                           type="email"
-                          value={field.value} 
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder={
                             field.id === "personalMail"
@@ -752,16 +833,16 @@ export default function Onboarding() {
                       {field.type === "date" && (
                         <input
                           type="date"
-                          value={field.value} 
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
                       )}
 
                       {field.type === "datetime" && (
-                        <input 
+                        <input
                           type="datetime-local"
-                          value={field.value} 
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         />
@@ -770,7 +851,7 @@ export default function Onboarding() {
                       {field.type === "checkbox" && (
                         <div className="mt-1">
                           <label className="inline-flex items-center">
-                            <input 
+                            <input
                               type="checkbox"
                               checked={field.value}
                               onChange={(e) => handleFieldChange(e, field.id)}
@@ -788,7 +869,7 @@ export default function Onboarding() {
                       {field.type === "tel" && (
                         <input
                           type="tel"
-                          value={field.value} 
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter contact number..."
                           pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
@@ -832,8 +913,8 @@ export default function Onboarding() {
                       )}
 
                       {field.type === "gender" && (
-                        <select 
-                          value={field.value} 
+                        <select
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                         >
@@ -847,10 +928,10 @@ export default function Onboarding() {
                       )}
 
                       {field.type === "decimal" && (
-                        <input 
+                        <input
                           type="number"
                           step="0.01"
-                          value={field.value} 
+                          value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter decimal number..."
                           className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
@@ -873,7 +954,7 @@ export default function Onboarding() {
                       )}
 
                       {field.type === "url" && (
-                        <input 
+                        <input
                           type="url"
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
@@ -939,16 +1020,21 @@ export default function Onboarding() {
                       {field.type === "multiselect" && (
                         <div className="mt-2 space-y-2">
                           {field.options?.map((option) => (
-                            <label key={option} className="flex items-center gap-2">
+                            <label
+                              key={option}
+                              className="flex items-center gap-2"
+                            >
                               <input
                                 type="checkbox"
                                 checked={(field.value || []).includes(option)}
                                 onChange={(e) => {
                                   const newValue = e.target.checked
                                     ? [...(field.value || []), option]
-                                    : (field.value || []).filter(v => v !== option);
-                                  setFields(prev =>
-                                    prev.map(f =>
+                                    : (field.value || []).filter(
+                                        (v) => v !== option
+                                      );
+                                  setFields((prev) =>
+                                    prev.map((f) =>
                                       f.id === field.id
                                         ? { ...f, value: newValue }
                                         : f
@@ -957,7 +1043,9 @@ export default function Onboarding() {
                                 }}
                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                               />
-                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {option}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -966,7 +1054,10 @@ export default function Onboarding() {
                       {field.type === "radio" && (
                         <div className="mt-2 space-y-2">
                           {field.options?.map((option) => (
-                            <label key={option} className="flex items-center gap-2">
+                            <label
+                              key={option}
+                              className="flex items-center gap-2"
+                            >
                               <input
                                 type="radio"
                                 name={field.id}
@@ -975,7 +1066,9 @@ export default function Onboarding() {
                                 onChange={(e) => handleFieldChange(e, field.id)}
                                 className="text-blue-600 focus:ring-blue-500"
                               />
-                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {option}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -984,14 +1077,19 @@ export default function Onboarding() {
                       {field.type === "decision" && (
                         <div className="mt-2 space-y-2">
                           {field.options?.map((option) => (
-                            <label key={option} className="flex items-center gap-2">
+                            <label
+                              key={option}
+                              className="flex items-center gap-2"
+                            >
                               <input
                                 type="checkbox"
                                 checked={field.value === option}
                                 onChange={(e) => handleFieldChange(e, field.id)}
                                 className="text-blue-600 focus:ring-blue-500"
                               />
-                              <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {option}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -999,7 +1097,6 @@ export default function Onboarding() {
                     </div>
                   </div>
                 ))}
-  
               </form>
             </div>
           </div>
@@ -1007,4 +1104,4 @@ export default function Onboarding() {
       </div>
     </div>
   );
-} 
+}
