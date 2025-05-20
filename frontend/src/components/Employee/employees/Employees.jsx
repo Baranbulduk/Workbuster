@@ -88,15 +88,22 @@ const Employees = () => {
                 }
               }
             );
+            const forms = formsResponse.data.forms;
+            const completedForms = getFormProgress(forms, employee.email);
+
             return {
               ...employee,
-              formsData: formsResponse.data.success ? formsResponse.data.forms : []
+              formsData: forms,
+              completedFormsCount: completedForms,
+              totalFormsCount: forms.length
             };
           } catch (error) {
             console.error(`Error fetching forms for ${employee.email}:`, error);
             return {
               ...employee,
-              formsData: []
+              formsData: [],
+              completedFormsCount: 0,
+              totalFormsCount: 0
             };
           }
         })
@@ -250,35 +257,37 @@ const Employees = () => {
     }
   };
 
-  const calculateFormProgress = (formsData) => {
-    if (!formsData || formsData.length === 0) {
-      return {
-        notStarted: 0,
-        inProgress: 0,
-        completed: 0,
-        totalForms: 0,
-        progressPercentage: 0
-      };
-    }
-    
+  const getFormProgress = (forms, email) => {
+    let completed = 0;
+    forms.forEach(form => {
+      const recipient = form.recipients.find(r => r.email === email);
+      if (recipient?.completedAt) {
+        completed++;
+      }
+    });
+    return completed;
+  };
+  
+
+  const calculateFormProgress = (formsData, recipientEmail) => {
     let notStarted = 0;
     let inProgress = 0;
     let completed = 0;
     
-    formsData.forEach(form => {
-      const recipient = form.recipients.find(r => r.email === form.recipientEmail);
-      if (!recipient) return;
-      
-      if (!recipient.completedFields) {
-        notStarted++;
-      } else if (recipient.completedAt) {
-        completed++;
-      } else {
-        inProgress++;
+    formsData?.forEach((form) => {
+      const recipient = form.recipients.find(r => r.email === recipientEmail);
+      if (recipient) {
+        if (recipient.completedAt) {
+          completed++;
+        } else if (recipient.startedAt) {
+          inProgress++;
+        } else {
+          notStarted++;
+        }
       }
     });
     
-    const totalForms = formsData.length;
+    const totalForms = notStarted + inProgress + completed;
     const progressPercentage = totalForms > 0 
       ? Math.round((completed / totalForms) * 100) 
       : 0;
@@ -585,12 +594,14 @@ const Employees = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-[120px] max-w-[180px]">
                         {(() => {
-                          const { progressPercentage, completed, totalForms } = calculateFormProgress(employee.formsData);
+                          const progress = calculateFormProgress(employee.formsData, employee.email);
+                          const progressPercentage = progress.progressPercentage;
+
                           return (
                             <>
                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                                 <span>{progressPercentage === 100 ? 'Complete' : progressPercentage > 0 ? 'In Progress' : 'Not Started'}</span>
-                                <span>{completed}/{totalForms} forms</span>
+                                <span>{progress.completed}/{progress.totalForms} forms</span>
                               </div>
                               <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
                                 <div 
