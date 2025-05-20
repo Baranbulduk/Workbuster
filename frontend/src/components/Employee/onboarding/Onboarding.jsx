@@ -374,7 +374,7 @@ export default function Onboarding() {
 
     const verifyToken = async () => {
       try {
-        const response = await axios.post('http://localhost:5000/api/employee/verify-token', {
+        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
           token: employeeToken
         });
         

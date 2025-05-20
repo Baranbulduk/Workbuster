@@ -9,7 +9,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user' // Default role
+    role: 'admin' // Default to admin
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -37,21 +37,35 @@ const Register = () => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        role: formData.role // Make sure to send the role
+        role: formData.role
       };
 
-      const response = await axios.post('http://localhost:5000/api/auth/register', userData);
-      const { token } = response.data;
+      // Use different endpoints based on role
+      const endpoint = formData.role === 'admin' 
+        ? 'http://localhost:5000/api/auth/register'
+        : 'http://localhost:5000/api/employees';
+
+      const response = await axios.post(endpoint, userData);
       
-      // Store the token and email in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('userEmail', formData.email);
-      
-      // Navigate based on role
       if (formData.role === 'admin') {
+        const { token } = response.data;
+        // Store the token and email in localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('userEmail', formData.email);
+        // Navigate to admin dashboard
         navigate('/');
       } else {
-        navigate('/employee/employees');
+        // For employee creation, show success message and stay on page
+        alert('Employee account created successfully. Credentials have been sent to their email.');
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: 'admin'
+        });
       }
     } catch (error) {
       setError(error.response?.data?.message || 'An error occurred during registration');
@@ -63,7 +77,7 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Create New Account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
@@ -121,7 +135,7 @@ const Register = () => {
               />
             </div>
             <div>
-              <label htmlFor="role" className="sr-only">Role</label>
+              <label htmlFor="role" className="sr-only">Account Type</label>
               <select
                 id="role"
                 name="role"
@@ -130,8 +144,8 @@ const Register = () => {
                 value={formData.role}
                 onChange={handleChange}
               >
-                <option value="user">Employee</option>
                 <option value="admin">Admin</option>
+                <option value="employee">Employee</option>
               </select>
             </div>
             <div>
@@ -167,7 +181,7 @@ const Register = () => {
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Create account
+              Create {formData.role === 'admin' ? 'Admin' : 'Employee'} Account
             </button>
           </div>
         </form>

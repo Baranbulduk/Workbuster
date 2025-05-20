@@ -35,13 +35,43 @@ const Employees = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+    const verifyToken = async () => {
+      const employeeToken = localStorage.getItem('employeeToken');
+      if (!employeeToken) {
+        navigate('/employee/login');
+        return;
+      }
+
+      try {
+        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
+          token: employeeToken
+        });
+        
+        if (!response.data.valid) {
+          localStorage.removeItem('employeeToken');
+          navigate('/employee/login');
+        } else {
+          fetchEmployees();
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('employeeToken');
+        navigate('/employee/login');
+      }
+    };
+
+    verifyToken();
+  }, [navigate]);
 
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/employees');
+      const employeeToken = localStorage.getItem('employeeToken');
+      const response = await axios.get('http://localhost:5000/api/employees', {
+        headers: {
+          'Authorization': `Bearer ${employeeToken}`
+        }
+      });
       setEmployees(response.data);
       setError(null);
     } catch (err) {
@@ -80,7 +110,12 @@ const Employees = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/employees/${id}`);
+        const employeeToken = localStorage.getItem('employeeToken');
+        await axios.delete(`http://localhost:5000/api/employees/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`
+          }
+        });
         setEmployees(employees.filter(emp => emp._id !== id));
       } catch (err) {
         console.error('Error deleting employee:', err);
@@ -160,6 +195,7 @@ const Employees = () => {
       return;
     }
     try {
+      const employeeToken = localStorage.getItem('employeeToken');
       const res = await axios.post('http://localhost:5000/api/employees', {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -170,6 +206,10 @@ const Employees = () => {
         postalCode: formData.postalCode,
         city: formData.city,
         country: formData.country
+      }, {
+        headers: {
+          'Authorization': `Bearer ${employeeToken}`
+        }
       });
       setSuccessMsg('Employee created and credentials sent via email!');
       setShowForm(false);

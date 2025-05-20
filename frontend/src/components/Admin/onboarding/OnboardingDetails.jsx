@@ -13,6 +13,13 @@ function formatDate(dateStr) {
   });
 }
 
+function formatAddress(address) {
+  if (!address) return 'N/A';
+  if (typeof address === 'string') return address;
+  const { street, city, zipCode, country } = address;
+  return [street, city, zipCode, country].filter(Boolean).join(', ');
+}
+
 function getInitials(firstName, lastName) {
   if (!firstName || !lastName) return '?';
   return `${firstName[0]}${lastName[0]}`.toUpperCase();
@@ -89,18 +96,25 @@ export default function OnboardingDetails({ item, type }) {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-
             <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
               <span className="text-blue-600 dark:text-blue-300 text-xl font-medium">
-                {getInitials(item.firstName, item.lastName)}
+                {type === 'clients' 
+                  ? item.companyName?.substring(0, 2).toUpperCase()
+                  : getInitials(item.firstName, item.lastName)}
               </span>
             </div>
             <div>
               <div className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                {item.name || `${item.firstName} ${item.lastName}`}
-
+                {type === 'clients' ? item.companyName : (item.name || `${item.firstName} ${item.lastName}`)}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">{item.email}</div>
+              {type === 'clients' && (
+                <>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{item.phone}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{formatAddress(item.address)}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{item.industry}</div>
+                </>
+              )}
             </div>
           </div>
           <div className="flex flex-col items-end">
@@ -110,9 +124,11 @@ export default function OnboardingDetails({ item, type }) {
             >
               View Profile
             </button>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Start Date</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {type === 'clients' ? 'Registration Date' : 'Start Date'}
+            </div>
             <div className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-3 py-1 rounded text-sm font-medium mt-1">
-              {formatDate(item.hireDate || item.startDate)}
+              {formatDate(type === 'clients' ? item.registrationDate : (item.hireDate || item.startDate))}
             </div>
           </div>
         </div>
@@ -135,18 +151,18 @@ export default function OnboardingDetails({ item, type }) {
           <div className="grid grid-cols-3 gap-4 mt-4">
             <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-3 text-center">
               <XCircleIcon className="h-6 w-6 mx-auto text-red-500" />
-              <p className="mt-1 font-medium">Not Started</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{progress.notStarted}</p>
+              <p className="mt-1 font-medium text-red-500">Not Started</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-400">{progress.notStarted}</p>
             </div>
             <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3 text-center">
               <ClockIcon className="h-6 w-6 mx-auto text-yellow-500" />
-              <p className="mt-1 font-medium">In Progress</p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{progress.inProgress}</p>
+              <p className="mt-1 font-medium text-yellow-500">In Progress</p>
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{progress.inProgress}</p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
               <CheckCircleIcon className="h-6 w-6 mx-auto text-green-500" />
-              <p className="mt-1 font-medium">Completed</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{progress.completed}</p>
+              <p className="mt-1 font-medium text-green-500">Completed</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-400">{progress.completed}</p>
             </div>
           </div>
         </div>

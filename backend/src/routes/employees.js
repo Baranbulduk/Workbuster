@@ -1,14 +1,15 @@
 import express from 'express';
-import Employee from '../../models/Employee.js';
+import User from '../../models/User.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
 // Get all employees
 router.get('/', async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
+    const employees = await User.find({ role: 'employee' }).sort({ createdAt: -1 });
     res.json(employees);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 // Get single employee
 router.get('/:id', async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -30,7 +31,7 @@ router.get('/:id', async (req, res) => {
 
 // Helper: Generate next employeeId (EM0001, EM0002, ...)
 async function generateEmployeeId() {
-  const last = await Employee.findOne().sort({ createdAt: -1 });
+  const last = await User.findOne({ role: 'employee' }).sort({ createdAt: -1 });
   let nextNum = 1;
   if (last && last.employeeId && /^EM\d+$/.test(last.employeeId)) {
     nextNum = parseInt(last.employeeId.replace('EM', '')) + 1;
@@ -50,9 +51,8 @@ function generatePassword(length = 10) {
 
 // Helper: Send email
 async function sendCredentialsEmail(to, employeeId, password) {
-  // Configure your SMTP here
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your SMTP
+    service: 'gmail',
     auth: {
       user: 'rexettit@gmail.com',
       pass: 'prmursgwotixwilt'
@@ -72,13 +72,13 @@ router.post('/', async (req, res) => {
   try {
     const { firstName, lastName, email, phone, department, position, address, city, country, postalCode } = req.body;
     // Check if email already exists
-    if (await Employee.findOne({ email })) {
+    if (await User.findOne({ email })) {
       return res.status(400).json({ message: 'Employee with this email already exists.' });
     }
     const employeeId = await generateEmployeeId();
     const passwordPlain = generatePassword();
     const hashedPassword = await bcrypt.hash(passwordPlain, 10);
-    const newEmployee = new Employee({
+    const newEmployee = new User({
       employeeId,
       password: hashedPassword,
       firstName,
@@ -127,7 +127,7 @@ router.post('/bulk', async (req, res) => {
     for (const emp of employees) {
       try {
         // Check if employee with this email already exists
-        const existingEmployee = await Employee.findOne({ email: emp.email });
+        const existingEmployee = await User.findOne({ email: emp.email });
         if (existingEmployee) {
           results.failed.push({
             email: emp.email,
@@ -137,17 +137,15 @@ router.post('/bulk', async (req, res) => {
         }
 
         // Generate employee ID
-        const lastEmployee = await Employee.findOne().sort({ employeeId: -1 });
-        const lastId = lastEmployee ? parseInt(lastEmployee.employeeId.slice(1)) : 0;
-        const newId = `E${(lastId + 1).toString().padStart(4, '0')}`;
+        const employeeId = await generateEmployeeId();
 
         // Generate random password and hash it
         const passwordPlain = generatePassword(8);
         const hashedPassword = await bcrypt.hash(passwordPlain, 10);
 
         // Create new employee
-        const newEmployee = new Employee({
-          employeeId: newId,
+        const newEmployee = new User({
+          employeeId,
           password: hashedPassword,
           firstName: emp.firstName,
           lastName: emp.lastName,
@@ -171,10 +169,10 @@ router.post('/bulk', async (req, res) => {
         await newEmployee.save();
 
         // Send credentials email
-        await sendCredentialsEmail(emp.email, newId, passwordPlain);
+        await sendCredentialsEmail(emp.email, employeeId, passwordPlain);
 
         results.success.push({
-          employeeId: newId,
+          employeeId,
           email: emp.email
         });
       } catch (error) {
@@ -204,7 +202,7 @@ router.post('/bulk', async (req, res) => {
 // Update employee
 router.put('/:id', async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -220,7 +218,7 @@ router.put('/:id', async (req, res) => {
 // Delete employee
 router.delete('/:id', async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -252,7 +250,7 @@ router.post('/import', async (req, res) => {
     for (const emp of items) {
       try {
         // Check if employee with this email already exists
-        const existingEmployee = await Employee.findOne({ email: emp.email });
+        const existingEmployee = await User.findOne({ email: emp.email });
         if (existingEmployee) {
           results.failed.push({
             email: emp.email,
@@ -269,7 +267,7 @@ router.post('/import', async (req, res) => {
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
         // Create new employee
-        const newEmployee = new Employee({
+        const newEmployee = new User({
           employeeId,
           password: hashedPassword,
           firstName: emp.firstName || '',
@@ -332,46 +330,89 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     console.log('Login attempt for email:', email);
 
-    // Find employee by email
-    const employee = await Employee.findOne({ email });
-    if (!employee) {
-      console.log('Employee not found with email:', email);
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('User not found with email:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    console.log('Employee found:', {
-      id: employee._id,
-      email: employee.email,
-      role: employee.role
+    console.log('User found:', {
+      id: user._id,
+      email: user.email,
+      role: user.role
     });
 
     // Check if the user is an admin (they should use the admin login instead)
-    if (employee.role === 'admin') {
+    if (user.role === 'admin') {
       console.log('Admin user attempting to use employee login');
       return res.status(403).json({ message: 'Please use the admin login page' });
     }
 
     // Check password
-    const isMatch = await bcrypt.compare(password, employee.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     console.log('Password match result:', isMatch);
 
     if (!isMatch) {
-      console.log('Password mismatch for employee:', email);
+      console.log('Password mismatch for user:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Return employee data (excluding password)
-    const employeeData = employee.toObject();
-    delete employeeData.password;
+    // Create JWT token
+    const payload = {
+      user: {
+        id: user._id,
+        role: user.role
+      }
+    };
 
-    console.log('Login successful for employee:', email);
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Return user data (excluding password) and token
+    const userData = user.toObject();
+    delete userData.password;
+
+    console.log('Login successful for user:', email);
     res.json({
       success: true,
-      employee: employeeData
+      token,
+      employee: userData
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Error during login' });
+  }
+});
+
+// Verify employee token
+router.post('/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(401).json({ valid: false, message: 'No token provided' });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const user = await User.findById(decoded.user.id);
+
+      if (!user || user.role !== 'employee') {
+        return res.status(401).json({ valid: false, message: 'Invalid token' });
+      }
+
+      res.json({ valid: true, user: { id: user._id, role: user.role } });
+    } catch (error) {
+      console.error('Token verification error:', error);
+      res.status(401).json({ valid: false, message: 'Invalid token' });
+    }
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(500).json({ valid: false, message: 'Error verifying token' });
   }
 });
 

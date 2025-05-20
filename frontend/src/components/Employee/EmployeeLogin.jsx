@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const EmployeeLogin = () => {
@@ -21,7 +21,8 @@ const EmployeeLogin = () => {
       });
 
       if (response.data.success) {
-        // Store employee data in localStorage or state management
+        // Store token and employee data in localStorage
+        localStorage.setItem('employeeToken', response.data.token);
         localStorage.setItem('employee', JSON.stringify(response.data.employee));
         // Navigate to onboarding form
         navigate('/employee/onboarding');
@@ -41,6 +42,12 @@ const EmployeeLogin = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Employee Login
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            Administrators should use the{' '}
+            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              admin login page
+            </Link>
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
@@ -84,7 +91,7 @@ const EmployeeLogin = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in...' : 'Sign in as Employee'}
             </button>
           </div>
         </form>

@@ -48,7 +48,8 @@ function formatDate(dateStr) {
 }
 
 function getInitials(firstName, lastName) {
-  return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+  if (!firstName || !lastName) return '?';
+  return `${firstName[0]}${lastName[0]}`.toUpperCase();
 }
 
 const FIELD_TYPES = [
@@ -84,6 +85,7 @@ export default function Onboarding() {
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
   const [activeView, setActiveView] = useState("overview");
+  const [selectedItemType, setSelectedItemType] = useState(null);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     candidateName: "",
@@ -554,8 +556,10 @@ export default function Onboarding() {
   const handleItemClick = (item) => {
     if (selectedItem && selectedItem._id === item._id) {
       setSelectedItem(null);
+      setSelectedItemType(null);
     } else {
       setSelectedItem(item);
+      setSelectedItemType(activeTab);
     }
   };
 
@@ -881,7 +885,7 @@ export default function Onboarding() {
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "candidates"
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("candidates")}
             >
@@ -891,7 +895,7 @@ export default function Onboarding() {
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "employees"
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("employees")}
             >
@@ -901,7 +905,7 @@ export default function Onboarding() {
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "clients"
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("clients")}
             >
@@ -942,14 +946,14 @@ export default function Onboarding() {
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   onClick={() => handleItemClick(item)}
-              >
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
+                >
+                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
                       {activeTab === 'clients' 
                         ? item.companyName?.substring(0, 2).toUpperCase()
                         : getInitials(item.firstName, item.lastName)}
-                  </span>
-                </div>
+                    </span>
+                  </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-800 dark:text-white">
                       {activeTab === 'clients' 
@@ -960,14 +964,14 @@ export default function Onboarding() {
                       {item.email}
                     </div>
                   </div>
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
         </aside>
         {/* Main Panel */}
         <main className="flex-1 pl-8 overflow-y-auto">
           {selectedItem ? (
-            <OnboardingDetails item={selectedItem} type={activeTab} />
+            <OnboardingDetails item={selectedItem} type={selectedItemType} />
           ) : (
             <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
               {/* Navigation Tabs */}
@@ -976,7 +980,7 @@ export default function Onboarding() {
                   className={`flex-1 px-4 py-2 text-sm font-medium ${
                     activeView === "overview"
                       ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500 hover:text-gray-700"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                   onClick={() => setActiveView("overview")}
                 >
@@ -986,7 +990,7 @@ export default function Onboarding() {
                   className={`flex-1 px-4 py-2 text-sm font-medium ${
                     activeView === "form"
                       ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500 hover:text-gray-700"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                   onClick={() => setActiveView("form")}
                 >

@@ -5,18 +5,37 @@ import {
   UserGroupIcon,
   BriefcaseIcon,
   DocumentTextIcon,
-  CalendarIcon
+  CalendarIcon,
+  UserIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import StatCard from './StatCard';
 
 export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    totalCandidates: 0,
-    activeProjects: 0,
-    openPositions: 0,
-    newMessages: 0
+  const [statistics, setStatistics] = useState({
+    candidates: {
+      total: 0,
+      byStatus: {},
+      bySource: {},
+      byDepartment: {}
+    },
+    employees: {
+      total: 0,
+      byDepartment: {},
+      byStatus: {}
+    },
+    clients: {
+      total: 0,
+      byIndustry: {},
+      byStatus: {}
+    },
+    revenue: {
+      total: 0,
+      monthly: [0, 0, 0, 0, 0, 0]
+    }
   });
   const [recentActivity, setRecentActivity] = useState([]);
 
@@ -39,8 +58,27 @@ export default function Dashboard() {
       // This is a static example since we don't have a messages API endpoint yet
       const newMessages = 3; // This matches the initial messages in Messaging.jsx
 
-      setStats({
-        openPositions: 8, // This is still hardcoded as we don't have an API endpoint for positions
+      setStatistics({
+        candidates: {
+          total: totalCandidates,
+          byStatus: {},
+          bySource: {},
+          byDepartment: {}
+        },
+        employees: {
+          total: 0,
+          byDepartment: {},
+          byStatus: {}
+        },
+        clients: {
+          total: 0,
+          byIndustry: {},
+          byStatus: {}
+        },
+        revenue: {
+          total: 0,
+          monthly: [0, 0, 0, 0, 0, 0]
+        }
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -89,12 +127,22 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Open Positions</h3>
-          <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.openPositions}</p>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatCard
+          title="Total Candidates"
+          value={statistics.candidates.total}
+          icon={<UserGroupIcon className="h-6 w-6" />}
+        />
+        <StatCard
+          title="Total Employees"
+          value={statistics.employees.total}
+          icon={<UserIcon className="h-6 w-6" />}
+        />
+        <StatCard
+          title="Total Clients"
+          value={statistics.clients.total}
+          icon={<BuildingOfficeIcon className="h-6 w-6" />}
+        />
       </div>
 
       {/* Recent Activity */}

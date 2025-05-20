@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import Employee from '../../models/Employee.js';
+import User from '../../models/User.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { transporter } from '../config/email.js';
@@ -41,14 +41,14 @@ async function sendCredentialsEmail(to, employeeId, password) {
 // Get all onboarding candidates
 router.get('/', async (req, res) => {
   try {
-  const { status, type } = req.query;
-    let query = {};
+    const { status, type } = req.query;
+    let query = { role: 'employee' };
 
-  if (status) {
+    if (status) {
       query.status = status;
     }
 
-    const employees = await Employee.find(query).sort({ createdAt: -1 });
+    const employees = await User.find(query).sort({ createdAt: -1 });
     const formattedEmployees = employees.map(emp => ({
       id: emp._id,
       name: `${emp.firstName} ${emp.lastName}`,
@@ -76,10 +76,10 @@ router.get('/', async (req, res) => {
 // Get a specific onboarding candidate
 router.get('/:id', async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Candidate not found' });
-  }
+    }
 
     const formattedEmployee = {
       id: employee._id,
@@ -114,7 +114,7 @@ router.post('/import', async (req, res) => {
         success: false, 
         message: 'No candidates data provided' 
       });
-  }
+    }
 
     const results = {
       success: [],
@@ -124,7 +124,7 @@ router.post('/import', async (req, res) => {
     for (const candidate of candidates) {
       try {
         // Check if candidate with this email already exists
-        const existingEmployee = await Employee.findOne({ email: candidate.email });
+        const existingEmployee = await User.findOne({ email: candidate.email });
         if (existingEmployee) {
           results.failed.push({
             email: candidate.email,
@@ -134,7 +134,7 @@ router.post('/import', async (req, res) => {
         }
 
         // Generate employee ID
-        const lastEmployee = await Employee.findOne().sort({ employeeId: -1 });
+        const lastEmployee = await User.findOne({ role: 'employee' }).sort({ employeeId: -1 });
         const lastId = lastEmployee ? parseInt(lastEmployee.employeeId.slice(1)) : 0;
         const newId = `E${(lastId + 1).toString().padStart(4, '0')}`;
 
@@ -143,7 +143,7 @@ router.post('/import', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create new employee
-        const newEmployee = new Employee({
+        const newEmployee = new User({
           employeeId: newId,
           password: hashedPassword,
           firstName: candidate.firstName,
@@ -152,6 +152,7 @@ router.post('/import', async (req, res) => {
           phone: candidate.phone || '',
           department: candidate.department || 'IT',
           position: candidate.position || 'Employee',
+          role: 'employee',
           status: candidate.status || 'Active',
           hireDate: candidate.hireDate || new Date(),
           salary: candidate.salary || 0,
@@ -183,7 +184,7 @@ router.post('/import', async (req, res) => {
           email: candidate.email,
           reason: error.message
         });
-  }
+      }
     }
 
     res.json({
@@ -204,7 +205,7 @@ router.post('/import', async (req, res) => {
 // Export candidates to CSV
 router.get('/export/csv', async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
+    const employees = await User.find().sort({ createdAt: -1 });
     
     const headers = [
       'First Name',
@@ -254,7 +255,7 @@ router.get('/export/csv', async (req, res) => {
 router.put('/:id/status', async (req, res) => {
   try {
     const { onboardingStep, welcomeSent, formCompleted, tasks } = req.body;
-    const employee = await Employee.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     
     if (!employee) {
       return res.status(404).json({ message: 'Candidate not found' });
@@ -315,32 +316,35 @@ router.post('/send-form', async (req, res) => {
         subject: `${formTitle} - Please Complete Your Onboarding Form`,
         html: emailContent
       };
+
       try {
-        console.log(`Sending email to: ${recipient.email}`);
         await transporter.sendMail(mailOptions);
-        console.log(`Email sent to: ${recipient.email}`);
-        results.push({ email: recipient.email, success: true });
-      } catch (err) {
-        console.error(`Error sending email to ${recipient.email}:`, err.message);
-        results.push({ email: recipient.email, success: false, error: err.message });
+        results.push({
+          email: recipient.email,
+          success: true
+        });
+      } catch (error) {
+        console.error(`Error sending email to ${recipient.email}:`, error);
+        results.push({
+          email: recipient.email,
+          success: false,
+          error: error.message
+        });
       }
     }
 
-    const failed = results.filter(r => !r.success);
-    if (failed.length > 0) {
-      console.log('Some emails failed to send:', failed);
-      return res.status(500).json({
-        success: false,
-        message: `Failed to send form to ${failed.length} recipient(s).`,
-        results
-      });
-    }
-
-    console.log('All emails sent successfully.');
-    res.json({ success: true, message: 'Form data sent successfully', results });
+    res.json({
+      success: true,
+      message: 'Form sent successfully',
+      results
+    });
   } catch (error) {
-    console.error('Error sending form data:', error);
-    res.status(500).json({ success: false, message: 'Failed to send form data', error: error.message });
+    console.error('Error sending form:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending form',
+      error: error.message
+    });
   }
 });
 
@@ -473,7 +477,7 @@ router.get('/my-forms/:email', async (req, res) => {
 // Send onboarding form to employee
 router.post('/send-form/:employeeId', async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.employeeId);
+    const employee = await User.findOne({ _id: req.params.employeeId, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
