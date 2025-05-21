@@ -133,6 +133,63 @@ export default function Settings() {
               Save Profile
             </button>
           </div>
+
+          {/* Forgot Password & Update Password */}
+          <div className="mt-8 border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-md font-medium text-gray-700 dark:text-gray-300">Password Management</span>
+              <button
+                onClick={() => alert('Password reset link sent to your email!')}
+                className="text-blue-600 hover:underline text-sm"
+                type="button"
+              >
+                Forgot Password?
+              </button>
+            </div>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                alert('Password updated successfully!');
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+                <input
+                  type="password"
+                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+                <input
+                  type="password"
+                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
+                  placeholder="Enter new password"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+                <input
+                  type="password"
+                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
+                  placeholder="Confirm new password"
+                  required
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
         {/* Notification Settings */}
