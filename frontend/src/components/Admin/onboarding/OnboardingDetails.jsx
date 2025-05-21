@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ClockIcon, XCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
 function formatDate(dateStr) {
@@ -29,6 +29,7 @@ export default function OnboardingDetails({ item, type }) {
   const navigate = useNavigate();
   const [formsData, setFormsData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedFormId, setExpandedFormId] = useState(null);
 
   useEffect(() => {
     const fetchFormData = async () => {
@@ -89,6 +90,10 @@ export default function OnboardingDetails({ item, type }) {
   const progressPercentage = progress.totalForms > 0 
     ? Math.round((progress.completed / progress.totalForms) * 100) 
     : 0;
+
+  const toggleFormDetails = (formId) => {
+    setExpandedFormId(expandedFormId === formId ? null : formId);
+  };
 
   return (
     <div className="space-y-6">
@@ -198,13 +203,16 @@ export default function OnboardingDetails({ item, type }) {
                 }
               }
               
-              // Calculate questions answered
               const totalQuestions = form.fields.length;
               const answeredQuestions = recipient?.completedFields?.length || 0;
+              const isExpanded = expandedFormId === form._id;
               
               return (
                 <div key={index} className="border dark:border-gray-700 rounded-lg p-4">
-                  <div className="flex justify-between items-start">
+                  <div 
+                    className="flex justify-between items-start cursor-pointer"
+                    onClick={() => toggleFormDetails(form._id)}
+                  >
                     <div>
                       <h4 className="font-medium text-gray-800 dark:text-white">{form.title}</h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -214,9 +222,16 @@ export default function OnboardingDetails({ item, type }) {
                         Questions answered: <span className="font-medium">{answeredQuestions}/{totalQuestions}</span>
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}>
-                      {status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}>
+                        {status}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUpIcon className="h-5 w-5 text-gray-500" />
+                      ) : (
+                        <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                      )}
+                    </div>
                   </div>
                   
                   {/* Progress bar */}
@@ -226,6 +241,66 @@ export default function OnboardingDetails({ item, type }) {
                       style={{ width: `${totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0}%` }}
                     ></div>
                   </div>
+
+                  {/* Form Details Dropdown */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                      <h5 className="font-medium text-gray-800 dark:text-white mb-3">Form Responses</h5>
+                      <div className="space-y-4">
+                        {form.fields.map((field, fieldIndex) => {
+                          // Find the answer in completedFields by matching the field ID
+                          const answer = recipient?.completedFields?.find(f => 
+                            f.id === field.id || f.fieldId === field.id
+                          )?.value;
+                          
+                          // Check if the field has been answered
+                          const isAnswered = answer !== undefined && answer !== null && answer !== '';
+                          
+                          // Format the answer based on field type
+                          let displayAnswer = answer;
+                          if (isAnswered) {
+                            switch (field.type) {
+                              case 'date':
+                                displayAnswer = formatDate(answer);
+                                break;
+                              case 'datetime':
+                                displayAnswer = new Date(answer).toLocaleString();
+                                break;
+                              case 'checkbox':
+                                displayAnswer = answer ? 'Yes' : 'No';
+                                break;
+                              case 'multiselect':
+                                displayAnswer = Array.isArray(answer) ? answer.join(', ') : answer;
+                                break;
+                              case 'file':
+                              case 'image':
+                                displayAnswer = answer.name || 'File uploaded';
+                                break;
+                              case 'currency':
+                                displayAnswer = `$${parseFloat(answer).toFixed(2)}`;
+                                break;
+                              default:
+                                displayAnswer = answer;
+                            }
+                          }
+
+                          return (
+                            <div key={fieldIndex} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                              <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">{field.label}</p>
+                              <p className="text-gray-600 dark:text-gray-400">
+                                {isAnswered ? displayAnswer : 'Not answered yet'}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {recipient?.completedAt && (
+                        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                          Completed on: {formatDate(recipient.completedAt)}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

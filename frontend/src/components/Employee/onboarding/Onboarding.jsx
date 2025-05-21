@@ -35,6 +35,7 @@ import {
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -379,22 +380,9 @@ export default function Onboarding() {
     }
 
     const verifyToken = async () => {
-      try {
-        const response = await axios.post(
-          "http://localhost:5000/api/employees/verify-token",
-          {
-            token: employeeToken,
-          }
-        );
-
-        if (!response.data.valid) {
-          localStorage.removeItem("employeeToken");
-          navigate(
-            `/employee/login?token=${token}${email ? `&email=${email}` : ""}`
-          );
-        }
-      } catch (error) {
-        console.error("Token verification failed:", error);
+      const { valid, expired } = await verifyAndRefreshToken();
+      if (!valid) {
+        handleTokenExpiration(navigate, token, email);
       }
     };
 
@@ -413,12 +401,10 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/onboarding/form/${token}`
-      );
+      const response = await apiCall('get', `/onboarding/form/${token}`);
 
-      if (response.data.success) {
-        const { title, fields, recipients } = response.data.form;
+      if (response.success) {
+        const { title, fields, recipients } = response.form;
         setFormTitle(title);
 
         const resetFields = fields.map((field) => ({
@@ -442,7 +428,11 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error("Error fetching form:", error);
-      setError("Error loading the form. Please try again or contact support.");
+      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+        handleTokenExpiration(navigate, token, email);
+      } else {
+        setError("Error loading the form. Please try again or contact support.");
+      }
       setLoading(false);
     }
   };
@@ -484,11 +474,18 @@ export default function Onboarding() {
       // Update completion status
       const totalFields = updatedFields.length;
       const completedFields = updatedFields.filter((field) => {
-        if (field.type === "checkbox") return true; // Checkboxes are always considered complete
-        if (field.type === "file" || field.type === "image")
-          return field.value !== null;
-        if (field.type === "multiselect") return field.value.length > 0;
-        return field.value !== "";
+        if (field.type === "checkbox") return false;
+        if (field.type === "file" || field.type === "image") {
+          // Only count as filled if value is a File object (not empty string/null)
+          return field.value && typeof field.value !== 'string';
+        }
+        if (field.type === "multiselect") {
+          return field.value && field.value.length > 0;
+        }
+        if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+          return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+        }
+        return field.value !== "" && field.value !== null && field.value !== undefined;
       }).length;
 
       setCompletionStatus({
@@ -496,7 +493,6 @@ export default function Onboarding() {
         completedFields,
         isComplete: completedFields === totalFields,
       });
-
       return updatedFields;
     });
   };
@@ -506,11 +502,6 @@ export default function Onboarding() {
 
     try {
       setSubmitting(true);
-
-      const employeeToken = localStorage.getItem("employeeToken");
-      if (!employeeToken) {
-        throw new Error("Authentication required");
-      }
 
       // Only include fields that have values
       const completedFields = fields
@@ -528,20 +519,12 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await axios.post(
-        `http://localhost:5000/api/onboarding/submit/${token}`,
-        {
-          completedFields,
-          recipientEmail: searchParams.get("email"),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${employeeToken}`,
-          },
-        }
-      );
+      const response = await apiCall('post', `/onboarding/submit/${token}`, {
+        completedFields,
+        recipientEmail: searchParams.get("email"),
+      });
 
-      if (response.data.success) {
+      if (response.success) {
         setSubmissionStatus({
           success: true,
           message: completionStatus.isComplete
@@ -569,13 +552,13 @@ export default function Onboarding() {
       } else {
         setSubmissionStatus({
           success: false,
-          message: response.data.message || "Failed to submit form",
+          message: response.message || "Failed to submit form",
         });
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      if (error.message === "Authentication required") {
-        navigate(`/employee/login?token=${token}`);
+      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+        handleTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
           success: false,
@@ -744,10 +727,10 @@ export default function Onboarding() {
                 {fields.map((field, idx) => (
                   <div
                     key={field.id}
-                    className="col-span-1 group flex items-end gap-2"
+                    className="col-span-1 group flex items-start gap-2"
                   >
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                         {field.label}
                         {field.value !== "" &&
                         field.value !== null &&
@@ -813,7 +796,7 @@ export default function Onboarding() {
                               ? "Enter official email address..."
                               : "Enter email address..."
                           }
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -822,7 +805,7 @@ export default function Onboarding() {
                           type="date"
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -831,7 +814,7 @@ export default function Onboarding() {
                           type="datetime-local"
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -860,7 +843,7 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter contact number..."
                           pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -868,7 +851,7 @@ export default function Onboarding() {
                         <select
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         >
                           <option value="">Select blood group</option>
                           {bloodGroups.map((group) => (
@@ -885,7 +868,7 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter text here..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -895,7 +878,7 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter phone number..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -903,7 +886,7 @@ export default function Onboarding() {
                         <select
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         >
                           <option value="">Select gender</option>
                           {genders.map((gender) => (
@@ -921,7 +904,7 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter decimal number..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -929,7 +912,7 @@ export default function Onboarding() {
                         <select
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         >
                           <option value="">Select country</option>
                           {countries.map((country) => (
@@ -946,7 +929,7 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter URL..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -956,7 +939,7 @@ export default function Onboarding() {
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter text here..."
                           rows={4}
-                          className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 py-2 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
@@ -966,13 +949,13 @@ export default function Onboarding() {
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
                           placeholder="Enter number..."
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         />
                       )}
 
                       {field.type === "currency" && (
                         <div className="relative mt-1">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <div className="absolute inset-y-0 left-0 px-3 flex items-center pointer-events-none">
                             <span className="text-gray-500 dark:text-gray-400">
                               $
                             </span>
@@ -984,7 +967,7 @@ export default function Onboarding() {
                             placeholder="0.00"
                             step="0.01"
                             min="0"
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-7"
                           />
                         </div>
                       )}
@@ -993,7 +976,7 @@ export default function Onboarding() {
                         <select
                           value={field.value}
                           onChange={(e) => handleFieldChange(e, field.id)}
-                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                          className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
                         >
                           <option value="">Select an option</option>
                           {field.options?.map((option) => (
@@ -1079,6 +1062,52 @@ export default function Onboarding() {
                               </span>
                             </label>
                           ))}
+                        </div>
+                      )}
+
+                      {field.type === "formula" && (
+                        <div className="mt-1">
+                          <input
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Enter formula..."
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
+                            disabled={true}
+                          />
+                        </div>
+                      )}
+
+                      {field.type === "notes" && (
+                        <div className="mt-1">
+                          <textarea
+                            value={field.value}
+                            onChange={(e) => handleFieldChange(e, field.id)}
+                            placeholder="Add your notes here..."
+                            rows={4}
+                            className="mt-1 py-2 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
+                          />
+                        </div>
+                      )}
+
+                      {field.type === "lookup" && (
+                        <div className="mt-1">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={field.value}
+                              onChange={(e) => handleFieldChange(e, field.id)}
+                              placeholder="Enter Lookup Value..."
+                              className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
+                            />
+                          </div>
+                          {field.value && (
+                            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-md">
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                                Selected: {field.value}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

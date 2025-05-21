@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 const Employees = () => {
   const { isDarkMode } = useTheme();
@@ -40,27 +41,12 @@ const Employees = () => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const employeeToken = localStorage.getItem('employeeToken');
-      if (!employeeToken) {
-        navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
+      const { valid, expired } = await verifyAndRefreshToken();
+      if (!valid) {
+        handleTokenExpiration(navigate, token, email);
         return;
       }
-
-      try {
-        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
-          token: employeeToken
-        });
-        
-        if (!response.data.valid) {
-          localStorage.removeItem('employeeToken');
-          navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
-        } else {
-          fetchEmployees();
-        }
-      } catch (error) {
-        console.error('Token verification failed:', error);
-        fetchEmployees();
-      }
+      fetchEmployees();
     };
 
     verifyToken();
@@ -69,26 +55,14 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const employeeToken = localStorage.getItem('employeeToken');
-      const response = await axios.get('http://localhost:5000/api/employees', {
-        headers: {
-          'Authorization': `Bearer ${employeeToken}`
-        }
-      });
+      const response = await apiCall('get', '/employees');
       
       // Fetch form data for each employee
       const employeesWithForms = await Promise.all(
-        response.data.map(async (employee) => {
+        response.map(async (employee) => {
           try {
-            const formsResponse = await axios.get(
-              `http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${employeeToken}`
-                }
-              }
-            );
-            const forms = formsResponse.data.forms;
+            const formsResponse = await apiCall('get', `/onboarding/forms-by-recipient/${employee.email}`);
+            const forms = formsResponse.forms;
             const completedForms = getFormProgress(forms, employee.email);
 
             return {
@@ -111,9 +85,13 @@ const Employees = () => {
 
       setEmployees(employeesWithForms);
       setError(null);
-    } catch (err) {
-      setError('Failed to fetch employees');
-      console.error('Error fetching employees:', err);
+    } catch (error) {
+      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+        handleTokenExpiration(navigate, token, email);
+      } else {
+        setError('Failed to fetch employees');
+        console.error('Error fetching employees:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -147,16 +125,15 @@ const Employees = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const employeeToken = localStorage.getItem('employeeToken');
-        await axios.delete(`http://localhost:5000/api/employees/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${employeeToken}`
-          }
-        });
+        await apiCall('delete', `/employees/${id}`);
         setEmployees(employees.filter(emp => emp._id !== id));
-      } catch (err) {
-        console.error('Error deleting employee:', err);
-        alert('Failed to delete employee');
+      } catch (error) {
+        if (error.response?.data?.message === 'Session expired. Please log in again.') {
+          handleTokenExpiration(navigate, token, email);
+        } else {
+          console.error('Error deleting employee:', error);
+          alert('Failed to delete employee');
+        }
       }
     }
   };
@@ -232,8 +209,7 @@ const Employees = () => {
       return;
     }
     try {
-      const employeeToken = localStorage.getItem('employeeToken');
-      const res = await axios.post('http://localhost:5000/api/employees', {
+      await apiCall('post', '/employees', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -243,17 +219,17 @@ const Employees = () => {
         postalCode: formData.postalCode,
         city: formData.city,
         country: formData.country
-      }, {
-        headers: {
-          'Authorization': `Bearer ${employeeToken}`
-        }
       });
       setSuccessMsg('Employee created and credentials sent via email!');
       setShowForm(false);
       setFormData({ firstName: '', lastName: '', email: '', phone: '', position: '', address: '', postalCode: '', city: '', country: '' });
       fetchEmployees();
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to create employee.');
+    } catch (error) {
+      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+        handleTokenExpiration(navigate, token, email);
+      } else {
+        setErrorMsg(error.response?.data?.message || 'Failed to create employee.');
+      }
     }
   };
 

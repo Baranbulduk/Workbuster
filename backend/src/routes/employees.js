@@ -369,7 +369,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     // Return user data (excluding password) and token
@@ -405,8 +405,37 @@ router.post('/verify-token', async (req, res) => {
         return res.status(401).json({ valid: false, message: 'Invalid token' });
       }
 
+      // Check if token is about to expire (less than 1 day remaining)
+      const tokenExp = decoded.exp * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const timeUntilExpiry = tokenExp - now;
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (timeUntilExpiry < oneDay) {
+        // Generate new token
+        const newToken = jwt.sign(
+          { user: { id: user._id, role: user.role } },
+          process.env.JWT_SECRET || 'your-secret-key',
+          { expiresIn: '7d' }
+        );
+        
+        return res.json({ 
+          valid: true, 
+          user: { id: user._id, role: user.role },
+          token: newToken,
+          tokenRefreshed: true
+        });
+      }
+
       res.json({ valid: true, user: { id: user._id, role: user.role } });
     } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          valid: false, 
+          message: 'Token expired',
+          expired: true
+        });
+      }
       console.error('Token verification error:', error);
       res.status(401).json({ valid: false, message: 'Invalid token' });
     }

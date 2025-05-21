@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { verifyAndRefreshToken } from '../../utils/tokenManager';
 
 const EmployeeLogin = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,20 @@ const EmployeeLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get('token');
+  const emailParam = searchParams.get('email');
+
+  useEffect(() => {
+    const checkExistingToken = async () => {
+      const { valid } = await verifyAndRefreshToken();
+      if (valid) {
+        navigate('/employee/onboarding');
+      }
+    };
+    checkExistingToken();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,8 +39,9 @@ const EmployeeLogin = () => {
         // Store token and employee data in localStorage
         localStorage.setItem('employeeToken', response.data.token);
         localStorage.setItem('employee', JSON.stringify(response.data.employee));
-        // Navigate to onboarding form
-        navigate('/employee/onboarding');
+        
+        // Navigate to onboarding form with any existing token/email params
+        navigate(`/employee/onboarding${token ? `?token=${token}${emailParam ? `&email=${emailParam}` : ''}` : ''}`);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -60,7 +76,7 @@ const EmployeeLogin = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 placeholder="Email address"
               />
             </div>
@@ -73,7 +89,7 @@ const EmployeeLogin = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 placeholder="Password"
               />
             </div>
@@ -89,9 +105,9 @@ const EmployeeLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in as Employee'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>
