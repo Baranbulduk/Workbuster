@@ -6,6 +6,7 @@ import {
   HomeIcon, 
   UserGroupIcon, 
   UserPlusIcon, 
+  Cog6ToothIcon,
   ArrowRightOnRectangleIcon 
 } from '@heroicons/react/24/outline';
 
@@ -26,7 +27,7 @@ import EmployeeLogin from './components/Employee/EmployeeLogin';
 import EmployeeEmployees from './components/Employee/employees/Employees';
 import EmployeeEmployeeDetails from './components/Employee/employees/EmployeeDetails';
 import EmployeeOnboarding from './components/Employee/onboarding/Onboarding';
-
+import EmployeeSettings from './components/Employee/settings/Settings';
 // Layout wrapper component
 const LayoutWrapper = () => {
   return (
@@ -56,6 +57,11 @@ const EmployeeLayout = () => {
       name: 'Onboarding', 
       href: `/employee/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, 
       icon: UserPlusIcon 
+    },
+    {
+      name: 'Settings',
+      href: `/employee/settings${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`,
+      icon: Cog6ToothIcon
     }
   ];
 
@@ -188,6 +194,7 @@ function App() {
             <Route path="employees" element={<EmployeeEmployees />} />
             <Route path="employees/:id" element={<EmployeeEmployeeDetails />} />
             <Route path="onboarding" element={<EmployeeOnboarding />} />
+            <Route path="settings" element={<EmployeeSettings />} />
           </Route>
 
           {/* Default redirect */}
