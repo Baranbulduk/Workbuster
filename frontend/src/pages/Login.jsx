@@ -24,7 +24,7 @@ const Login = () => {
     
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
-      const { token, role } = response.data;
+      const { token, role, admin } = response.data;
       
       // Only allow admin login
       if (role !== 'admin') {
@@ -32,9 +32,12 @@ const Login = () => {
         return;
       }
       
-      // Store the token and email in localStorage
+      // Store the token, email, and admin profile in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('userEmail', formData.email);
+      if (admin) {
+        localStorage.setItem('admin', JSON.stringify(admin));
+      }
       
       // Navigate to admin dashboard
       navigate('/');

@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [settings, setSettings] = useState({
     profile: {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      role: 'Admin',
-      department: 'Management',
-      phone: '+1 234 567 8900',
-      location: 'New York, USA'
+      name: '',
+      email: '',
+      role: '',
+      department: '',
+      phone: '',
+      location: ''
     },
     notifications: {
       emailNotifications: true,
@@ -36,6 +36,30 @@ export default function Settings() {
       lastPasswordChange: '2024-01-15'
     }
   });
+
+  useEffect(() => {
+    // Try to load admin info from localStorage
+    const adminStr = localStorage.getItem('admin');
+    if (adminStr) {
+      try {
+        const admin = JSON.parse(adminStr);
+        setSettings(prev => ({
+          ...prev,
+          profile: {
+            ...prev.profile,
+            name: admin.name || prev.profile.name,
+            email: admin.email || prev.profile.email,
+            role: admin.role || prev.profile.role,
+            department: admin.department || prev.profile.department,
+            phone: admin.phone || prev.profile.phone,
+            location: admin.location || prev.profile.location,
+          }
+        }));
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, []);
 
   const handleInputChange = (section, field, value) => {
     setSettings(prev => ({
