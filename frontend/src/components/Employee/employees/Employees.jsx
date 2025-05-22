@@ -77,20 +77,23 @@ const Employees = () => {
       setLoading(true);
       const employeeToken = localStorage.getItem('employeeToken');
       if (!employeeToken) {
+        console.log('No employee token found in localStorage');
         handleTokenExpiration(navigate, token, email);
         return;
       }
 
+      // Log token for debugging
+      console.log("Fetching with token:", employeeToken);
+
       const response = await axios.get('http://localhost:5000/api/employees/colleagues', {
         headers: {
-          Authorization: `Bearer ${employeeToken}`
+          'Authorization': `Bearer ${employeeToken}`,
+          'Content-Type': 'application/json'
         }
       });
-      console.log("response", response);
-      console.log("employeeToken", employeeToken);
-      console.log("token", token);
-      console.log("email", email);
-    
+      
+      console.log('Response from server:', response.data);
+      
       // Process employee data
       const processedEmployees = response.data.map(employee => ({
         ...employee,
@@ -117,7 +120,12 @@ const Employees = () => {
       setError(null);
     } catch (error) {
       console.error('Error fetching employees:', error);
+      if (error.response) {
+        console.log('Error response:', error.response.data);
+        console.log('Error status:', error.response.status);
+      }
       if (error.response?.status === 401 || error.response?.status === 403) {
+        console.log('Token expired or invalid, redirecting to login');
         handleTokenExpiration(navigate, token, email);
       } else {
         setError('Failed to fetch employees');

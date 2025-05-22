@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAdminId, requireRole } from '../middleware/auth.js';
+import { requireAdmin, requireEmployee, getAdminId } from '../middleware/rolePermissions.js';
 import User from '../../models/User.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
@@ -8,24 +8,15 @@ import Employee from '../../models/Employee.js';
 
 const router = express.Router();
 
-// Get all employees
-router.get('/', requireRole('admin'), async (req, res) => {
+// Get all employees (admin only)
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const adminId = getAdminId(req);
     if (!adminId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Get the user making the request
-    const requestingUser = await User.findById(req.user.id);
-    if (!requestingUser) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-
-    // If the requesting user is an employee, get their admin's ID
-    const adminToQuery = requestingUser.role === 'employee' ? requestingUser.createdBy : adminId;
-
-    const employees = await Employee.find({ createdBy: adminToQuery });
+    const employees = await Employee.find({ createdBy: adminId });
 
     // Format the response
     const formattedEmployees = employees.map(emp => ({
@@ -42,26 +33,97 @@ router.get('/', requireRole('admin'), async (req, res) => {
   }
 });
 
-// Get single employee
-router.get('/:id', requireRole('admin'), async (req, res) => {
+// Get employees for employee role
+router.get('/colleagues', requireEmployee, async (req, res) => {
   try {
-    const adminId = getAdminId(req);
-    if (!adminId) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const employee = await Employee.findOne({
-      _id: req.params.id,
-      createdBy: adminId
+    const employee = req.user;
+    console.log('Employee making request:', {
+      id: employee._id,
+      role: employee.role,
+      email: employee.email,
+      createdBy: employee.createdBy
     });
 
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
+    if (!employee.createdBy) {
+      console.log('Employee has no admin association:', employee._id);
+      return res.status(403).json({ message: 'Employee not associated with any admin.' });
     }
 
-    res.json(employee);
+    // Get employees created by the same admin
+    const employees = await Employee.find({ createdBy: employee.createdBy });
+    console.log('Found employees:', employees.length);
+    
+    // Format the response
+    const formattedEmployees = employees.map(emp => ({
+      ...emp.toObject(),
+      employeeId: emp.employeeId || `EM${String(emp._id).slice(-4)}`,
+      fullName: `${emp.firstName} ${emp.lastName}`,
+      name: `${emp.firstName} ${emp.lastName}`,
+      department: emp.department || 'IT',
+      position: emp.position || 'Employee',
+      status: emp.status || 'active',
+      hireDate: emp.hireDate || new Date()
+    }));
+
+    res.json(formattedEmployees);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching colleagues:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get single employee
+router.get('/:id', async (req, res) => {
+  try {
+    // Get the token from the Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const requestingUser = await User.findById(decoded.user.id);
+
+    if (!requestingUser) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // If the requesting user is an employee, they can only view their own details
+    if (requestingUser.role === 'employee') {
+      if (requestingUser._id.toString() !== req.params.id) {
+        return res.status(403).json({ message: 'Access denied. You can only view your own details.' });
+      }
+      const employee = await Employee.findOne({ _id: req.params.id });
+      if (!employee) {
+        return res.status(404).json({ message: 'Employee not found' });
+      }
+      return res.json(employee);
+    }
+
+    // If the requesting user is an admin, they can view any employee under their admin
+    if (requestingUser.role === 'admin') {
+      const employee = await Employee.findOne({
+        _id: req.params.id,
+        createdBy: requestingUser._id
+      });
+
+      if (!employee) {
+        return res.status(404).json({ message: 'Employee not found' });
+      }
+
+      return res.json(employee);
+    }
+
+    return res.status(403).json({ message: 'Access denied. Invalid role.' });
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired' });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -105,7 +167,7 @@ async function sendCredentialsEmail(to, employeeId, password) {
 }
 
 // Create new employee
-router.post('/', requireRole('admin'), async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const adminId = getAdminId(req);
     if (!adminId) {
@@ -180,7 +242,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
 });
 
 // Bulk import employees
-router.post('/bulk', requireRole('admin'), async (req, res) => {
+router.post('/bulk', requireAdmin, async (req, res) => {
   try {
     const { employees } = req.body;
 
@@ -273,7 +335,7 @@ router.post('/bulk', requireRole('admin'), async (req, res) => {
 });
 
 // Update employee
-router.put('/:id', requireRole('admin'), async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const adminId = getAdminId(req);
     if (!adminId) {
@@ -298,7 +360,7 @@ router.put('/:id', requireRole('admin'), async (req, res) => {
 });
 
 // Delete employee
-router.delete('/:id', requireRole('admin'), async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const adminId = getAdminId(req);
     if (!adminId) {
@@ -344,7 +406,7 @@ router.delete('/:id', requireRole('admin'), async (req, res) => {
 });
 
 // Import employees from CSV
-router.post('/import', requireRole('admin'), async (req, res) => {
+router.post('/import', requireAdmin, async (req, res) => {
   try {
     const { items } = req.body;
 
@@ -552,45 +614,6 @@ router.post('/verify-token', async (req, res) => {
   } catch (error) {
     console.error('Error verifying token:', error);
     res.status(500).json({ valid: false, message: 'Error verifying token' });
-  }
-});
-
-// Get employees for employee role
-router.get('/colleagues', requireRole('employee'), async (req, res) => {
-  try {
-    // Get the token from the Authorization header
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    console.log("decoded", decoded);
-    if (!decoded.user.id) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-
-    // Get the employee making the request
-    const employee = await User.findOne({
-      _id: decoded.user.id,
-      role: 'employee'
-    });
-
-    if (!employee) {
-      return res.status(403).json({ message: 'Access denied. Employee role required.' });
-    }
-
-
-  } catch (error) {
-    console.error('Error fetching colleagues:', error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expired' });
-    }
-    res.status(500).json({ message: 'Server error' });
   }
 });
 
