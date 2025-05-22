@@ -24,6 +24,7 @@ const Employees = () => {
     experience: ''
   });
   const [importedEmployees, setImportedEmployees] = useState([]);
+  const [onboardingProgress, setOnboardingProgress] = useState({});
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -41,12 +42,31 @@ const Employees = () => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const { valid, expired } = await verifyAndRefreshToken();
-      if (!valid) {
+      try {
+        const employeeToken = localStorage.getItem('employeeToken');
+        if (!employeeToken) {
+          handleTokenExpiration(navigate, token, email);
+          return;
+        }
+
+        // Verify token with backend
+        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
+          token: employeeToken
+        });
+
+        if (response.data.valid) {
+          // If token was refreshed, update it
+          if (response.data.tokenRefreshed) {
+            localStorage.setItem('employeeToken', response.data.token);
+          }
+          fetchEmployees();
+        } else {
+          handleTokenExpiration(navigate, token, email);
+        }
+      } catch (error) {
+        console.error('Token verification error:', error);
         handleTokenExpiration(navigate, token, email);
-        return;
       }
-      fetchEmployees();
     };
 
     verifyToken();
@@ -55,46 +75,101 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('get', '/employees');
+      const employeeToken = localStorage.getItem('employeeToken');
+      if (!employeeToken) {
+        handleTokenExpiration(navigate, token, email);
+        return;
+      }
+
+      const response = await axios.get('http://localhost:5000/api/employees/colleagues', {
+        headers: {
+          Authorization: `Bearer ${employeeToken}`
+        }
+      });
+      console.log("response", response);
+      console.log("employeeToken", employeeToken);
+      console.log("token", token);
+      console.log("email", email);
+    
+      // Process employee data
+      const processedEmployees = response.data.map(employee => ({
+        ...employee,
+        name: employee.name || `${employee.firstName} ${employee.lastName}`,
+        fullName: employee.fullName || `${employee.firstName} ${employee.lastName}`,
+        employeeId: employee.employeeId || `EM${String(employee._id).slice(-4)}`,
+        status: employee.status || 'active',
+        department: employee.department || 'IT',
+        position: employee.position || 'Employee',
+        hireDate: employee.hireDate || employee.createdAt
+      }));
       
-      // Fetch form data for each employee
-      const employeesWithForms = await Promise.all(
-        response.map(async (employee) => {
-          try {
-            const formsResponse = await apiCall('get', `/onboarding/forms-by-recipient/${employee.email}`);
-            const forms = formsResponse.forms;
-            const completedForms = getFormProgress(forms, employee.email);
-
-            return {
-              ...employee,
-              formsData: forms,
-              completedFormsCount: completedForms,
-              totalFormsCount: forms.length
-            };
-          } catch (error) {
-            console.error(`Error fetching forms for ${employee.email}:`, error);
-            return {
-              ...employee,
-              formsData: [],
-              completedFormsCount: 0,
-              totalFormsCount: 0
-            };
-          }
-        })
-      );
-
-      setEmployees(employeesWithForms);
+      setEmployees(processedEmployees);
+      
+      // Calculate onboarding progress for each employee
+      const progressMap = {};
+      processedEmployees.forEach(employee => {
+        if (employee) {
+          progressMap[employee._id] = calculateOnboardingProgress(employee);
+        }
+      });
+      setOnboardingProgress(progressMap);
+      
       setError(null);
     } catch (error) {
-      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+      console.error('Error fetching employees:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
         handleTokenExpiration(navigate, token, email);
       } else {
         setError('Failed to fetch employees');
-        console.error('Error fetching employees:', error);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateOnboardingProgress = (employee) => {
+    // Get the forms data for this employee
+    const formsData = employee.forms || [];
+    
+    // Calculate progress based on form completion
+    let notStarted = 0;
+    let inProgress = 0;
+    let completed = 0;
+    
+    formsData.forEach(form => {
+      const recipient = form.recipients?.find(r => r.email === employee.email);
+      if (!recipient) {
+        notStarted++;
+      } else if (recipient.completedAt) {
+        completed++;
+      } else if (recipient.completedFields) {
+        inProgress++;
+      } else {
+        notStarted++;
+      }
+    });
+    
+    const totalForms = formsData.length;
+    const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
+    
+    // Determine status based on progress
+    let status = 'Not Started';
+    if (progress === 100) {
+      status = 'Complete';
+    } else if (progress > 0) {
+      status = 'In Progress';
+    }
+
+    return {
+      progress,
+      status,
+      currentStep: employee.onboardingStep || 1,
+      welcomeSent: employee.welcomeSent,
+      formCompleted: completed > 0,
+      tasks: completed,
+      completed: completed,
+      totalForms: totalForms
+    };
   };
 
   const handleSearch = (e) => {
@@ -231,50 +306,6 @@ const Employees = () => {
         setErrorMsg(error.response?.data?.message || 'Failed to create employee.');
       }
     }
-  };
-
-  const getFormProgress = (forms, email) => {
-    let completed = 0;
-    forms.forEach(form => {
-      const recipient = form.recipients.find(r => r.email === email);
-      if (recipient?.completedAt) {
-        completed++;
-      }
-    });
-    return completed;
-  };
-  
-
-  const calculateFormProgress = (formsData, recipientEmail) => {
-    let notStarted = 0;
-    let inProgress = 0;
-    let completed = 0;
-    
-    formsData?.forEach((form) => {
-      const recipient = form.recipients.find(r => r.email === recipientEmail);
-      if (recipient) {
-        if (recipient.completedAt) {
-          completed++;
-        } else if (recipient.startedAt) {
-          inProgress++;
-        } else {
-          notStarted++;
-        }
-      }
-    });
-    
-    const totalForms = notStarted + inProgress + completed;
-    const progressPercentage = totalForms > 0 
-      ? Math.round((completed / totalForms) * 100) 
-      : 0;
-
-    return {
-      notStarted,
-      inProgress,
-      completed,
-      totalForms,
-      progressPercentage
-    };
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -570,14 +601,14 @@ const Employees = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-[120px] max-w-[180px]">
                         {(() => {
-                          const progress = calculateFormProgress(employee.formsData, employee.email);
-                          const progressPercentage = progress.progressPercentage;
+                          const progress = onboardingProgress[employee._id]?.progress || 0;
+                          const progressPercentage = progress;
 
                           return (
                             <>
                               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                                 <span>{progressPercentage === 100 ? 'Complete' : progressPercentage > 0 ? 'In Progress' : 'Not Started'}</span>
-                                <span>{progress.completed}/{progress.totalForms} forms</span>
+                                <span>{onboardingProgress[employee._id]?.completed}/{onboardingProgress[employee._id]?.totalForms} forms</span>
                               </div>
                               <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
                                 <div 

@@ -1,31 +1,68 @@
 import express from 'express';
+import { getAdminId, requireRole } from '../middleware/auth.js';
 import User from '../../models/User.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
+import Employee from '../../models/Employee.js';
 
 const router = express.Router();
 
 // Get all employees
-router.get('/', async (req, res) => {
+router.get('/', requireRole('admin'), async (req, res) => {
   try {
-    const employees = await User.find({ role: 'employee' }).sort({ createdAt: -1 });
-    res.json(employees);
+    const adminId = getAdminId(req);
+    if (!adminId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Get the user making the request
+    const requestingUser = await User.findById(req.user.id);
+    if (!requestingUser) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // If the requesting user is an employee, get their admin's ID
+    const adminToQuery = requestingUser.role === 'employee' ? requestingUser.createdBy : adminId;
+
+    const employees = await Employee.find({ createdBy: adminToQuery });
+
+    // Format the response
+    const formattedEmployees = employees.map(emp => ({
+      ...emp.toObject(),
+      employeeId: emp.employeeId || `EM${String(emp._id).slice(-4)}`,
+      fullName: `${emp.firstName} ${emp.lastName}`,
+      name: `${emp.firstName} ${emp.lastName}`
+    }));
+
+    res.json(formattedEmployees);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Get single employee
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireRole('admin'), async (req, res) => {
   try {
-    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
+    const adminId = getAdminId(req);
+    if (!adminId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const employee = await Employee.findOne({
+      _id: req.params.id,
+      createdBy: adminId
+    });
+
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
+
     res.json(employee);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -67,55 +104,90 @@ async function sendCredentialsEmail(to, employeeId, password) {
   await transporter.sendMail(mailOptions);
 }
 
-// POST /api/employees
-router.post('/', async (req, res) => {
+// Create new employee
+router.post('/', requireRole('admin'), async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, department, position, address, city, country, postalCode } = req.body;
-    // Check if email already exists
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Employee with this email already exists.' });
+    const adminId = getAdminId(req);
+    if (!adminId) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
+
+    // Generate employee ID
     const employeeId = await generateEmployeeId();
-    const passwordPlain = generatePassword();
+
+    // Generate random password
+    const passwordPlain = generatePassword(8);
     const hashedPassword = await bcrypt.hash(passwordPlain, 10);
+
+    // Create new employee in User model
     const newEmployee = new User({
       employeeId,
       password: hashedPassword,
-      firstName,
-      lastName,
-      email,
-      phone,
-      department: department || 'IT',
-      position: position || '-',
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phone: req.body.phone,
+      department: req.body.department || 'IT',
+      position: req.body.position,
       role: 'employee',
-      address: {
-        street: address || '',
-        city: city || '',
-        zipCode: postalCode || '',
-        country: country || ''
-      },
       status: 'Active',
       hireDate: new Date(),
-      salary: 0
+      address: {
+        street: req.body.address,
+        city: req.body.city,
+        zipCode: req.body.postalCode,
+        country: req.body.country
+      },
+      createdBy: adminId
     });
+
     await newEmployee.save();
-    await sendCredentialsEmail(email, employeeId, passwordPlain);
-    res.status(201).json({ message: 'Employee created and credentials sent via email.' });
+
+    // Send credentials email
+    try {
+      await sendCredentialsEmail(req.body.email, employeeId, passwordPlain);
+    } catch (emailError) {
+      console.error('Error sending credentials email:', emailError);
+      // Don't fail if email sending fails
+    }
+
+    // Also create in Employee model for consistency
+    const employeeModel = new Employee({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phone: req.body.phone,
+      position: req.body.position,
+      department: req.body.department || 'IT',
+      status: 'active',
+      hireDate: new Date(),
+      createdBy: adminId
+    });
+
+    await employeeModel.save();
+
+    res.status(201).json({
+      ...newEmployee.toObject(),
+      password: undefined // Don't send password back
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating employee.' });
+    console.error('Error creating employee:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
 // Bulk import employees
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', requireRole('admin'), async (req, res) => {
   try {
     const { employees } = req.body;
-    
+
     if (!Array.isArray(employees) || employees.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No employees data provided' 
+      return res.status(400).json({
+        success: false,
+        message: 'No employees data provided'
       });
     }
 
@@ -163,7 +235,8 @@ router.post('/bulk', async (req, res) => {
             state: emp.address?.state || '',
             zipCode: emp.address?.zipCode || '',
             country: emp.address?.country || ''
-          }
+          },
+          createdBy: getAdminId(req)
         });
 
         await newEmployee.save();
@@ -200,45 +273,85 @@ router.post('/bulk', async (req, res) => {
 });
 
 // Update employee
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireRole('admin'), async (req, res) => {
   try {
-    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
+    const adminId = getAdminId(req);
+    if (!adminId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const employee = await Employee.findOneAndUpdate(
+      { _id: req.params.id, createdBy: adminId },
+      { ...req.body, updatedAt: Date.now() },
+      { new: true }
+    );
+
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
-    
-    Object.assign(employee, req.body);
-    const updatedEmployee = await employee.save();
-    res.json(updatedEmployee);
+
+    res.json(employee);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Delete employee
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   try {
-    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
+    const adminId = getAdminId(req);
+    if (!adminId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // First find the employee to get their email
+    const employee = await Employee.findOne({
+      _id: req.params.id,
+      createdBy: adminId
+    });
+
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
-    
-    await employee.deleteOne();
-    res.json({ message: 'Employee deleted successfully' });
+
+    // Delete from both Employee and User models
+    const [deletedEmployee, deletedUser] = await Promise.all([
+      Employee.findOneAndDelete({
+        _id: req.params.id,
+        createdBy: adminId
+      }),
+      User.findOneAndDelete({
+        email: employee.email,
+        role: 'employee',
+        createdBy: adminId
+      })
+    ]);
+
+    if (!deletedEmployee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    res.json({
+      message: 'Employee deleted successfully',
+      deletedFromEmployee: !!deletedEmployee,
+      deletedFromUser: !!deletedUser
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting employee:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Import employees from CSV
-router.post('/import', async (req, res) => {
+router.post('/import', requireRole('admin'), async (req, res) => {
   try {
     const { items } = req.body;
-    
+
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No employee data provided' 
+      return res.status(400).json({
+        success: false,
+        message: 'No employee data provided'
       });
     }
 
@@ -287,7 +400,8 @@ router.post('/import', async (req, res) => {
             zipCode: emp.zipCode || '',
             country: emp.country || ''
           },
-          skills: emp.skills ? emp.skills.split(',').map(skill => skill.trim()) : []
+          skills: emp.skills ? emp.skills.split(',').map(skill => skill.trim()) : [],
+          createdBy: getAdminId(req)
         });
 
         const savedEmployee = await newEmployee.save();
@@ -317,9 +431,9 @@ router.post('/import', async (req, res) => {
     });
   } catch (error) {
     console.error('Error importing employees:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -392,56 +506,91 @@ router.post('/login', async (req, res) => {
 router.post('/verify-token', async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token) {
       return res.status(401).json({ valid: false, message: 'No token provided' });
     }
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-      const user = await User.findById(decoded.user.id);
 
-      if (!user || user.role !== 'employee') {
-        return res.status(401).json({ valid: false, message: 'Invalid token' });
-      }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const user = await User.findById(decoded.user.id);
 
-      // Check if token is about to expire (less than 1 day remaining)
-      const tokenExp = decoded.exp * 1000; // Convert to milliseconds
-      const now = Date.now();
-      const timeUntilExpiry = tokenExp - now;
-      const oneDay = 24 * 60 * 60 * 1000;
-
-      if (timeUntilExpiry < oneDay) {
-        // Generate new token
-        const newToken = jwt.sign(
-          { user: { id: user._id, role: user.role } },
-          process.env.JWT_SECRET || 'your-secret-key',
-          { expiresIn: '7d' }
-        );
-        
-        return res.json({ 
-          valid: true, 
-          user: { id: user._id, role: user.role },
-          token: newToken,
-          tokenRefreshed: true
-        });
-      }
-
-      res.json({ valid: true, user: { id: user._id, role: user.role } });
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({ 
-          valid: false, 
-          message: 'Token expired',
-          expired: true
-        });
-      }
-      console.error('Token verification error:', error);
-      res.status(401).json({ valid: false, message: 'Invalid token' });
+    if (!user || user.role !== 'employee') {
+      return res.status(401).json({ valid: false, message: 'Invalid token' });
     }
+
+    // Check if token is about to expire (less than 1 day remaining)
+    const tokenExp = decoded.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+    const timeUntilExpiry = tokenExp - now;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    let newToken = null;
+    if (timeUntilExpiry < oneDay) {
+      // Generate new token
+      const payload = {
+        user: {
+          id: user._id,
+          role: user.role
+        }
+      };
+      newToken = jwt.sign(
+        payload,
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '7d' }
+      );
+    }
+
+    res.status(200).json({
+      valid: true,
+      token: newToken || token,
+      employee: {
+        id: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone, department: user.department, position: user.position, status: user.status, hireDate: user.hireDate, salary: user.salary, address: user.address, skills: user.skills
+      }
+    });
+
   } catch (error) {
     console.error('Error verifying token:', error);
     res.status(500).json({ valid: false, message: 'Error verifying token' });
+  }
+});
+
+// Get employees for employee role
+router.get('/colleagues', requireRole('employee'), async (req, res) => {
+  try {
+    // Get the token from the Authorization header
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log("decoded", decoded);
+    if (!decoded.user.id) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // Get the employee making the request
+    const employee = await User.findOne({
+      _id: decoded.user.id,
+      role: 'employee'
+    });
+
+    if (!employee) {
+      return res.status(403).json({ message: 'Access denied. Employee role required.' });
+    }
+
+
+  } catch (error) {
+    console.error('Error fetching colleagues:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired' });
+    }
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

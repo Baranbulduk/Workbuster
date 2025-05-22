@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../../utils/axios';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
@@ -42,38 +42,37 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/employees');
+      const response = await axios.get('/employees');
       
-      // Fetch forms data for each employee
-      const employeesWithForms = await Promise.all(
-        response.data.map(async (employee) => {
-          try {
-            const formsResponse = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`);
-            return {
-              ...employee,
-              forms: formsResponse.data.forms || []
-            };
-          } catch (error) {
-            console.error(`Error fetching forms for employee ${employee.email}:`, error);
-            return {
-              ...employee,
-              forms: []
-            };
-          }
-        })
-      );
+      // Process employee data
+      const processedEmployees = response.data.map(employee => ({
+        ...employee,
+        name: employee.name || `${employee.firstName} ${employee.lastName}`,
+        fullName: employee.fullName || `${employee.firstName} ${employee.lastName}`,
+        employeeId: employee.employeeId || `EM${String(employee._id).slice(-4)}`,
+        status: employee.status || 'active',
+        department: employee.department || 'IT',
+        position: employee.position || 'Employee',
+        hireDate: employee.hireDate || employee.createdAt
+      }));
       
-      setEmployees(employeesWithForms);
+      setEmployees(processedEmployees);
       
       // Calculate onboarding progress for each employee
       const progressMap = {};
-      employeesWithForms.forEach(employee => {
-        progressMap[employee._id] = calculateOnboardingProgress(employee);
+      processedEmployees.forEach(employee => {
+        if (employee) {
+          progressMap[employee._id] = calculateOnboardingProgress(employee);
+        }
       });
       setOnboardingProgress(progressMap);
       
       setError(null);
     } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
       setError('Failed to fetch employees');
       console.error('Error fetching employees:', err);
     } finally {
@@ -154,11 +153,29 @@ const Employees = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/employees/${id}`);
-        setEmployees(employees.filter(emp => emp._id !== id));
+        const response = await axios.delete(`/employees/${id}`);
+        // Remove from both employees and importedEmployees arrays
+        setEmployees(prev => prev.filter(emp => emp._id !== id));
+        setImportedEmployees(prev => prev.filter(emp => emp._id !== id));
+        
+        // Show success message with details
+        const message = 'Employee deleted successfully';
+        if (response.data.deletedFromEmployee && response.data.deletedFromUser) {
+          setSuccessMsg(`${message} (deleted from both Employee and User records)`);
+        } else if (response.data.deletedFromEmployee) {
+          setSuccessMsg(`${message} (deleted from Employee records)`);
+        } else if (response.data.deletedFromUser) {
+          setSuccessMsg(`${message} (deleted from User records)`);
+        } else {
+          setSuccessMsg(message);
+        }
       } catch (err) {
+        if (err.response?.status === 401) {
+          navigate('/login');
+          return;
+        }
         console.error('Error deleting employee:', err);
-        alert('Failed to delete employee');
+        setErrorMsg(err.response?.data?.message || 'Failed to delete employee');
       }
     }
   };
@@ -229,35 +246,59 @@ const Employees = () => {
     e.preventDefault();
     setSuccessMsg('');
     setErrorMsg('');
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.position || !formData.address || !formData.postalCode || !formData.city || !formData.country) {
-      setErrorMsg('Please fill in all fields.');
+
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'position'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      setErrorMsg(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
+
     try {
-      const res = await axios.post('http://localhost:5000/api/employees', {
+      const res = await axios.post('/employees', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         position: formData.position,
+        department: formData.department || 'IT',
         address: formData.address,
         postalCode: formData.postalCode,
         city: formData.city,
         country: formData.country
       });
-      setSuccessMsg('Employee created and credentials sent via email!');
+
+      setSuccessMsg('Employee created successfully! Credentials have been sent via email.');
       setShowForm(false);
-      setFormData({ firstName: '', lastName: '', email: '', phone: '', position: '', address: '', postalCode: '', city: '', country: '' });
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        position: '',
+        department: '',
+        address: '',
+        postalCode: '',
+        city: '',
+        country: ''
+      });
       fetchEmployees();
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to create employee.');
+      if (err.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      setErrorMsg(err.response?.data?.message || 'Failed to create employee. Please try again.');
+      console.error('Error creating employee:', err);
     }
   };
 
   // Add function to update onboarding status
   const updateOnboardingStatus = async (employeeId, updates) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/onboarding/${employeeId}/status`, updates);
+      const response = await axios.put(`/onboarding/${employeeId}/status`, updates);
       
       // Update local state
       setEmployees(prev => prev.map(emp => 

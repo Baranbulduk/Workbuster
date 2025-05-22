@@ -34,7 +34,7 @@ import {
   XMarkIcon,
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
-import axios from "axios";
+import axios from "../../../utils/axios";
 import { useNavigate } from "react-router-dom";
 import OnboardingDetails from "./OnboardingDetails";
 
@@ -385,19 +385,19 @@ export default function Onboarding() {
       switch (activeTab) {
         case "candidates":
           const candidatesResponse = await axios.get(
-            "http://localhost:5000/api/candidates"
+            "/candidates"
           );
           setCandidates(candidatesResponse.data);
           break;
         case "employees":
           const employeesResponse = await axios.get(
-            "http://localhost:5000/api/employees"
+            "/employees"
           );
           setEmployees(employeesResponse.data);
           break;
         case "clients":
           const clientsResponse = await axios.get(
-            "http://localhost:5000/api/clients"
+            "/clients"
           );
           setClients(clientsResponse.data);
           break;
@@ -409,7 +409,7 @@ export default function Onboarding() {
 
   const fetchStats = async () => {
     try {
-      const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
+      const candidatesResponse = await axios.get('/candidates');
       const totalCandidates = candidatesResponse.data.length;
       const newMessages = 3;
 
@@ -424,10 +424,11 @@ export default function Onboarding() {
   const fetchRecentActivity = async () => {
     try {
       const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/candidates'),
-        axios.get('http://localhost:5000/api/employees'),
-        axios.get('http://localhost:5000/api/clients'),
+        axios.get('/candidates'),
+        axios.get('/employees'),
+        axios.get('/clients'),
       ]);
+      
       const activities = [];
       
       candidatesRes.data.forEach(c => activities.push({
@@ -435,8 +436,7 @@ export default function Onboarding() {
         name: `${c.firstName} ${c.lastName}`,
         email: c.email,
         action: 'Added/Updated Candidate',
-        time: c.updatedAt || c.createdAt,
-        _id: c._id
+        time: c.updatedAt || c.createdAt
       }));
       
       employeesRes.data.forEach(e => activities.push({
@@ -444,8 +444,7 @@ export default function Onboarding() {
         name: `${e.firstName} ${e.lastName}`,
         email: e.email,
         action: 'Added/Updated Employee',
-        time: e.updatedAt || e.createdAt,
-        _id: e._id
+        time: e.updatedAt || e.createdAt
       }));
       
       clientsRes.data.forEach(cl => activities.push({
@@ -453,14 +452,18 @@ export default function Onboarding() {
         name: cl.companyName,
         email: cl.email,
         action: 'Added/Updated Client',
-        time: cl.updatedAt || cl.createdAt,
-        _id: cl._id
+        time: cl.updatedAt || cl.createdAt
       }));
       
+      // Sort by time, descending
       activities.sort((a, b) => new Date(b.time) - new Date(a.time));
-      setRecentActivity(activities.slice(0, 8));
+      setRecentActivity(activities.slice(0, 8)); // Show only the 8 most recent
     } catch (error) {
       console.error('Error fetching recent activity:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized error - redirect to login
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -499,7 +502,7 @@ export default function Onboarding() {
           });
 
           const response = await axios.post(
-            `http://localhost:5000/api/${activeTab}/import`,
+            `/${activeTab}/import`,
             { items: newItems }
           );
           
@@ -767,7 +770,7 @@ export default function Onboarding() {
       };
 
       // Send to backend
-      const response = await axios.post('http://localhost:5000/api/onboarding/send-form', payload);
+      const response = await axios.post('/onboarding/send-form', payload);
 
       if (response.data.success) {
         // Reset form state
@@ -794,7 +797,7 @@ export default function Onboarding() {
   const handleExportCSV = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/onboarding/export/csv",
+        "/onboarding/export/csv",
         {
           responseType: "blob",
         }

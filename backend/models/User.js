@@ -50,6 +50,13 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'employee'],
     default: 'employee'
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: function() {
+      return this.role === 'employee';
+    }
+  },
   hireDate: {
     type: Date,
     default: Date.now

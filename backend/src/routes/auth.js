@@ -18,7 +18,8 @@ router.post('/register', async (req, res) => {
 
     // Create new user
     user = new User({
-      name: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
       email,
       password,
       role: role || 'user' // Use provided role or default to 'user'
@@ -87,7 +88,15 @@ router.post('/login', async (req, res) => {
         if (err) throw err;
         res.json({ 
           token,
-          role: user.role
+          role: user.role,
+          adminId: user._id,
+          admin: {
+            id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role
+          }
         });
       }
     );

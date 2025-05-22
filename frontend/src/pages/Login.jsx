@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -23,8 +23,8 @@ const Login = () => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
-      const { token, role, admin } = response.data;
+      const response = await axios.post('/auth/login', formData);
+      const { token, role, adminId, admin } = response.data;
       
       // Only allow admin login
       if (role !== 'admin') {
@@ -32,15 +32,16 @@ const Login = () => {
         return;
       }
       
-      // Store the token, email, and admin profile in localStorage
+      // Store the token, email, admin ID, and admin profile in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('userEmail', formData.email);
+      localStorage.setItem('adminId', adminId);
       if (admin) {
         localStorage.setItem('admin', JSON.stringify(admin));
       }
       
-      // Navigate to admin dashboard
-      navigate('/');
+      // Navigate to dashboard
+      navigate('/dashboard');
     } catch (error) {
       setError(error.response?.data?.message || 'An error occurred during login');
     }

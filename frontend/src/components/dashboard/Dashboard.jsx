@@ -9,7 +9,7 @@ import {
   UserIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import axios from '../../utils/axios';
 import StatCard from './StatCard';
 
 export default function Dashboard() {

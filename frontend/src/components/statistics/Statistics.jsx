@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/axios';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -56,14 +56,20 @@ const Statistics = () => {
     }
   });
   const [employees, setEmployees] = useState([]);
+  const [candidates, setCandidates] = useState([]);
+  const [clients, setClients] = useState([]);
 
   useEffect(() => {
     fetchStatistics();
     fetchEmployees();
+    fetchCandidates();
+    fetchClients();
     // Set up polling every 30 seconds to keep data fresh
     const interval = setInterval(() => {
       fetchStatistics();
       fetchEmployees();
+      fetchCandidates();
+      fetchClients();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -72,12 +78,11 @@ const Statistics = () => {
     try {
       setLoading(true);
       // Fetch candidates data
-      const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
+      const candidatesResponse = await axios.get('/candidates');
       const candidates = candidatesResponse.data;
     
-      
       // Fetch clients data
-      const clientsResponse = await axios.get('http://localhost:5000/api/clients');
+      const clientsResponse = await axios.get('/clients');
       const clients = clientsResponse.data;
 
       // Calculate statistics
@@ -87,7 +92,6 @@ const Statistics = () => {
         placed: candidates.filter(c => c.status === 'placed').length,
         inProgress: candidates.filter(c => c.status === 'in-progress').length
       };
-
 
       const clientStats = {
         total: clients.length,
@@ -130,10 +134,40 @@ const Statistics = () => {
 
   const fetchEmployees = async () => {
     try {
-      const employeesResponse = await axios.get('http://localhost:5000/api/employees');
-      setEmployees(employeesResponse.data);
-    } catch (err) {
-      console.error('Error fetching employees:', err);
+      const response = await axios.get('/employees');
+      setEmployees(response.data);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized error - redirect to login
+        window.location.href = '/login';
+      }
+    }
+  };
+
+  const fetchCandidates = async () => {
+    try {
+      const response = await axios.get('/candidates');
+      setCandidates(response.data);
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized error - redirect to login
+        window.location.href = '/login';
+      }
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get('/clients');
+      setClients(response.data);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized error - redirect to login
+        window.location.href = '/login';
+      }
     }
   };
 
