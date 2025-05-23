@@ -69,17 +69,17 @@ export default function OnboardingDetails({ item, type }) {
       const recipient = form.recipients.find(r => r.email === item.email);
       if (!recipient) return;
       
-      // Count only fields that have actual answers
-      const answeredFields = recipient.completedFields?.filter(field => 
+      const totalQuestions = form.fields.length;
+      const answeredQuestions = recipient.completedFields?.filter(field => 
         field.value !== undefined && 
         field.value !== null && 
         field.value !== '' &&
         !(Array.isArray(field.value) && field.value.length === 0)
-      ) || [];
+      ).length || 0;
       
-      if (answeredFields.length === 0) {
+      if (answeredQuestions === 0) {
         notStarted++;
-      } else if (recipient.completedAt) {
+      } else if (answeredQuestions === totalQuestions) {
         completed++;
       } else {
         inProgress++;
@@ -201,16 +201,6 @@ export default function OnboardingDetails({ item, type }) {
               let status = "Not Started";
               let statusColor = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
               
-              if (recipient && recipient.completedFields) {
-                if (recipient.completedAt) {
-                  status = "Completed";
-                  statusColor = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-                } else {
-                  status = "In Progress";
-                  statusColor = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-                }
-              }
-              
               const totalQuestions = form.fields.length;
               const answeredQuestions = recipient?.completedFields?.filter(field => 
                 field.value !== undefined && 
@@ -218,6 +208,17 @@ export default function OnboardingDetails({ item, type }) {
                 field.value !== '' &&
                 !(Array.isArray(field.value) && field.value.length === 0)
               ).length || 0;
+              
+              if (recipient && recipient.completedFields) {
+                if (answeredQuestions === totalQuestions) {
+                  status = "Completed";
+                  statusColor = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+                } else if (answeredQuestions > 0) {
+                  status = "In Progress";
+                  statusColor = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+                }
+              }
+              
               const isExpanded = expandedFormId === form._id;
               
               return (
