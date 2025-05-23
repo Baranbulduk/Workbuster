@@ -1,10 +1,10 @@
 import express from 'express';
 import { requireAdmin, requireEmployee, getAdminId } from '../middleware/rolePermissions.js';
-import User from '../../models/User.js';
+import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
-import Employee from '../../models/Employee.js';
+import Employee from '../models/Employee.js';
 
 const router = express.Router();
 
@@ -72,59 +72,57 @@ router.get('/colleagues', requireEmployee, async (req, res) => {
   }
 });
 
-// Get single employee
+// Get a single employee
 router.get('/:id', async (req, res) => {
   try {
-    // Get the token from the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
+    const { id } = req.params;
+    console.log('Fetching employee with ID:', id);
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log('Invalid ID format:', id);
+      return res.status(400).json({ message: 'Invalid employee ID format' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const requestingUser = await User.findById(decoded.user.id);
+    // Find the requested employee
+    const employee = await Employee.findById(id)
+      .populate('user', 'email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
+      .populate('position', 'title')
+      .lean(); // Convert to plain JavaScript object
 
-    if (!requestingUser) {
-      return res.status(401).json({ message: 'User not found' });
+    if (!employee) {
+      console.log('Employee not found with ID:', id);
+      return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // If the requesting user is an employee, they can only view their own details
-    if (requestingUser.role === 'employee') {
-      if (requestingUser._id.toString() !== req.params.id) {
-        return res.status(403).json({ message: 'Access denied. You can only view your own details.' });
-      }
-      const employee = await Employee.findOne({ _id: req.params.id });
-      if (!employee) {
-        return res.status(404).json({ message: 'Employee not found' });
-      }
-      return res.json(employee);
-    }
+    // Handle null populated fields
+    const sanitizedEmployee = {
+      ...employee,
+      user: employee.user || null,
+      createdBy: employee.createdBy || null,
+      department: employee.department || { name: employee.department || 'IT' },
+      position: employee.position || { title: employee.position || 'Employee' }
+    };
 
-    // If the requesting user is an admin, they can view any employee under their admin
-    if (requestingUser.role === 'admin') {
-      const employee = await Employee.findOne({
-        _id: req.params.id,
-        createdBy: requestingUser._id
-      });
+    console.log('Successfully found employee:', {
+      id: employee._id,
+      name: `${employee.firstName} ${employee.lastName}`
+    });
 
-      if (!employee) {
-        return res.status(404).json({ message: 'Employee not found' });
-      }
-
-      return res.json(employee);
-    }
-
-    return res.status(403).json({ message: 'Access denied. Invalid role.' });
+    res.json(sanitizedEmployee);
   } catch (error) {
-    console.error('Error fetching employee:', error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expired' });
-    }
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in GET /:id:', {
+      error: error.message,
+      stack: error.stack,
+      id: req.params.id
+    });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

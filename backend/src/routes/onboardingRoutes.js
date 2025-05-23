@@ -1,12 +1,14 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import User from '../../models/User.js';
+import User from '../models/User.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { transporter } from '../config/email.js';
 import crypto from 'crypto';
 import OnboardingForm from '../models/OnboardingForm.js';
 import nodemailer from 'nodemailer';
+import { getOnboardingProgress } from '../controllers/onboardingController.js';
+import Employee from '../models/Employee.js';
 
 const router = express.Router();
 
@@ -592,6 +594,76 @@ router.post('/submit-form/:token', async (req, res) => {
     res.json({ message: 'Form submitted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error submitting form' });
+  }
+});
+
+// Get onboarding progress for all employees
+router.get('/progress', async (req, res) => {
+  try {
+    console.log('Fetching onboarding progress for all employees');
+    
+    // Get all employees with their forms
+    const employees = await Employee.find()
+      .populate('forms')
+      .lean();
+
+    console.log(`Found ${employees.length} employees`);
+
+    // Calculate progress for each employee
+    const progressData = employees.map(employee => {
+      const formsData = employee.forms || [];
+      let notStarted = 0;
+      let inProgress = 0;
+      let completed = 0;
+
+      formsData.forEach(form => {
+        if (!form) return;
+        
+        const recipient = form.recipients?.find(r => r.email === employee.email);
+        if (!recipient) {
+          notStarted++;
+        } else if (recipient.completedAt) {
+          completed++;
+        } else if (recipient.completedFields) {
+          inProgress++;
+        } else {
+          notStarted++;
+        }
+      });
+
+      const totalForms = formsData.length || 0;
+      const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
+
+      let status = 'Not Started';
+      if (progress === 100) {
+        status = 'Complete';
+      } else if (progress > 0) {
+        status = 'In Progress';
+      }
+
+      return {
+        employeeId: employee._id,
+        status,
+        progress,
+        completed,
+        totalForms,
+        notStarted,
+        inProgress,
+        currentStep: employee.onboardingStep || 1,
+        welcomeSent: employee.welcomeSent,
+        formCompleted: completed > 0
+      };
+    });
+
+    console.log('Successfully calculated progress for all employees');
+    res.json(progressData);
+  } catch (error) {
+    console.error('Error in GET /progress:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

@@ -34,10 +34,84 @@ const Employees = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [onboardingProgress, setOnboardingProgress] = useState({});
+  const [realTimeUpdates, setRealTimeUpdates] = useState({});
 
   useEffect(() => {
     fetchEmployees();
+    // Set up polling for real-time updates
+    const interval = setInterval(fetchOnboardingProgress, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchOnboardingProgress = async () => {
+    try {
+      // Get progress for each employee
+      const progressPromises = employees.map(async (employee) => {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`);
+          
+          if (response.data.success) {
+            const formsData = response.data.forms;
+            let notStarted = 0;
+            let inProgress = 0;
+            let completed = 0;
+            
+            formsData.forEach(form => {
+              const recipient = form.recipients.find(r => r.email === employee.email);
+              if (!recipient) {
+                notStarted++;
+              } else if (recipient.completedAt) {
+                completed++;
+              } else if (recipient.completedFields) {
+                inProgress++;
+              } else {
+                notStarted++;
+              }
+            });
+            
+            const totalForms = formsData.length || 0;
+            const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
+            
+            let status = 'Not Started';
+            if (progress === 100) {
+              status = 'Complete';
+            } else if (progress > 0) {
+              status = 'In Progress';
+            }
+
+            return {
+              employeeId: employee._id,
+              status,
+              progress,
+              completed,
+              totalForms,
+              notStarted,
+              inProgress
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error fetching progress for employee ${employee.email}:`, error);
+          return null;
+        }
+      });
+
+      const progressResults = await Promise.all(progressPromises);
+      
+      // Update the progress state with new data
+      setOnboardingProgress(prev => {
+        const newProgress = { ...prev };
+        progressResults.forEach((progress, index) => {
+          if (progress) {
+            newProgress[employees[index]._id] = progress;
+          }
+        });
+        return newProgress;
+      });
+    } catch (error) {
+      console.error('Error fetching onboarding progress:', error);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -53,19 +127,14 @@ const Employees = () => {
         status: employee.status || 'active',
         department: employee.department || 'IT',
         position: employee.position || 'Employee',
-        hireDate: employee.hireDate || employee.createdAt
+        hireDate: employee.hireDate || employee.createdAt,
+        forms: employee.forms || []
       }));
       
       setEmployees(processedEmployees);
       
-      // Calculate onboarding progress for each employee
-      const progressMap = {};
-      processedEmployees.forEach(employee => {
-        if (employee) {
-          progressMap[employee._id] = calculateOnboardingProgress(employee);
-        }
-      });
-      setOnboardingProgress(progressMap);
+      // Fetch onboarding progress for all employees
+      await fetchOnboardingProgress();
       
       setError(null);
     } catch (err) {
@@ -78,51 +147,6 @@ const Employees = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateOnboardingProgress = (employee) => {
-    // Get the forms data for this employee
-    const formsData = employee.forms || [];
-    
-    // Calculate progress based on form completion
-    let notStarted = 0;
-    let inProgress = 0;
-    let completed = 0;
-    
-    formsData.forEach(form => {
-      const recipient = form.recipients?.find(r => r.email === employee.email);
-      if (!recipient) {
-        notStarted++;
-      } else if (recipient.completedAt) {
-        completed++;
-      } else if (recipient.completedFields) {
-        inProgress++;
-      } else {
-        notStarted++;
-      }
-    });
-    
-    const totalForms = formsData.length;
-    const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
-    
-    // Determine status based on progress
-    let status = 'Not Started';
-    if (progress === 100) {
-      status = 'Complete';
-    } else if (progress > 0) {
-      status = 'In Progress';
-    }
-
-    return {
-      progress,
-      status,
-      currentStep: employee.onboardingStep || 1,
-      welcomeSent: employee.welcomeSent,
-      formCompleted: completed > 0,
-      tasks: completed,
-      completed: completed,
-      totalForms: totalForms
-    };
   };
 
   const handleSearch = (e) => {
@@ -180,7 +204,6 @@ const Employees = () => {
     }
   };
 
-  // CSV Export
   const handleExportCSV = () => {
     const headers = [
       'ID', 'Full Name', 'Position', 'E-Mail', 'Hiring Lead', 'Department', 'Status'
@@ -209,7 +232,6 @@ const Employees = () => {
     document.body.removeChild(link);
   };
 
-  // CSV Import
   const handleImportCSV = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -295,17 +317,16 @@ const Employees = () => {
     }
   };
 
-  // Add function to update onboarding status
   const updateOnboardingStatus = async (employeeId, updates) => {
     try {
       const response = await axios.put(`/onboarding/${employeeId}/status`, updates);
       
-      // Update local state
+      // Update local state with the new employee data
       setEmployees(prev => prev.map(emp => 
-        emp._id === employeeId ? { ...emp, ...updates } : emp
+        emp._id === employeeId ? { ...emp, ...response.data } : emp
       ));
       
-      // Recalculate progress
+      // Recalculate progress for the updated employee
       const updatedEmployee = response.data;
       setOnboardingProgress(prev => ({
         ...prev,
@@ -317,6 +338,19 @@ const Employees = () => {
       console.error('Error updating onboarding status:', error);
       return false;
     }
+  };
+
+  const handleOnboardingUpdate = (employeeId, formData) => {
+    setEmployees(prev => prev.map(emp => {
+      if (emp._id === employeeId) {
+        const updatedEmployee = {
+          ...emp,
+          forms: emp.forms ? [...emp.forms, formData] : [formData]
+        };
+        return updatedEmployee;
+      }
+      return emp;
+    }));
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -418,13 +452,11 @@ const Employees = () => {
         </div>
       )}
 
-      {/* Modal Form */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add New Employee</h2>
             <form onSubmit={handleFormSubmit} className="space-y-6">
-              {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -485,7 +517,6 @@ const Employees = () => {
                   </div>
                 </div>
               </div>
-              {/* Address Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -606,18 +637,21 @@ const Employees = () => {
                       <div className="flex-1 min-w-[120px] max-w-[180px]">
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                           <span>{onboardingProgress[employee._id]?.status || 'Not Started'}</span>
-                          <span>{Math.round(onboardingProgress[employee._id]?.progress || 0)}%</span>
+                          <span>{onboardingProgress[employee._id]?.progress || 0}%</span>
                         </div>
                         <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
                           <div 
-                            className={`absolute left-0 top-0 h-2 rounded-full ${
+                            className={`absolute left-0 top-0 h-2 rounded-full transition-all duration-300 ease-in-out ${
                               onboardingProgress[employee._id]?.progress === 100 
                                 ? 'bg-green-500' 
                                 : onboardingProgress[employee._id]?.progress > 0 
                                   ? 'bg-blue-500' 
                                   : 'bg-gray-400'
                             }`} 
-                            style={{ width: `${onboardingProgress[employee._id]?.progress || 0}%` }} 
+                            style={{ 
+                              width: `${onboardingProgress[employee._id]?.progress || 0}%`,
+                              transition: 'width 0.3s ease-in-out'
+                            }} 
                           />
                         </div>
                         <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">

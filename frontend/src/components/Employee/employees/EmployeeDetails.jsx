@@ -19,33 +19,23 @@ const EmployeeDetails = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
 
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const employeeToken = localStorage.getItem('employeeToken');
-        if (!employeeToken) {
-          navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
-          return;
-        }
-
-        const res = await axios.get(`http://localhost:5000/api/employees/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${employeeToken}`
-          }
-        });
-        setEmployee(res.data);
+        const response = await axios.get(`http://localhost:5000/api/employees/${id}`);
+        console.log('Employee data received:', response.data);
+        setEmployee(response.data);
       } catch (err) {
+        console.error('Error fetching employee:', err);
         setError('Failed to fetch employee details.');
       } finally {
         setLoading(false);
       }
     };
+
     fetchEmployee();
-  }, [id, navigate, token, email]);
+  }, [id]);
 
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
@@ -56,7 +46,7 @@ const EmployeeDetails = () => {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate(`/employee/employees${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
+          onClick={() => navigate('/employee/employees')}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
@@ -122,7 +112,7 @@ const EmployeeDetails = () => {
             </div>
           </div>
         </div>
-        {/* Right Column - Additional Info (expand as needed) */}
+        {/* Right Column - Additional Info */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notes</h2>

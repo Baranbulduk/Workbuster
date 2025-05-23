@@ -1223,7 +1223,8 @@ export default function Onboarding() {
                               type="file"
                               accept="image/*"
                               onChange={(e) => handleFieldChange(e, field.id)}
-                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-not-allowed opacity-50" 
+                              disabled
                             />
                             {field.value && (
                               <img
@@ -1245,7 +1246,8 @@ export default function Onboarding() {
                                   : undefined
                               }
                               onChange={(e) => handleFieldChange(e, field.id)}
-                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-not-allowed opacity-50" 
+                              disabled
                             />
                             {field.value && (
                               <div className="mt-2 flex items-center gap-2">
@@ -1271,6 +1273,7 @@ export default function Onboarding() {
                                 : "Enter email address..."
                             }
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            disabled
                           />
                         )}
 
@@ -1280,6 +1283,7 @@ export default function Onboarding() {
                             value={field.value} 
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1289,6 +1293,7 @@ export default function Onboarding() {
                             value={field.value} 
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            disabled
                           />
                         )}
 
@@ -1300,6 +1305,7 @@ export default function Onboarding() {
                                 checked={field.value}
                                 onChange={(e) => handleFieldChange(e, field.id)}
                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                disabled
                               />
                               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                 {field.id === "offerAccepted"
@@ -1318,6 +1324,7 @@ export default function Onboarding() {
                             placeholder="Enter contact number..."
                             pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            disabled
                           />
                         )}
 
@@ -1326,6 +1333,7 @@ export default function Onboarding() {
                             value={field.value}
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           >
                             <option value="">Select blood group</option>
                             {bloodGroups.map((group) => (
@@ -1363,6 +1371,7 @@ export default function Onboarding() {
                                       <span
                                         key={idx}
                                         className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded"
+                                        disabled
                                       >
                                         {option}
                                         <button
@@ -1392,6 +1401,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  disabled
                                 >
                                   <option value="">Select an option</option>
                                   {(fieldOptions[field.id] || []).map(
@@ -1420,6 +1430,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter text here..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            disabled
                           />
                         )}
 
@@ -1431,6 +1442,7 @@ export default function Onboarding() {
                             placeholder="Enter phone number..."
                             pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1441,6 +1453,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter formula..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1449,6 +1462,7 @@ export default function Onboarding() {
                             value={field.value} 
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           >
                             <option value="">Select gender</option>
                             {genders.map((gender) => (
@@ -1466,7 +1480,8 @@ export default function Onboarding() {
                             value={field.value} 
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter decimal number..."
-                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1475,6 +1490,7 @@ export default function Onboarding() {
                             value={field.value}
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           >
                             <option value="">Select country</option>
                             {countries.map((country) => (
@@ -1556,6 +1572,7 @@ export default function Onboarding() {
                                           );
                                         }}
                                         className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        disabled
                                       />
                                       <span className="text-gray-700 dark:text-gray-300">{option}</span>
                                     </label>
@@ -1579,6 +1596,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter lookup value..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3" 
+                            disabled
                           />
                         )}
 
@@ -1589,6 +1607,7 @@ export default function Onboarding() {
                             placeholder="Add notes..."
                             rows={4}
                             className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1599,6 +1618,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter URL..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1668,6 +1688,7 @@ export default function Onboarding() {
                               handleFieldChange(e, field.id)
                             }
                             className="text-blue-600 focus:ring-blue-500"
+                            disabled
                           />
                           <span>{option}</span>
                             </label>
@@ -1749,6 +1770,7 @@ export default function Onboarding() {
                                             handleFieldChange(e, field.id)
                                           }
                                           className="text-blue-600 focus:ring-blue-500"
+                                          disabled
                                         />
                                         <span>{option}</span>
                                       </label>
@@ -1773,6 +1795,7 @@ export default function Onboarding() {
                             placeholder="Enter text here..."
                             rows={4}
                             className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1783,6 +1806,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter number..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                            disabled
                           />
                         )}
 
@@ -1801,6 +1825,7 @@ export default function Onboarding() {
                               step="0.01"
                               min="0"
                               className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
+                              disabled
                             />
                           </div>
                         )}

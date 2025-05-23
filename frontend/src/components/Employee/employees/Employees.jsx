@@ -108,14 +108,8 @@ const Employees = () => {
       
       setEmployees(processedEmployees);
       
-      // Calculate onboarding progress for each employee
-      const progressMap = {};
-      processedEmployees.forEach(employee => {
-        if (employee) {
-          progressMap[employee._id] = calculateOnboardingProgress(employee);
-        }
-      });
-      setOnboardingProgress(progressMap);
+      // Fetch onboarding progress for all employees
+      await fetchOnboardingProgress();
       
       setError(null);
     } catch (error) {
@@ -135,49 +129,74 @@ const Employees = () => {
     }
   };
 
-  const calculateOnboardingProgress = (employee) => {
-    // Get the forms data for this employee
-    const formsData = employee.forms || [];
-    
-    // Calculate progress based on form completion
-    let notStarted = 0;
-    let inProgress = 0;
-    let completed = 0;
-    
-    formsData.forEach(form => {
-      const recipient = form.recipients?.find(r => r.email === employee.email);
-      if (!recipient) {
-        notStarted++;
-      } else if (recipient.completedAt) {
-        completed++;
-      } else if (recipient.completedFields) {
-        inProgress++;
-      } else {
-        notStarted++;
-      }
-    });
-    
-    const totalForms = formsData.length;
-    const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
-    
-    // Determine status based on progress
-    let status = 'Not Started';
-    if (progress === 100) {
-      status = 'Complete';
-    } else if (progress > 0) {
-      status = 'In Progress';
-    }
+  const fetchOnboardingProgress = async () => {
+    try {
+      // Get progress for each employee
+      const progressPromises = employees.map(async (employee) => {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`);
+          
+          if (response.data.success) {
+            const formsData = response.data.forms;
+            let notStarted = 0;
+            let inProgress = 0;
+            let completed = 0;
+            
+            formsData.forEach(form => {
+              const recipient = form.recipients.find(r => r.email === employee.email);
+              if (!recipient) {
+                notStarted++;
+              } else if (recipient.completedAt) {
+                completed++;
+              } else if (recipient.completedFields) {
+                inProgress++;
+              } else {
+                notStarted++;
+              }
+            });
+            
+            const totalForms = formsData.length || 0;
+            const progress = totalForms > 0 ? Math.round((completed / totalForms) * 100) : 0;
+            
+            let status = 'Not Started';
+            if (progress === 100) {
+              status = 'Complete';
+            } else if (progress > 0) {
+              status = 'In Progress';
+            }
 
-    return {
-      progress,
-      status,
-      currentStep: employee.onboardingStep || 1,
-      welcomeSent: employee.welcomeSent,
-      formCompleted: completed > 0,
-      tasks: completed,
-      completed: completed,
-      totalForms: totalForms
-    };
+            return {
+              employeeId: employee._id,
+              status,
+              progress,
+              completed,
+              totalForms,
+              notStarted,
+              inProgress
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error fetching progress for employee ${employee.email}:`, error);
+          return null;
+        }
+      });
+
+      const progressResults = await Promise.all(progressPromises);
+      
+      // Update the progress state with new data
+      setOnboardingProgress(prev => {
+        const newProgress = { ...prev };
+        progressResults.forEach((progress, index) => {
+          if (progress) {
+            newProgress[employees[index]._id] = progress;
+          }
+        });
+        return newProgress;
+      });
+    } catch (error) {
+      console.error('Error fetching onboarding progress:', error);
+    }
   };
 
   const handleSearch = (e) => {
@@ -346,12 +365,6 @@ const Employees = () => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
             <FiPlus /> Add New Employee
-          </button>
-          <button
-            onClick={() => navigate(`/employee/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            Back to Onboarding
           </button>
         </div>
       </div>
@@ -607,32 +620,26 @@ const Employees = () => {
                   <td className="px-4 py-4 whitespace-nowrap">
                     {/* Onboarding Workflow Progress Bar */}
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 min-w-[120px] max-w-[180px]">
-                        {(() => {
-                          const progress = onboardingProgress[employee._id]?.progress || 0;
-                          const progressPercentage = progress;
-
-                          return (
-                            <>
-                              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                <span>{progressPercentage === 100 ? 'Complete' : progressPercentage > 0 ? 'In Progress' : 'Not Started'}</span>
-                                <span>{onboardingProgress[employee._id]?.completed}/{onboardingProgress[employee._id]?.totalForms} forms</span>
-                              </div>
-                              <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                <div 
-                                  className={`absolute left-0 top-0 h-2 rounded-full transition-all duration-300 ${
-                                    progressPercentage === 100 
-                                      ? 'bg-green-500' 
-                                      : progressPercentage > 0 
-                                      ? 'bg-blue-500' 
-                                      : 'bg-gray-400'
-                                  }`} 
-                                  style={{ width: `${progressPercentage}%` }} 
-                                />
-                              </div>
-                            </>
-                          );
-                        })()}
+                    <div className="flex-1 min-w-[120px] max-w-[180px]">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          <span>{onboardingProgress[employee._id]?.status || 'Not Started'}</span>
+                          <span>{Math.round(onboardingProgress[employee._id]?.progress || 0)}%</span>
+                        </div>
+                        <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                          <div 
+                            className={`absolute left-0 top-0 h-2 rounded-full ${
+                              onboardingProgress[employee._id]?.progress === 100 
+                                ? 'bg-green-500' 
+                                : onboardingProgress[employee._id]?.progress > 0 
+                                  ? 'bg-blue-500' 
+                                  : 'bg-gray-400'
+                            }`} 
+                            style={{ width: `${onboardingProgress[employee._id]?.progress || 0}%` }} 
+                          />
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {onboardingProgress[employee._id]?.completed || 0} of {onboardingProgress[employee._id]?.totalForms || 0} forms completed
+                        </div>
                       </div>
                     </div>
                   </td>
