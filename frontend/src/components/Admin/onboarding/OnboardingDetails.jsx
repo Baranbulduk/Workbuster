@@ -69,7 +69,15 @@ export default function OnboardingDetails({ item, type }) {
       const recipient = form.recipients.find(r => r.email === item.email);
       if (!recipient) return;
       
-      if (!recipient.completedFields) {
+      // Count only fields that have actual answers
+      const answeredFields = recipient.completedFields?.filter(field => 
+        field.value !== undefined && 
+        field.value !== null && 
+        field.value !== '' &&
+        !(Array.isArray(field.value) && field.value.length === 0)
+      ) || [];
+      
+      if (answeredFields.length === 0) {
         notStarted++;
       } else if (recipient.completedAt) {
         completed++;
@@ -204,7 +212,12 @@ export default function OnboardingDetails({ item, type }) {
               }
               
               const totalQuestions = form.fields.length;
-              const answeredQuestions = recipient?.completedFields?.length || 0;
+              const answeredQuestions = recipient?.completedFields?.filter(field => 
+                field.value !== undefined && 
+                field.value !== null && 
+                field.value !== '' &&
+                !(Array.isArray(field.value) && field.value.length === 0)
+              ).length || 0;
               const isExpanded = expandedFormId === form._id;
               
               return (
