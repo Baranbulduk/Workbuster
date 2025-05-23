@@ -108,9 +108,6 @@ const Employees = () => {
       
       setEmployees(processedEmployees);
       
-      // Fetch onboarding progress for all employees
-      await fetchOnboardingProgress();
-      
       setError(null);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -128,6 +125,12 @@ const Employees = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (employees.length > 0) {
+      fetchOnboardingProgress();
+    }
+  }, [employees]);
 
   const fetchOnboardingProgress = async () => {
     try {

@@ -34,7 +34,6 @@ const Employees = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [onboardingProgress, setOnboardingProgress] = useState({});
-  const [realTimeUpdates, setRealTimeUpdates] = useState({});
 
   useEffect(() => {
     fetchEmployees();
@@ -90,6 +89,8 @@ const Employees = () => {
             };
           }
           return null;
+          
+          
         } catch (error) {
           console.error(`Error fetching progress for employee ${employee.email}:`, error);
           return null;
@@ -132,10 +133,7 @@ const Employees = () => {
       }));
       
       setEmployees(processedEmployees);
-      
-      // Fetch onboarding progress for all employees
-      await fetchOnboardingProgress();
-      
+    
       setError(null);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -148,6 +146,12 @@ const Employees = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (employees.length > 0) {
+      fetchOnboardingProgress();
+    }
+  }, [employees]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);

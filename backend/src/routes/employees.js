@@ -37,12 +37,6 @@ router.get('/', requireAdmin, async (req, res) => {
 router.get('/colleagues', requireEmployee, async (req, res) => {
   try {
     const employee = req.user;
-    console.log('Employee making request:', {
-      id: employee._id,
-      role: employee.role,
-      email: employee.email,
-      createdBy: employee.createdBy
-    });
 
     if (!employee.createdBy) {
       console.log('Employee has no admin association:', employee._id);
@@ -51,7 +45,6 @@ router.get('/colleagues', requireEmployee, async (req, res) => {
 
     // Get employees created by the same admin
     const employees = await Employee.find({ createdBy: employee.createdBy });
-    console.log('Found employees:', employees.length);
     
     // Format the response
     const formattedEmployees = employees.map(emp => ({
@@ -76,7 +69,6 @@ router.get('/colleagues', requireEmployee, async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('Fetching employee with ID:', id);
 
     // Validate ID format
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -105,11 +97,6 @@ router.get('/:id', async (req, res) => {
       department: employee.department || { name: employee.department || 'IT' },
       position: employee.position || { title: employee.position || 'Employee' }
     };
-
-    console.log('Successfully found employee:', {
-      id: employee._id,
-      name: `${employee.firstName} ${employee.lastName}`
-    });
 
     res.json(sanitizedEmployee);
   } catch (error) {
