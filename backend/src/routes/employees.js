@@ -179,11 +179,11 @@ router.post('/', requireAdmin, async (req, res) => {
       role: 'employee',
       status: 'Active',
       hireDate: new Date(),
-      address: {
-        street: req.body.address,
-        city: req.body.city,
-        zipCode: req.body.postalCode,
-        country: req.body.country
+      address: req.body.address || {
+        street: '',
+        city: '',
+        zipCode: '',
+        country: ''
       },
       createdBy: adminId
     });
@@ -208,7 +208,14 @@ router.post('/', requireAdmin, async (req, res) => {
       department: req.body.department || 'IT',
       status: 'active',
       hireDate: new Date(),
-      createdBy: adminId
+      address: req.body.address || {
+        street: '',
+        city: '',
+        zipCode: '',
+        country: ''
+      },
+      createdBy: adminId,
+      user: newEmployee._id // Link to the User model
     });
 
     await employeeModel.save();
@@ -246,7 +253,8 @@ router.post('/bulk', requireAdmin, async (req, res) => {
     for (const emp of employees) {
       try {
         // Check if employee with this email already exists
-        const existingEmployee = await User.findOne({ email: emp.email });
+        const email = emp.email.trim().toLowerCase();
+        const existingEmployee = await User.findOne({ email });
         if (existingEmployee) {
           results.failed.push({
             email: emp.email,

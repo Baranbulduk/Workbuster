@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema({
-  employeeId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
   firstName: {
     type: String,
     required: true
@@ -70,8 +65,15 @@ const employeeSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
+    ref: 'User',
+    required: true
+  },
+  salary: {
+    type: Number,
+    default: 0
+  },
+  skills: [String],
+  notes: String
 }, {
   timestamps: true
 });

@@ -16,6 +16,7 @@ import {
   DocumentTextIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  UserIcon,
   UserGroupIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
@@ -25,18 +26,6 @@ import {
 import { FiHome, FiUsers, FiUserCheck, FiBriefcase, FiCalendar, FiMessageSquare, FiBarChart2, FiSettings } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
-
-
-// const navigation = [
-//   { name: 'Dashboard', href: '/', icon: HomeIcon },
-//   { name: 'Candidates', href: '/candidates', icon: UserGroupIcon },
-//   { name: 'Employees', href: '/employees', icon: UserGroupIcon }, 
-//   { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon }, 
-//   { name: 'Onboarding', href: '/onboarding', icon: UserPlusIcon }, 
-//  { name: 'Statistics', href: '/statistics', icon: ChartBarIcon },
-//   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
-// ];
-
 const searchParams = new URLSearchParams(location.search);
 const token = searchParams.get('token');
 const email = searchParams.get('email');
@@ -45,8 +34,8 @@ const navigation = [
   { name: `Dashboard`, href: `/${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: HomeIcon },
   { name: `Candidates`, href: `/candidates${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: UserGroupIcon },
   { name: `Employees`, href: `/employees${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: UserGroupIcon }, 
-  { name: `Clients`, href: `/clients${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: BuildingOfficeIcon }, 
-  { name: `Onboarding`, href: `/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: UserPlusIcon }, 
+  { name: `Clients`, href: `/clients${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: UserGroupIcon }, 
+  { name: `Onboarding`, href: `/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: UserIcon }, 
   { name: `Statistics`, href: `/statistics${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: ChartBarIcon },
   { name: `Settings`, href: `/settings${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, icon: Cog6ToothIcon }
 ];

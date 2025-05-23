@@ -47,7 +47,7 @@ export default function Settings() {
           ...prev,
           profile: {
             ...prev.profile,
-            name: admin.name || prev.profile.name,
+            name: `${admin.firstName && admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.name}` || prev.profile.name,
             email: admin.email || prev.profile.email,
             role: admin.role || prev.profile.role,
             department: admin.department || prev.profile.department,

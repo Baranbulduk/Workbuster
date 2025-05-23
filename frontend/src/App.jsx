@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { 
   HomeIcon, 
+  UserIcon,
   UserGroupIcon, 
   UserPlusIcon, 
   Cog6ToothIcon,
@@ -56,7 +57,7 @@ const EmployeeLayout = () => {
     { 
       name: 'Onboarding', 
       href: `/employee/onboarding${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`, 
-      icon: UserPlusIcon 
+      icon: UserIcon 
     },
     {
       name: 'Settings',

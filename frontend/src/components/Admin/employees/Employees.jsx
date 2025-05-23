@@ -26,7 +26,7 @@ const Employees = () => {
     email: '',
     phone: '',
     position: '',
-    address: '',
+    street: '',
     postalCode: '',
     city: '',
     country: ''
@@ -270,6 +270,8 @@ const Employees = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData);
+    console.log(formData.street);
     setSuccessMsg('');
     setErrorMsg('');
 
@@ -290,10 +292,14 @@ const Employees = () => {
         phone: formData.phone,
         position: formData.position,
         department: formData.department || 'IT',
-        address: formData.address,
-        postalCode: formData.postalCode,
-        city: formData.city,
-        country: formData.country
+        role: 'employee',
+        status: 'Active',
+        address: {
+          street: formData.street,
+          zipCode: formData.postalCode,
+          city: formData.city,
+          country: formData.country
+        }
       });
 
       setSuccessMsg('Employee created successfully! Credentials have been sent via email.');
@@ -305,7 +311,7 @@ const Employees = () => {
         phone: '',
         position: '',
         department: '',
-        address: '',
+        street: '',
         postalCode: '',
         city: '',
         country: ''
@@ -528,8 +534,8 @@ const Employees = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Street Address</label>
                     <input
                       type="text"
-                      name="address"
-                      value={formData.address}
+                      name="street"
+                      value={formData.street}
                       onChange={handleFormChange}
                       className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
