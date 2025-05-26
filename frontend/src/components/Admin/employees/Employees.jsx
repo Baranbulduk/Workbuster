@@ -4,6 +4,8 @@ import axios from '../../../utils/axios';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const Employees = () => {
   const { isDarkMode } = useTheme();
@@ -26,14 +28,21 @@ const Employees = () => {
     email: '',
     phone: '',
     position: '',
-    street: '',
-    postalCode: '',
-    city: '',
-    country: ''
+    department: '',
+    address: {
+      street: '',
+      zipCode: '',
+      city: '',
+      country: ''
+    },
+    hireDate: ''
   });
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [onboardingProgress, setOnboardingProgress] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
@@ -178,33 +187,46 @@ const Employees = () => {
     return matchesSearch && matchesStatus && matchesDepartment && matchesExperience;
   });
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
-      try {
-        const response = await axios.delete(`/employees/${id}`);
-        // Remove from both employees and importedEmployees arrays
-        setEmployees(prev => prev.filter(emp => emp._id !== id));
-        setImportedEmployees(prev => prev.filter(emp => emp._id !== id));
-        
-        // Show success message with details
-        const message = 'Employee deleted successfully';
-        if (response.data.deletedFromEmployee && response.data.deletedFromUser) {
-          setSuccessMsg(`${message} (deleted from both Employee and User records)`);
-        } else if (response.data.deletedFromEmployee) {
-          setSuccessMsg(`${message} (deleted from Employee records)`);
-        } else if (response.data.deletedFromUser) {
-          setSuccessMsg(`${message} (deleted from User records)`);
-        } else {
-          setSuccessMsg(message);
-        }
-      } catch (err) {
-        if (err.response?.status === 401) {
-          navigate('/login');
-          return;
-        }
-        console.error('Error deleting employee:', err);
-        setErrorMsg(err.response?.data?.message || 'Failed to delete employee');
+    setSelectedEmployee(employees.find(emp => emp._id === id));
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await axios.delete(`/employees/${selectedEmployee._id}`);
+      // Remove from both employees and importedEmployees arrays
+      setEmployees(prev => prev.filter(emp => emp._id !== selectedEmployee._id));
+      setImportedEmployees(prev => prev.filter(emp => emp._id !== selectedEmployee._id));
+      
+      // Show success message with details
+      const message = 'Employee deleted successfully';
+      if (response.data.deletedFromEmployee && response.data.deletedFromUser) {
+        setSuccessMsg(`${message} (deleted from both Employee and User records)`);
+      } else if (response.data.deletedFromEmployee) {
+        setSuccessMsg(`${message} (deleted from Employee records)`);
+      } else if (response.data.deletedFromUser) {
+        setSuccessMsg(`${message} (deleted from User records)`);
+      } else {
+        setSuccessMsg(message);
       }
+      setShowDeleteModal(false);
+      setSelectedEmployee(null);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      console.error('Error deleting employee:', err);
+      setErrorMsg(err.response?.data?.message || 'Failed to delete employee');
     }
   };
 
@@ -265,7 +287,21 @@ const Employees = () => {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleFormSubmit = async (e) => {
@@ -296,7 +332,7 @@ const Employees = () => {
         status: 'Active',
         address: {
           street: formData.street,
-          zipCode: formData.postalCode,
+          zipCode: formData.zipCode,
           city: formData.city,
           country: formData.country
         }
@@ -312,7 +348,7 @@ const Employees = () => {
         position: '',
         department: '',
         street: '',
-        postalCode: '',
+        zipCode: '',
         city: '',
         country: ''
       });
@@ -362,6 +398,48 @@ const Employees = () => {
       }
       return emp;
     }));
+  };
+
+  const handleUpdate = (employee) => {
+    setSelectedEmployee(employee);
+    setFormData({
+      firstName: employee.firstName || '',
+      lastName: employee.lastName || '',
+      email: employee.email || '',
+      phone: employee.phone || '',
+      position: employee.position || '',
+      department: employee.department || '',
+      address: {
+        street: employee.address?.street || '',
+        zipCode: employee.address?.zipCode || '',
+        city: employee.address?.city || '',
+        country: employee.address?.country || ''
+      },
+      hireDate: employee.hireDate || ''
+    });
+    setShowUpdateForm(true);
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.put(`/employees/${selectedEmployee._id}`, formData);
+      if (response.status === 200) {
+        setShowUpdateForm(false);
+        setSelectedEmployee(null);
+        fetchEmployees();
+        setSuccessMsg('Employee updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      if (error.response) {
+        setErrorMsg(`Error: ${error.response.data.message || 'Failed to update employee. Please check your input and try again.'}`);
+      } else if (error.request) {
+        setErrorMsg('No response from server. Please check your connection and try again.');
+      } else {
+        setErrorMsg('Error setting up the request. Please try again.');
+      }
+    }
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -546,8 +624,8 @@ const Employees = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Postal Code</label>
                     <input
                       type="text"
-                      name="postalCode"
-                      value={formData.postalCode}
+                      name="zipCode"
+                      value={formData.zipCode}
                       onChange={handleFormChange}
                       className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                       required
@@ -673,7 +751,7 @@ const Employees = () => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => navigate(`/employees/${employee._id}`)}
+                      onClick={() => handleUpdate(employee)}
                       className="text-blue-600 hover:text-blue-900 mr-4 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       <FiEdit2 className="inline-block" />
@@ -691,6 +769,246 @@ const Employees = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                      Delete Employee
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Are you sure you want to delete {selectedEmployee?.firstName} {selectedEmployee?.lastName}? This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setSelectedEmployee(null);
+                  }}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Form Modal */}
+      {showUpdateForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => setShowUpdateForm(false)}></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Update Employee
+                  </h3>
+                  <button
+                    onClick={() => setShowUpdateForm(false)}
+                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+                <form onSubmit={handleUpdateSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        First Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Phone <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Position <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Department <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Street Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="address.street"
+                        value={formData.address.street}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        ZIP Code <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="address.zipCode"
+                        value={formData.address.zipCode}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="address.city"
+                        value={formData.address.city}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Country <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="address.country"
+                        value={formData.address.country}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Hire Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="hireDate"
+                        value={formData.hireDate ? formData.hireDate.split('T')[0] : ''}
+                        onChange={handleInputChange}
+                        required
+                        className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowUpdateForm(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Update Employee
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

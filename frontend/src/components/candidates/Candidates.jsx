@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
-import { PlusIcon, XMarkIcon, ExclamationTriangleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
-import path from 'path';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useTheme } from "../../context/ThemeContext";
+import {
+  PlusIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon,
+  ArrowDownTrayIcon,
+} from "@heroicons/react/24/outline";
+import axios from "axios";
+import path from "path";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterCandidate() {
   const { isDarkMode } = useTheme();
@@ -13,30 +18,30 @@ export default function RegisterCandidate() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [filters, setFilters] = useState({
-    position: '',
-    experience: '',
-    availability: '',
-    workPreference: ''
+    position: "",
+    experience: "",
+    availability: "",
+    workPreference: "",
   });
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    position: '',
-    experience: '',
-    skills: '',
-    education: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    position: "",
+    experience: "",
+    skills: "",
+    education: "",
     resume: null,
     coverLetter: null,
-    availability: '',
-    expectedSalary: '',
-    workPreference: 'full-time',
-    location: '',
-    portfolio: '',
-    linkedin: '',
-    github: '',
-    personId: '',
+    availability: "",
+    expectedSalary: "",
+    workPreference: "full-time",
+    location: "",
+    portfolio: "",
+    linkedin: "",
+    github: "",
+    personId: "",
   });
   const navigate = useNavigate();
 
@@ -47,208 +52,222 @@ export default function RegisterCandidate() {
 
   const fetchCandidates = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/candidates');
+      const response = await axios.get("http://localhost:5000/api/candidates");
       setCandidates(response.data);
     } catch (error) {
-      console.error('Error fetching candidates:', error);
+      console.error("Error fetching candidates:", error);
     }
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const filteredCandidates = candidates.filter(candidate => {
+  const filteredCandidates = candidates.filter((candidate) => {
     return (
-      (!filters.position || candidate.position.toLowerCase().includes(filters.position.toLowerCase())) &&
-      (!filters.experience || candidate.experience >= parseInt(filters.experience)) &&
-      (!filters.availability || candidate.availability === filters.availability) &&
-      (!filters.workPreference || candidate.workPreference === filters.workPreference)
+      (!filters.position ||
+        candidate.position
+          .toLowerCase()
+          .includes(filters.position.toLowerCase())) &&
+      (!filters.experience ||
+        candidate.experience >= parseInt(filters.experience)) &&
+      (!filters.availability ||
+        candidate.availability === filters.availability) &&
+      (!filters.workPreference ||
+        candidate.workPreference === filters.workPreference)
     );
   });
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
-    
-    if (name === 'personId') {
+
+    if (name === "personId") {
       // Remove any non-digit characters
-      let cleaned = value.replace(/\D/g, '');
-      
+      let cleaned = value.replace(/\D/g, "");
+
       // Format as YYYY-MM-DD-XXXX
       if (cleaned.length > 8) {
-        cleaned = cleaned.slice(0, 8) + '-' + cleaned.slice(8, 12);
+        cleaned = cleaned.slice(0, 8) + "-" + cleaned.slice(8, 12);
       }
       if (cleaned.length > 6) {
-        cleaned = cleaned.slice(0, 6) + '-' + cleaned.slice(6);
+        cleaned = cleaned.slice(0, 6) + "-" + cleaned.slice(6);
       }
       if (cleaned.length > 4) {
-        cleaned = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+        cleaned = cleaned.slice(0, 4) + "-" + cleaned.slice(4);
       }
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        [name]: cleaned
+        [name]: cleaned,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === 'file' ? files[0] : value
+        [name]: type === "file" ? files[0] : value,
       }));
     }
   };
 
   const validatePersonId = (id) => {
     if (!id) return false;
-    
+
     // Check if it matches the format YYYY-MM-DD-XXXX
     const regex = /^\d{4}-\d{2}-\d{2}-\d{4}$/;
     if (!regex.test(id)) return false;
-    
+
     // Check if it has exactly 12 digits
-    const digitCount = id.replace(/\D/g, '').length;
+    const digitCount = id.replace(/\D/g, "").length;
     if (digitCount !== 12) return false;
-    
+
     // Extract parts
-    const [year, month, day] = id.split('-').slice(0, 3).map(Number);
-    
+    const [year, month, day] = id.split("-").slice(0, 3).map(Number);
+
     // Validate year is not before 1930
     if (year < 1930) return false;
-    
+
     // Validate date
     const date = new Date(year, month - 1, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time part to compare only dates
-    
-    return date.getFullYear() === year && 
-           date.getMonth() === month - 1 && 
-           date.getDate() === day &&
-           date <= today; // Ensure date is not in the future
+
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day &&
+      date <= today
+    ); // Ensure date is not in the future
   };
 
   const handleUpdate = (candidate) => {
     setSelectedCandidate(candidate);
     setIsUpdating(true);
     setFormData({
-      firstName: candidate.firstName || '',
-      lastName: candidate.lastName || '',
-      email: candidate.email || '',
-      phone: candidate.phone || '',
-      position: candidate.position || '',
-      experience: candidate.experience || '',
-      skills: candidate.skills || '',
-      education: candidate.education || '',
+      firstName: candidate.firstName || "",
+      lastName: candidate.lastName || "",
+      email: candidate.email || "",
+      phone: candidate.phone || "",
+      position: candidate.position || "",
+      experience: candidate.experience || "",
+      skills: candidate.skills || "",
+      education: candidate.education || "",
       resume: null,
       coverLetter: null,
-      availability: candidate.availability || '',
-      expectedSalary: candidate.expectedSalary || '',
-      workPreference: candidate.workPreference || 'full-time',
-      location: candidate.location || '',
-      portfolio: candidate.portfolio || '',
-      linkedin: candidate.linkedin || '',
-      github: candidate.github || '',
-      personId: candidate.personId || '',
+      availability: candidate.availability || "",
+      expectedSalary: candidate.expectedSalary || "",
+      workPreference: candidate.workPreference || "full-time",
+      location: candidate.location || "",
+      portfolio: candidate.portfolio || "",
+      linkedin: candidate.linkedin || "",
+      github: candidate.github || "",
+      personId: candidate.personId || "",
     });
     setShowForm(true);
   };
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/candidates/${selectedCandidate._id}`);
+      await axios.delete(
+        `http://localhost:5000/api/candidates/${selectedCandidate._id}`
+      );
       setShowDeleteModal(false);
       setSelectedCandidate(null);
       fetchCandidates();
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      console.error("Error deleting candidate:", error);
     }
   };
 
   const resetForm = () => {
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        position: '',
-        experience: '',
-        skills: '',
-        education: '',
-        resume: null,
-        coverLetter: null,
-        availability: '',
-        expectedSalary: '',
-        workPreference: 'full-time',
-        location: '',
-        portfolio: '',
-        linkedin: '',
-        github: '',
-        personId: '',
-      });
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      position: "",
+      experience: "",
+      skills: "",
+      education: "",
+      resume: null,
+      coverLetter: null,
+      availability: "",
+      expectedSalary: "",
+      workPreference: "full-time",
+      location: "",
+      portfolio: "",
+      linkedin: "",
+      github: "",
+      personId: "",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate person ID before submission
     if (!validatePersonId(formData.personId)) {
-      alert('Person ID must be exactly 12 digits in the format YYYY-MM-DD-XXXX, the year must be 1930 or later, and the date cannot be in the future');
+      alert(
+        "Person ID must be exactly 12 digits in the format YYYY-MM-DD-XXXX, the year must be 1930 or later, and the date cannot be in the future"
+      );
       return;
     }
 
     const formDataToSend = new FormData();
-    
+
     // Required fields that must be present
     const requiredFields = [
-      'firstName',
-      'lastName',
-      'email',
-      'phone',
-      'position',
-      'experience',
-      'skills',
-      'education',
-      'resume',
-      'availability',
-      'expectedSalary',
-      'workPreference',
-      'location',
-      'personId'
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "position",
+      "experience",
+      "skills",
+      "education",
+      "resume",
+      "availability",
+      "expectedSalary",
+      "workPreference",
+      "location",
+      "personId",
     ];
 
     // Check if all required fields are present
-    const missingFields = requiredFields.filter(field => {
+    const missingFields = requiredFields.filter((field) => {
       const value = formData[field];
-      return !value || (typeof value === 'string' && value.trim() === '');
+      return !value || (typeof value === "string" && value.trim() === "");
     });
 
     if (missingFields.length > 0) {
-      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
       return;
     }
 
     // Convert experience to number
     const experience = parseInt(formData.experience, 10);
     if (isNaN(experience)) {
-      alert('Experience must be a valid number');
+      alert("Experience must be a valid number");
       return;
     }
 
     // Convert expectedSalary to number
     const expectedSalary = parseInt(formData.expectedSalary, 10);
     if (isNaN(expectedSalary)) {
-      alert('Expected salary must be a valid number');
+      alert("Expected salary must be a valid number");
       return;
     }
 
     // Format location as an object
-    const locationParts = formData.location.split(',').map(part => part.trim());
+    const locationParts = formData.location
+      .split(",")
+      .map((part) => part.trim());
     const location = {
-      city: locationParts[0] || '',
-      state: locationParts[1] || '',
-      country: locationParts[2] || ''
+      city: locationParts[0] || "",
+      state: locationParts[1] || "",
+      country: locationParts[2] || "",
     };
 
     // Format availability as an enum value
@@ -256,30 +275,30 @@ export default function RegisterCandidate() {
     const today = new Date();
     const diffTime = Math.abs(availabilityDate - today);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     let availability;
     if (diffDays <= 7) {
-      availability = '1-week';
+      availability = "1-week";
     } else if (diffDays <= 14) {
-      availability = '2-weeks';
+      availability = "2-weeks";
     } else if (diffDays <= 30) {
-      availability = '1-month';
+      availability = "1-month";
     } else {
-      availability = 'more-than-1-month';
+      availability = "more-than-1-month";
     }
 
     // Add all form fields to FormData
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       if (formData[key] !== null) {
-        if (key === 'experience') {
+        if (key === "experience") {
           formDataToSend.append(key, experience);
-        } else if (key === 'expectedSalary') {
+        } else if (key === "expectedSalary") {
           formDataToSend.append(key, expectedSalary);
-        } else if (key === 'location') {
-          formDataToSend.append('location[city]', location.city);
-          formDataToSend.append('location[state]', location.state);
-          formDataToSend.append('location[country]', location.country);
-        } else if (key === 'availability') {
+        } else if (key === "location") {
+          formDataToSend.append("location[city]", location.city);
+          formDataToSend.append("location[state]", location.state);
+          formDataToSend.append("location[country]", location.country);
+        } else if (key === "availability") {
           formDataToSend.append(key, availability);
         } else {
           formDataToSend.append(key, formData[key]);
@@ -288,21 +307,21 @@ export default function RegisterCandidate() {
     });
 
     // Log FormData contents
-    console.log('FormData contents:');
+    console.log("FormData contents:");
     for (let pair of formDataToSend.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
+      console.log(pair[0] + ": " + pair[1]);
     }
 
     try {
-      const url = isUpdating 
+      const url = isUpdating
         ? `http://localhost:5000/api/candidates/${selectedCandidate._id}`
-        : 'http://localhost:5000/api/candidates';
-      
-      const method = isUpdating ? 'put' : 'post';
-      
+        : "http://localhost:5000/api/candidates";
+
+      const method = isUpdating ? "put" : "post";
+
       const response = await axios[method](url, formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -314,15 +333,22 @@ export default function RegisterCandidate() {
         fetchCandidates();
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting form:", error);
       if (error.response) {
         // Log the specific error message from the server
-        console.error('Server error response:', error.response.data);
-        alert(`Error: ${error.response.data.message || 'Failed to submit form. Please check your input and try again.'}`);
+        console.error("Server error response:", error.response.data);
+        alert(
+          `Error: ${
+            error.response.data.message ||
+            "Failed to submit form. Please check your input and try again."
+          }`
+        );
       } else if (error.request) {
-        alert('No response from server. Please check your connection and try again.');
+        alert(
+          "No response from server. Please check your connection and try again."
+        );
       } else {
-        alert('Error setting up the request. Please try again.');
+        alert("Error setting up the request. Please try again.");
       }
     }
   };
@@ -330,26 +356,26 @@ export default function RegisterCandidate() {
   const handleExportCSV = () => {
     // Define CSV headers
     const headers = [
-      'First Name',
-      'Last Name',
-      'Email',
-      'Phone',
-      'Position',
-      'Experience',
-      'Skills',
-      'Education',
-      'Availability',
-      'Expected Salary',
-      'Work Preference',
-      'Location',
-      'Portfolio',
-      'LinkedIn',
-      'GitHub',
-      'Person ID'
+      "First Name",
+      "Last Name",
+      "Email",
+      "Phone",
+      "Position",
+      "Experience",
+      "Skills",
+      "Education",
+      "Availability",
+      "Expected Salary",
+      "Work Preference",
+      "Location",
+      "Portfolio",
+      "LinkedIn",
+      "GitHub",
+      "Person ID",
     ];
 
     // Convert candidates data to CSV format
-    const csvData = candidates.map(candidate => [
+    const csvData = candidates.map((candidate) => [
       candidate.firstName,
       candidate.lastName,
       candidate.email,
@@ -361,37 +387,80 @@ export default function RegisterCandidate() {
       new Date(candidate.availability).toLocaleDateString(),
       candidate.expectedSalary,
       candidate.workPreference,
-      typeof candidate.location === 'object' 
+      typeof candidate.location === "object"
         ? `${candidate.location.city},${candidate.location.state},${candidate.location.country}`
         : candidate.location,
-      candidate.portfolio || '',
-      candidate.linkedin || '',
-      candidate.github || '',
-      candidate.personId
+      candidate.portfolio || "",
+      candidate.linkedin || "",
+      candidate.github || "",
+      candidate.personId,
     ]);
 
     // Combine headers and data
     const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
 
     // Create and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `candidates_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `candidates_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const handleDownloadCV = async (candidate) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/candidates/${candidate._id}/resume`, {
+        responseType: 'blob'
+      });
+      
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get the file extension from the content type or default to .pdf
+      const contentType = response.headers['content-type'];
+      const extension = contentType === 'application/pdf' ? '.pdf' : 
+                       contentType === 'application/msword' ? '.doc' :
+                       contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? '.docx' : '.pdf';
+      
+      // Set the download filename
+      link.download = `${candidate.firstName}_${candidate.lastName}_CV${extension}`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading CV:', error);
+      alert('Error downloading CV. Please try again.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Candidates</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Candidates
+        </h1>
         <div className="flex items-center space-x-4">
           {/* Filters */}
           <div className="flex items-center space-x-2">
@@ -469,140 +538,217 @@ export default function RegisterCandidate() {
 
       <div className="space-y-4">
         {filteredCandidates.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">No candidates found matching the selected filters.</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            No candidates found matching the selected filters.
+          </p>
         ) : (
           <div className="overflow-x-auto w-full dark:bg-gray-800 rounded-lg shadow">
             <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Candidate
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Contact
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Position
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Experience
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Location
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Documents
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredCandidates.map((candidate) => (
-                  <tr 
-                    key={candidate._id} 
+                  <tr
+                    key={candidate._id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     onClick={() => navigate(`/candidates/${candidate._id}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                      <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                             <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
-                            {candidate.firstName[0]}{candidate.lastName[0]}
-                          </span>
+                              {candidate.firstName[0]}
+                              {candidate.lastName[0]}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="ml-4">
+                        <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {candidate.firstName} {candidate.lastName}
+                            {candidate.firstName} {candidate.lastName}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            ID: {candidate.personId ? candidate.personId.replace(/\d{4}$/, 'XXXX') : 'N/A'}
+                            ID:{" "}
+                            {candidate.personId
+                              ? candidate.personId.replace(/\d{4}$/, "XXXX")
+                              : "N/A"}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{candidate.email}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{candidate.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{candidate.position}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{candidate.workPreference}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{candidate.experience} years</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Available: {new Date(candidate.availability).toLocaleDateString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {typeof candidate.location === 'object' 
-                          ? `${candidate.location.city}${candidate.location.state ? `, ${candidate.location.state}` : ''}${candidate.location.country ? `, ${candidate.location.country}` : ''}`
+                        {candidate.email}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {candidate.phone}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {candidate.position}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {candidate.workPreference}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {candidate.experience} years
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Available:{" "}
+                        {new Date(candidate.availability).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {typeof candidate.location === "object"
+                          ? `${candidate.location.city}${
+                              candidate.location.state
+                                ? `, ${candidate.location.state}`
+                                : ""
+                            }${
+                              candidate.location.country
+                                ? `, ${candidate.location.country}`
+                                : ""
+                            }`
                           : candidate.location}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Expected: {candidate.expectedSalary}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Expected: {candidate.expectedSalary}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <div
+                        className="flex space-x-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {candidate.resume ? (
                           <>
                             <button
                               onClick={() => {
                                 const url = `http://localhost:5000/api/candidates/${candidate._id}/resume`;
-                                window.open(url, '_blank');
+                                window.open(url, "_blank");
                               }}
                               className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 mr-1"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
                               </svg>
                               View CV
                             </button>
                             <button
-                              onClick={() => {
-                                const url = `http://localhost:5000/api/candidates/${candidate._id}/resume`;
-                                fetch(url)
-                                  .then(response => {
-                                    if (!response.ok) {
-                                      throw new Error('Network response was not ok');
-                                    }
-                                    return response.blob();
-                                  })
-                                  .then(blob => {
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = `${candidate.firstName}_${candidate.lastName}_CV${path.extname(candidate.resume)}`;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
-                                  })
-                                  .catch(error => {
-                                    console.error('Error downloading CV:', error);
-                                    alert('Error downloading CV. Please try again.');
-                                  });
-                              }}
+                              onClick={() => handleDownloadCV(candidate)}
                               className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 mr-1"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                />
                               </svg>
                               Download CV
                             </button>
                           </>
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500 text-xs">No CV available</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">
+                            No CV available
+                          </span>
                         )}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        className="flex space-x-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
                           onClick={() => handleUpdate(candidate)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                           Update
                         </button>
@@ -613,8 +759,19 @@ export default function RegisterCandidate() {
                           }}
                           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                           Delete
                         </button>
@@ -632,7 +789,10 @@ export default function RegisterCandidate() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
               <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>
 
@@ -648,7 +808,10 @@ export default function RegisterCandidate() {
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Are you sure you want to delete {selectedCandidate?.firstName} {selectedCandidate?.lastName}? This action cannot be undone.
+                        Are you sure you want to delete{" "}
+                        {selectedCandidate?.firstName}{" "}
+                        {selectedCandidate?.lastName}? This action cannot be
+                        undone.
                       </p>
                     </div>
                   </div>
@@ -675,26 +838,32 @@ export default function RegisterCandidate() {
               </div>
             </div>
           </div>
-          </div>
-        )}
+        </div>
+      )}
 
       {/* Registration/Update Form Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => {
-                setShowForm(false);
-                setSelectedCandidate(null);
-                setIsUpdating(false);
-              }}></div>
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+                onClick={() => {
+                  setShowForm(false);
+                  setSelectedCandidate(null);
+                  setIsUpdating(false);
+                }}
+              ></div>
             </div>
 
             <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
               <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    {isUpdating ? 'Update Candidate' : 'Register New Candidate'}
+                    {isUpdating ? "Update Candidate" : "Register New Candidate"}
                   </h3>
                   <button
                     onClick={() => {
@@ -710,7 +879,9 @@ export default function RegisterCandidate() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Personal Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -789,7 +960,9 @@ export default function RegisterCandidate() {
 
                   {/* Professional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Professional Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Professional Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -807,7 +980,8 @@ export default function RegisterCandidate() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Years of Experience <span className="text-red-500">*</span>
+                          Years of Experience{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -838,7 +1012,9 @@ export default function RegisterCandidate() {
 
                   {/* Education and Documents */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Education and Documents</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Education and Documents
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -877,7 +1053,9 @@ Graduation Year"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cover Letter</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Cover Letter
+                        </label>
                         <input
                           type="file"
                           name="coverLetter"
@@ -896,7 +1074,9 @@ Graduation Year"
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Additional Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Additional Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -914,7 +1094,8 @@ Graduation Year"
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Expected Salary <span className="text-red-500">*</span>
+                          Expected Salary{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -928,7 +1109,8 @@ Graduation Year"
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Work Preference <span className="text-red-500">*</span>
+                          Work Preference{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <select
                           name="workPreference"
@@ -962,10 +1144,14 @@ Graduation Year"
 
                   {/* Social Links */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Social Links</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Social Links
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Portfolio URL</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Portfolio URL
+                        </label>
                         <input
                           type="url"
                           name="portfolio"
@@ -976,7 +1162,9 @@ Graduation Year"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">LinkedIn</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          LinkedIn
+                        </label>
                         <input
                           type="url"
                           name="linkedin"
@@ -987,7 +1175,9 @@ Graduation Year"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          GitHub
+                        </label>
                         <input
                           type="url"
                           name="github"
@@ -1024,4 +1214,4 @@ Graduation Year"
       )}
     </div>
   );
-} 
+}

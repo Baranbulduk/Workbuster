@@ -127,7 +127,7 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatCard
           title="Total Candidates"
           value={statistics.candidates.total}
@@ -146,55 +146,51 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recent Activity</h2>
-          <div className="mt-4 space-y-4">
-            {recentActivity.length === 0 ? (
-              <div className="text-gray-500 dark:text-gray-400">No recent activity.</div>
-            ) : (
-              recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-center space-x-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="p-4 sm:p-6">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Activity</h2>
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'Candidate' ? 'bg-blue-100 dark:bg-blue-900' : activity.type === 'Employee' ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
-                      <span className={`font-medium ${activity.type === 'Candidate' ? 'text-blue-600 dark:text-blue-400' : activity.type === 'Employee' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{activity.type[0]}</span>
+                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                      <activity.icon className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{activity.action}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{activity.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{activity.action}</p>
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(activity.time).toLocaleString()}</div>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Quick Actions</h2>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button 
-              onClick={() => navigate('/candidates')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Register New Candidate
-            </button>
-            <button 
-              onClick={() => navigate('/employees')}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Add New Employee
-            </button>
-            <button 
-              onClick={() => navigate('/clients')}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            >
-              Register New Client
-            </button>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="p-4 sm:p-6">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button 
+                onClick={() => navigate('/candidates')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              >
+                Register New Candidate
+              </button>
+              <button 
+                onClick={() => navigate('/employees')}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
+              >
+                Add New Employee
+              </button>
+              <button 
+                onClick={() => navigate('/clients')}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
+              >
+                Register New Client
+              </button>
+            </div>
           </div>
         </div>
       </div>

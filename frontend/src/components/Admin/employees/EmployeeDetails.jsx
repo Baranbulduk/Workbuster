@@ -209,39 +209,39 @@ const EmployeeDetails = () => {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate(fromOnboarding ? '/onboarding' : '/employees', { replace: true })}
+          onClick={() => navigate('/employees')}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          {fromOnboarding ? 'Back to Onboarding' : 'Back to Employees'}
+          Back to Employees
         </button>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center">
-            <div className="h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-              <span className="text-2xl font-semibold text-blue-600 dark:text-blue-300">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <span className="text-xl sm:text-2xl font-semibold text-blue-600 dark:text-blue-300">
                 {employee.firstName?.[0]}{employee.lastName?.[0]}
               </span>
             </div>
-            <div className="ml-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="ml-4 sm:ml-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {employee.firstName} {employee.lastName}
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">{employee.position}</p>
+              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">{employee.position}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={handleUpdate}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm sm:text-base"
             >
-              <PencilSquareIcon className="h-5 w-5 mr-2" />
+              <PencilSquareIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Update
             </button>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              className="flex items-center px-3 sm:px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm sm:text-base"
             >
-              <TrashIcon className="h-5 w-5 mr-2" />
+              <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Delete
             </button>
           </div>
@@ -249,11 +249,11 @@ const EmployeeDetails = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="flex">
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
+        <nav className="flex min-w-max">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -263,7 +263,7 @@ const EmployeeDetails = () => {
           </button>
           <button
             onClick={() => setActiveTab('documents')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
               activeTab === 'documents'
                 ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -273,7 +273,7 @@ const EmployeeDetails = () => {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
               activeTab === 'history'
                 ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -285,50 +285,33 @@ const EmployeeDetails = () => {
       </div>
 
       {/* Main Content */}
-      {renderTabContent()}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="p-4 sm:p-6">
+          {renderTabContent()}
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
-
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                      Delete Employee
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Are you sure you want to delete {employee.firstName} {employee.lastName}? This action cannot be undone.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Delete
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete this employee? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
@@ -494,7 +477,7 @@ const EmployeeDetails = () => {
                       <input
                         type="date"
                         name="hireDate"
-                        value={formData.hireDate}
+                        value={formData.hireDate ? formData.hireDate.split('T')[0] : ''}
                         onChange={handleInputChange}
                         required
                         className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"

@@ -288,37 +288,40 @@ export default function CandidateDetails() {
   };
 
   const handleDownloadCV = async () => {
-    if (candidate.resume) {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/candidates/${id}/resume`, {
-          responseType: 'blob'
-        });
-        
-        // Create a blob from the response data
-        const blob = new Blob([response.data], { type: response.headers['content-type'] });
-        
-        // Create a URL for the blob
-        const url = window.URL.createObjectURL(blob);
-        
-        // Create a temporary link element
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Set the download filename
-        const filename = `${candidate.firstName}_${candidate.lastName}_CV${path.extname(candidate.resume)}`;
-        link.setAttribute('download', filename);
-        
-        // Append to body, click, and remove
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up the URL
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Error downloading CV:', error);
-        alert('Error downloading CV. Please try again.');
-      }
+    try {
+      const response = await axios.get(`http://localhost:5000/api/candidates/${id}/resume`, {
+        responseType: 'blob'
+      });
+      
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get the file extension from the content type or default to .pdf
+      const contentType = response.headers['content-type'];
+      const extension = contentType === 'application/pdf' ? '.pdf' : 
+                       contentType === 'application/msword' ? '.doc' :
+                       contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? '.docx' : '.pdf';
+      
+      // Set the download filename
+      link.download = `${candidate.firstName}_${candidate.lastName}_CV${extension}`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading CV:', error);
+      alert('Error downloading CV. Please try again.');
     }
   };
 
