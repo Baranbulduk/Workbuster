@@ -115,10 +115,10 @@ router.get('/:id', async (req, res) => {
 
 // Helper: Generate next employeeId (EM0001, EM0002, ...)
 async function generateEmployeeId() {
-  const last = await User.findOne({ role: 'employee' }).sort({ createdAt: -1 });
+  const last = await Employee.findOne({ employeeId: { $regex: /^EM\d{4}$/ } }).sort({ employeeId: -1 }).lean();
   let nextNum = 1;
-  if (last && last.employeeId && /^EM\d+$/.test(last.employeeId)) {
-    nextNum = parseInt(last.employeeId.replace('EM', '')) + 1;
+  if (last && last.employeeId) {
+    nextNum = parseInt(last.employeeId.replace('EM', ''), 10) + 1;
   }
   return `EM${String(nextNum).padStart(4, '0')}`;
 }
@@ -166,13 +166,19 @@ router.post('/', requireAdmin, async (req, res) => {
     const passwordPlain = generatePassword(8);
     const hashedPassword = await bcrypt.hash(passwordPlain, 10);
 
+    // Check if employee with this email already exists
+    const existingUser = await User.findOne({ email: req.body.email.toLowerCase().trim() });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
     // Create new employee in User model
     const newEmployee = new User({
       employeeId,
       password: hashedPassword,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
-      email: req.body.email,
+      email: req.body.email.toLowerCase().trim(),
       phone: req.body.phone,
       department: req.body.department || 'IT',
       position: req.body.position,
@@ -200,9 +206,10 @@ router.post('/', requireAdmin, async (req, res) => {
 
     // Also create in Employee model for consistency
     const employeeModel = new Employee({
+      employeeId,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
-      email: req.body.email,
+      email: req.body.email.toLowerCase().trim(),
       phone: req.body.phone,
       position: req.body.position,
       department: req.body.department || 'IT',
@@ -295,6 +302,30 @@ router.post('/bulk', requireAdmin, async (req, res) => {
         });
 
         await newEmployee.save();
+
+        // Also create in Employee model for consistency
+        const employeeModel = new Employee({
+          employeeId,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          email: emp.email,
+          phone: emp.phone || '',
+          position: emp.position || 'Employee',
+          department: emp.department || 'IT',
+          status: emp.status || 'active',
+          hireDate: emp.hireDate || new Date(),
+          address: {
+            street: emp.address?.street || '',
+            city: emp.address?.city || '',
+            state: emp.address?.state || '',
+            zipCode: emp.address?.zipCode || '',
+            country: emp.address?.country || ''
+          },
+          createdBy: getAdminId(req),
+          user: newEmployee._id
+        });
+
+        await employeeModel.save();
 
         // Send credentials email
         await sendCredentialsEmail(emp.email, employeeId, passwordPlain);

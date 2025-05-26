@@ -323,6 +323,7 @@ const Employees = () => {
         return;
       }
       setErrorMsg(err.response?.data?.message || 'Failed to create employee. Please try again.');
+      console.log('Server message:', err.response?.data?.message);
       console.error('Error creating employee:', err);
     }
   };
