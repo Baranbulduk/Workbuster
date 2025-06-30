@@ -20,6 +20,15 @@ export const requireAdmin = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Admin auth error:', error);
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired. Please log in again.',
+        expired: true,
+        expiredAt: error.expiredAt
+      });
+    }
+    
     res.status(401).json({ message: 'Invalid token' });
   }
 };
@@ -43,6 +52,15 @@ export const requireEmployee = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Employee auth error:', error);
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired. Please log in again.',
+        expired: true,
+        expiredAt: error.expiredAt
+      });
+    }
+    
     res.status(401).json({ message: 'Invalid token' });
   }
 };

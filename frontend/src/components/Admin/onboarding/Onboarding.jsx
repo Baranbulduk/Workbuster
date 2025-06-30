@@ -863,31 +863,39 @@ export default function Onboarding() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
           Onboarding
         </h1>
         <div className="flex gap-2">
-          <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-            <ArrowUpTrayIcon className="h-5 w-5" />
-            Import CSV
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleImportCSV}
-              className="hidden"
-            />
-          </label>
+            <button
+              className="flex items-center gap-2 pl-4 pr-1 py-1 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
+              type="button"
+              onClick={() => document.getElementById('csv-upload').click()}
+            >
+              
+              Import CSV
+              <div className="bg-white rounded-3xl p-2 text-black">
+              <ArrowUpTrayIcon className="h-5 w-5" />
+              </div>
+              <input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                className="hidden"
+              />
+            </button>
         </div>
       </div>
       <div className="flex h-[calc(100vh-2rem)] overflow-hidden">
         {/* Left Panel */}
-        <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col">
+        <aside className="w-80 bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col">
           {/* Navigation Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "candidates"
-                  ? "text-blue-600 border-b-2 border-blue-600"
+                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("candidates")}
@@ -897,7 +905,7 @@ export default function Onboarding() {
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "employees"
-                  ? "text-blue-600 border-b-2 border-blue-600"
+                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("employees")}
@@ -907,7 +915,7 @@ export default function Onboarding() {
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "clients"
-                  ? "text-blue-600 border-b-2 border-blue-600"
+                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("clients")}
@@ -923,7 +931,7 @@ export default function Onboarding() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 dark:backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
             </div>
@@ -976,7 +984,7 @@ export default function Onboarding() {
           {selectedItem ? (
             <OnboardingDetails item={selectedItem} type={selectedItemType} />
           ) : (
-            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-700">
               {/* Navigation Tabs */}
               <div className="flex border-b border-gray-200 dark:border-gray-700">
                 <button
@@ -1205,7 +1213,8 @@ export default function Onboarding() {
                             autoFocus
                           />
                         ) : (
-                          <label
+                          <button
+                            type="button"
                             className="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
                             onClick={() =>
                               handleLabelClick(field.id, field.label)
@@ -1213,7 +1222,7 @@ export default function Onboarding() {
                           >
                             {field.label}
                             <PencilIcon className="h-4 w-4 inline ml-1 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
-                          </label>
+                          </button>
                         )}
 
                         {/* Field Type Specific Inputs */}

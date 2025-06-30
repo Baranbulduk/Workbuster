@@ -43,7 +43,7 @@ router.post('/register', async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' },
+      { expiresIn: '7d' }, // Extended to 7 days like employee tokens
       (err, token) => {
         if (err) throw err;
         res.json({ token, role: user.role });
@@ -83,7 +83,7 @@ router.post('/login', async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' },
+      { expiresIn: '7d' }, // Extended to 7 days like employee tokens
       (err, token) => {
         if (err) throw err;
         res.json({ 
@@ -103,6 +103,69 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify and refresh admin token
+router.post('/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ valid: false, message: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const user = await User.findById(decoded.user.id);
+
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({ valid: false, message: 'Invalid token' });
+    }
+
+    // Check if token is about to expire (less than 1 day remaining)
+    const tokenExp = decoded.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+    const timeUntilExpiry = tokenExp - now;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    let newToken = null;
+    if (timeUntilExpiry < oneDay) {
+      // Generate new token
+      const payload = {
+        user: {
+          id: user._id,
+          role: user.role
+        }
+      };
+      newToken = jwt.sign(
+        payload,
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '7d' }
+      );
+    }
+
+    res.status(200).json({
+      valid: true,
+      token: newToken || token,
+      admin: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Error verifying admin token:', error);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        valid: false, 
+        expired: true,
+        message: 'Token has expired' 
+      });
+    }
+    res.status(500).json({ valid: false, message: 'Error verifying token' });
   }
 });
 

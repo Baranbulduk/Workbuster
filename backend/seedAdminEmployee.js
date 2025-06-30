@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import Employee from './models/Employee.js';
+import User from './src/models/User.js';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rexett';
 
@@ -20,6 +20,7 @@ async function seed() {
     department: 'IT',
     position: 'Administrator',
     status: 'Active',
+    role: 'admin',
     hireDate: new Date(),
     salary: 100000,
     address: {
@@ -43,6 +44,7 @@ async function seed() {
     department: 'IT',
     position: 'Developer',
     status: 'Active',
+    role: 'employee',
     hireDate: new Date(),
     salary: 50000,
     address: {
@@ -56,8 +58,8 @@ async function seed() {
     notes: 'Seeded employee user.'
   };
 
-  await Employee.deleteMany({ email: { $in: [admin.email, employee.email] } });
-  await Employee.create([admin, employee]);
+  await User.deleteMany({ email: { $in: [admin.email, employee.email] } });
+  await User.create([admin, employee]);
   console.log('Seeded admin and employee users.');
   await mongoose.disconnect();
 }

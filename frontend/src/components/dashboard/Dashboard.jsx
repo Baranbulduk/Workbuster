@@ -12,6 +12,7 @@ import {
 import axios from '../../utils/axios';
 import StatCard from './StatCard';
 
+
 export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
@@ -48,30 +49,26 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      // Fetch candidates
-      const candidatesResponse = await axios.get('http://localhost:5000/api/candidates');
-      const totalCandidates = candidatesResponse.data.length;
-
-  
-
-      // For messages, we'll use the length of the messages array from Messaging component
-      // This is a static example since we don't have a messages API endpoint yet
-      const newMessages = 3; // This matches the initial messages in Messaging.jsx
+      const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/candidates'),
+        axios.get('http://localhost:5000/api/employees'),
+        axios.get('http://localhost:5000/api/clients'),
+      ]);
 
       setStatistics({
         candidates: {
-          total: totalCandidates,
+          total: candidatesRes.data.length,
           byStatus: {},
           bySource: {},
           byDepartment: {}
         },
         employees: {
-          total: 0,
+          total: employeesRes.data.length,
           byDepartment: {},
           byStatus: {}
         },
         clients: {
-          total: 0,
+          total: clientsRes.data.length,
           byIndustry: {},
           byStatus: {}
         },
@@ -85,6 +82,33 @@ export default function Dashboard() {
     }
   };
 
+  const getIconByType = (type) => {
+    switch (type) {
+      case 'Candidate':
+        return UserGroupIcon;
+      case 'Employee':
+        return UserGroupIcon;
+      case 'Client':
+        return UserGroupIcon;
+      default:
+        return UserGroupIcon;
+    }
+  };
+
+  const getBackgroundColor = (type) => {
+    switch (type) {
+      case 'Candidate':
+        return 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300';
+      case 'Employee':
+        return 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300';
+      case 'Client':
+        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300';
+      default:
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
+    }
+  };
+  
+  
   const fetchRecentActivity = async () => {
     try {
       const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
@@ -98,21 +122,27 @@ export default function Dashboard() {
         name: `${c.firstName} ${c.lastName}`,
         email: c.email,
         action: 'Added/Updated Candidate',
-        time: c.updatedAt || c.createdAt
+        time: c.updatedAt || c.createdAt,
+        icon: getIconByType('Candidate'),
+        _id: c._id
       }));
       employeesRes.data.forEach(e => activities.push({
         type: 'Employee',
         name: `${e.firstName} ${e.lastName}`,
         email: e.email,
         action: 'Added/Updated Employee',
-        time: e.updatedAt || e.createdAt
+        time: e.updatedAt || e.createdAt,
+        icon: getIconByType('Employee'),
+        _id: e._id
       }));
       clientsRes.data.forEach(cl => activities.push({
         type: 'Client',
         name: cl.companyName,
         email: cl.email,
         action: 'Added/Updated Client',
-        time: cl.updatedAt || cl.createdAt
+        time: cl.updatedAt || cl.createdAt,
+        icon: getIconByType('Client'),
+        _id: cl._id
       }));
       // Sort by time, descending
       activities.sort((a, b) => new Date(b.time) - new Date(a.time));
@@ -131,35 +161,54 @@ export default function Dashboard() {
         <StatCard
           title="Total Candidates"
           value={statistics.candidates.total}
-          icon={<UserGroupIcon className="h-6 w-6" />}
+          icon={<UserGroupIcon className="h-6 w-6 text-blue-600 dark:text-blue-300" />}
+          type="Candidate"
         />
         <StatCard
           title="Total Employees"
           value={statistics.employees.total}
-          icon={<UserIcon className="h-6 w-6" />}
+          icon={<UserGroupIcon className="h-6 w-6 text-green-600 dark:text-green-300" />}
+          type="Employee"
         />
         <StatCard
           title="Total Clients"
           value={statistics.clients.total}
-          icon={<BuildingOfficeIcon className="h-6 w-6" />}
+          icon={<UserGroupIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />}
+          type="Client"
         />
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className='flex flex-col gap-6'>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-4 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-            <div className="space-y-4">
+            <div>
               {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3">
+                <div 
+                  key={index} 
+                  className="flex items-start space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg transition-colors duration-150"
+                  onClick={() => {
+                    switch (activity.type) {
+                      case 'Candidate':
+                        navigate(`/candidates/${activity._id}`);
+                        break;
+                      case 'Employee':
+                        navigate(`/employees/${activity._id}`);
+                        break;
+                      case 'Client':
+                        navigate(`/clients/${activity._id}`);
+                        break;
+                    }
+                  }}
+                >
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <activity.icon className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getBackgroundColor(activity.type)}`}>
+                      <span className='text-xl font-medium'>{activity.type.charAt(0)}</span>
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">{activity.name}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{activity.action}</p>
                   </div>
                 </div>

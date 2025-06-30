@@ -227,22 +227,6 @@ const Employees = () => {
     return matchesSearch && matchesStatus && matchesDepartment && matchesExperience;
   });
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
-      try {
-        await apiCall('delete', `/employees/${id}`);
-        setEmployees(employees.filter(emp => emp._id !== id));
-      } catch (error) {
-        if (error.response?.data?.message === 'Session expired. Please log in again.') {
-          handleTokenExpiration(navigate, token, email);
-        } else {
-          console.error('Error deleting employee:', error);
-          alert('Failed to delete employee');
-        }
-      }
-    }
-  };
-
   // CSV Export
   const handleExportCSV = () => {
     const headers = [
@@ -300,44 +284,6 @@ const Employees = () => {
     }
   };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    setSuccessMsg('');
-    setErrorMsg('');
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.position || !formData.address || !formData.postalCode || !formData.city || !formData.country) {
-      setErrorMsg('Please fill in all fields.');
-      return;
-    }
-    try {
-      await apiCall('post', '/employees', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        position: formData.position,
-        address: formData.address,
-        postalCode: formData.postalCode,
-        city: formData.city,
-        country: formData.country
-      });
-      setSuccessMsg('Employee created and credentials sent via email!');
-      setShowForm(false);
-      setFormData({ firstName: '', lastName: '', email: '', phone: '', position: '', address: '', postalCode: '', city: '', country: '' });
-      fetchEmployees();
-    } catch (error) {
-      if (error.response?.data?.message === 'Session expired. Please log in again.') {
-        handleTokenExpiration(navigate, token, email);
-      } else {
-        setErrorMsg(error.response?.data?.message || 'Failed to create employee.');
-      }
-    }
-  };
-
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -346,28 +292,26 @@ const Employees = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Employees</h1>
         <div className="flex items-center gap-2">
-          <label className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 cursor-pointer">
+          <button
+            onClick={() => document.getElementById('csv-upload').click()}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 cursor-pointer"
+          >
             <ArrowUpTrayIcon className="h-5 w-5 mr-2" />
             Import CSV
             <input
+              id="csv-upload"
               type="file"
               accept=".csv"
               onChange={handleImportCSV}
               className="hidden"
             />
-          </label>
+          </button>
           <button
             onClick={handleExportCSV}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
             Export CSV
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <FiPlus /> Add New Employee
           </button>
         </div>
       </div>
@@ -437,143 +381,6 @@ const Employees = () => {
         </div>
       )}
 
-      {/* Modal Form */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add New Employee</h2>
-            <form onSubmit={handleFormSubmit} className="space-y-6">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
-                    <input
-                      type="text"
-                      name="position"
-                      value={formData.position}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Address Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Street Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Postal Code</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={formData.postalCode}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleFormChange}
-                      className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add Employee
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-lg shadow overflow-hidden dark:bg-gray-800">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -586,7 +393,7 @@ const Employees = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Hiring Date</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Documents</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Onboarding Workflow</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300"></th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -647,18 +454,6 @@ const Employees = () => {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => navigate(`/employee/employees/${employee._id}${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`)}
-                      className="text-blue-600 hover:text-blue-900 mr-4 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      <FiEdit2 className="inline-block" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(employee._id)}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      <FiTrash2 className="inline-block" />
-                    </button>
                   </td>
                 </tr>
               ))}

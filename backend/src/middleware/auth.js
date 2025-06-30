@@ -29,6 +29,13 @@ export const requireAuth = (req, res, next) => {
     req.user = decoded.user;
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired. Please log in again.',
+        expired: true,
+        expiredAt: error.expiredAt
+      });
+    }
     res.status(401).json({ message: 'Token is not valid' });
   }
 };
@@ -50,6 +57,13 @@ export const requireRole = (...roles) => {
       req.user = user;
       next();
     } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          message: 'Token has expired. Please log in again.',
+          expired: true,
+          expiredAt: error.expiredAt
+        });
+      }
       res.status(401).json({ message: 'Token is not valid' });
     }
   };
