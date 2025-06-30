@@ -863,7 +863,7 @@ export default function Onboarding() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
+        <h1 className="text-2xl font-semibold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
           Onboarding
         </h1>
         <div className="flex gap-2">
@@ -889,13 +889,13 @@ export default function Onboarding() {
       </div>
       <div className="flex h-[calc(100vh-2rem)] overflow-hidden">
         {/* Left Panel */}
-        <aside className="w-80 bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col">
+        <aside className="w-80 bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-900 flex flex-col">
           {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
+          <div className="flex border-b border-gray-200 dark:border-transparent">
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "candidates"
-                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("candidates")}
@@ -905,7 +905,7 @@ export default function Onboarding() {
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "employees"
-                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("employees")}
@@ -915,7 +915,7 @@ export default function Onboarding() {
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium ${
                 activeTab === "clients"
-                  ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
               onClick={() => setActiveTab("clients")}
@@ -931,7 +931,7 @@ export default function Onboarding() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 dark:backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 dark:backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
             </div>
@@ -953,13 +953,13 @@ export default function Onboarding() {
                   key={item._id}
                   className={`flex items-center gap-3 p-2 rounded cursor-pointer mb-1 transition-colors ${
                     selectedItem?._id === item._id
-                      ? "bg-blue-100 dark:bg-blue-900"
+                      ? "bg-red-100 dark:bg-red-900"
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   onClick={() => handleItemClick(item)}
                 >
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-300 text-sm font-medium">
+                  <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                    <span className="text-red-600 dark:text-red-300 text-sm font-medium">
                       {activeTab === 'clients' 
                         ? item.companyName?.substring(0, 2).toUpperCase()
                         : getInitials(item.firstName, item.lastName)}
@@ -984,13 +984,13 @@ export default function Onboarding() {
           {selectedItem ? (
             <OnboardingDetails item={selectedItem} type={selectedItemType} />
           ) : (
-            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-900">
               {/* Navigation Tabs */}
-              <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <div className="flex border-b border-gray-200 dark:border-transparent">
                 <button
                   className={`flex-1 px-4 py-2 text-sm font-medium ${
                     activeView === "overview"
-                      ? "text-blue-600 border-b-2 border-blue-600"
+                      ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                   onClick={() => setActiveView("overview")}
@@ -1000,7 +1000,7 @@ export default function Onboarding() {
                 <button
                   className={`flex-1 px-4 py-2 text-sm font-medium ${
                     activeView === "form"
-                      ? "text-blue-600 border-b-2 border-blue-600"
+                      ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                   onClick={() => setActiveView("form")}
@@ -1041,8 +1041,8 @@ export default function Onboarding() {
                               }}
                             >
                               <div className="flex-shrink-0">
-                                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'Candidate' ? 'bg-blue-100 dark:bg-blue-900' : activity.type === 'Employee' ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
-                                  <span className={`font-medium ${activity.type === 'Candidate' ? 'text-blue-600 dark:text-blue-400' : activity.type === 'Employee' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{activity.type[0]}</span>
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'Candidate' ? 'bg-red-100 dark:bg-red-900' : activity.type === 'Employee' ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
+                                  <span className={`font-medium ${activity.type === 'Candidate' ? 'text-red-600 dark:text-red-400' : activity.type === 'Employee' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{activity.type[0]}</span>
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
@@ -1113,7 +1113,7 @@ export default function Onboarding() {
                   )}
                   <button
                     type="button"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="gap-2 px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
                     onClick={() => formRef.current && formRef.current.requestSubmit()}
                   >
                     Submit
@@ -1123,40 +1123,40 @@ export default function Onboarding() {
                   <div className="mb-2 font-semibold text-gray-800 dark:text-white">
                     Send this form to:
                   </div>
-                  <div className="flex flex-col md:flex-row gap-2 mb-2">
+                  <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
                     <input
                       type="text"
                       placeholder="Recipient name (optional)"
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
-                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
                     />
                     <input
                       type="email"
                       placeholder="Recipient email"
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
-                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                      className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
                     />
                     <button
                       type="button"
                       onClick={handleAddRecipient}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
                     >
                       Add
                     </button>
                   </div>
-                  <div className="flex flex-col md:flex-row gap-2 mb-2">
+                  <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
                     <textarea
                       placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
                       value={bulkInput}
                       onChange={(e) => setBulkInput(e.target.value)}
-                      className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pt-3"
+                      className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700  pl-3 pt-3"
                     />
                     <button
                       type="button"
                       onClick={handleBulkAdd}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 self-start"
+                      className="px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
                     >
                       Add Bulk
                     </button>
@@ -1186,7 +1186,7 @@ export default function Onboarding() {
                 <form
                   ref={formRef}
                         className={`grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg transition-colors ${
-                          isDraggingOver ? 'bg-blue-50 dark:bg-blue-900 border-2 border-blue-500' : ''
+                          isDraggingOver ? 'bg-red-50 dark:bg-red-900 border-2 border-red-500' : ''
                         }`}
                   onSubmit={handleSubmit}
                 >

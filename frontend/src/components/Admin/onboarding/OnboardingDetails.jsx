@@ -132,7 +132,7 @@ export default function OnboardingDetails({ item, type }) {
           </div>
           <div className="flex flex-col items-end">
             <button
-              className="mb-2 bg-blue-600 text-white rounded px-4 py-1 hover:bg-blue-700 transition"
+              className="mb-2 px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
               onClick={handleViewProfile}
             >
               View Profile

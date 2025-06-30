@@ -86,7 +86,7 @@ export default function Sidebar() {
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           {isMobileMenuOpen ? (
             <XMarkIcon className="h-6 w-6" />
@@ -102,14 +102,14 @@ export default function Sidebar() {
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isSidebarOpen ? 'w-64' : 'w-20'}
-        h-full flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+        h-full flex flex-col bg-gray-50 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-900                     dark:backdrop-blur-sm rounded-lg shadow border 
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-900">
           <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : 'space-x-3'}`}>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 hidden lg:block"
+              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 hidden lg:block"
             >
               <svg
                 className={`w-5 h-5 text-gray-700 dark:text-gray-300 transform transition-transform duration-200 ${
@@ -139,7 +139,7 @@ export default function Sidebar() {
                   onClick={() => handleNavigation(item.href)}
                   className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-400'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                       : 'text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -147,7 +147,7 @@ export default function Sidebar() {
                     <item.icon
                       className={`h-5 w-5 ${
                         isActive
-                          ? 'text-blue-700 dark:text-blue-400'
+                          ? 'text-red-700 dark:text-red-300'
                           : 'text-gray-500 group-hover:text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300'
                       } ${isSidebarOpen ? 'mr-3' : ''}`}
                       aria-hidden="true"
@@ -166,7 +166,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-900">
           <button
             onClick={handleLogout}
             className="group flex items-center w-full px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md"
