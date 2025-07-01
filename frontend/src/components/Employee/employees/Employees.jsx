@@ -149,9 +149,13 @@ const Employees = () => {
               const recipient = form.recipients.find(r => r.email === employee.email);
               if (!recipient) {
                 notStarted++;
-              } else if (recipient.completedAt) {
+              } else if (
+                recipient.completedFields &&
+                Array.isArray(recipient.completedFields) &&
+                recipient.completedFields.length === form.fields.length
+              ) {
                 completed++;
-              } else if (recipient.completedFields) {
+              } else if (recipient.completedFields && recipient.completedFields.length > 0) {
                 inProgress++;
               } else {
                 notStarted++;

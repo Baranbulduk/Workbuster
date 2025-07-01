@@ -32,6 +32,7 @@ import {
   Bars3Icon,
   PlusIcon,
   XCircleIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -82,6 +83,8 @@ export default function Onboarding() {
   const [form, setForm] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [availableForms, setAvailableForms] = useState([]);
+  const [formsLoading, setFormsLoading] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     candidateName: "",
@@ -398,6 +401,36 @@ export default function Onboarding() {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (!token) {
+      const employeeStr = localStorage.getItem('employee');
+      let employeeEmail = null;
+      if (employeeStr) {
+        try {
+          const employeeObj = JSON.parse(employeeStr);
+          employeeEmail = employeeObj.email;
+        } catch (e) {}
+      }
+      if (employeeEmail) {
+        setFormsLoading(true);
+        apiCall('get', `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`)
+          .then(res => {
+            console.log('FORMS RESPONSE:', res);
+            if (res.success) {
+              setAvailableForms(res.forms);
+            } else {
+              setAvailableForms([]);
+            }
+          })
+          .catch(() => setAvailableForms([]))
+          .finally(() => setFormsLoading(false));
+      } else {
+        setAvailableForms([]);
+        setFormsLoading(false);
+      }
+    }
+  }, [token]);
+
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
@@ -637,21 +670,6 @@ export default function Onboarding() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="bg-red-50 dark:bg-red-900 p-6 rounded-lg">
-          <h2 className="text-lg font-medium text-red-800 dark:text-red-200">
-            Error
-          </h2>
-          <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>
-          <p className="mt-4">
-            Please check your link or contact your administrator for assistance.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (
     submissionStatus &&
@@ -673,13 +691,88 @@ export default function Onboarding() {
     );
   }
 
+  if (!token) {
+    if (formsLoading) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-700 dark:text-gray-300">
+              Loading your onboarding forms...
+            </p>
+          </div>
+        </div>
+      );
+    }
+    if (availableForms.length === 0) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="bg-yellow-50 dark:bg-yellow-900 p-6 rounded-lg">
+            <h2 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+              No Onboarding Forms Found
+            </h2>
+            <p className="mt-2 text-yellow-700 dark:text-yellow-300">
+              You do not have any onboarding forms assigned. Please contact your administrator if you believe this is a mistake.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    console.log('Rendering forms list', availableForms);
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Onboarding Forms</h2>
+        <ul className="space-y-4">
+          {availableForms.map(form => {
+            const employeeStr = localStorage.getItem('employee');
+            let employeeEmail = null;
+            if (employeeStr) {
+              try {
+                const employeeObj = JSON.parse(employeeStr);
+                employeeEmail = employeeObj.email;
+              } catch (e) {}
+            }
+            const recipient = form.recipients.find(r => r.email === employeeEmail);
+            let status = 'Not Started';
+            if (recipient?.completedFields && Array.isArray(recipient.completedFields)) {
+              const totalFields = form.fields.length;
+              const filledFields = recipient.completedFields.length;
+              if (filledFields === totalFields) {
+                status = 'Completed';
+              } else if (filledFields > 0) {
+                status = 'In Progress';
+              }
+            } else if (recipient?.completedAt) {
+              // fallback for legacy data
+              status = 'Completed';
+            }
+            return (
+              <li key={form.token} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">{form.title}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Status: <span className={status === 'Completed' ? 'text-green-600' : status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'}>{status}</span></div>
+                </div>
+                <button
+                  className="mt-3 md:mt-0 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => navigate(`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(employeeEmail)}`)}
+                >
+                  Open Form
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Onboarding
-        </h1>
-      </div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Onboarding
+          </h1>
+        </div>
 
       <div className="flex">
         {/* Main Panel */}
@@ -688,9 +781,21 @@ export default function Onboarding() {
             {/* Form Section */}
             <div className="flex-1 p-8 overflow-y-auto transition-all duration-150">
               <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-2">
+              {token && (
+            <button
+              type="button"
+              onClick={() => navigate('/employee/onboarding')}
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Back to forms list"
+            >
+              <ArrowLeftIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+            </button>
+          )}
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {formTitle}
                 </h2>
+                </div>
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
