@@ -14,16 +14,6 @@ const EmployeeLogin = () => {
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email');
 
- /* useEffect(() => {
-    const checkExistingToken = async () => {
-      const { valid } = await verifyAndRefreshToken();
-      if (valid) {
-        navigate('/employee/onboarding');
-      }
-    };
-    checkExistingToken();
-  }, [navigate]);*/
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -55,12 +45,12 @@ const EmployeeLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="h-10 text-center text-3xl font-semibold text-gray-900 dark:text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
             Employee Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Administrators should use the{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/login" className="font-medium text-red-500 hover:text-red-500">
               admin login page
             </Link>
           </p>
@@ -105,7 +95,7 @@ const EmployeeLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center px-4 py-2 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
