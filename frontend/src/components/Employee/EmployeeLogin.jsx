@@ -14,7 +14,7 @@ const EmployeeLogin = () => {
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email');
 
-  useEffect(() => {
+ /* useEffect(() => {
     const checkExistingToken = async () => {
       const { valid } = await verifyAndRefreshToken();
       if (valid) {
@@ -22,7 +22,7 @@ const EmployeeLogin = () => {
       }
     };
     checkExistingToken();
-  }, [navigate]);
+  }, [navigate]);*/
 
   const handleSubmit = async (e) => {
     e.preventDefault();

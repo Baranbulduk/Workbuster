@@ -407,20 +407,55 @@ export default function Onboarding() {
         const { title, fields, recipients } = response.form;
         setFormTitle(title);
 
-        const resetFields = fields.map((field) => ({
-          ...field,
-          value:
-            field.type === "checkbox"
+        // Get existing form data from localStorage if available
+        const existingFormData = localStorage.getItem(`formData_${token}`);
+        const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
+
+        const resetFields = fields.map((field) => {
+          // Check if we have existing data for this field
+          const existingValue = parsedExistingData[field.id];
+          
+          return {
+            ...field,
+            value: existingValue !== undefined 
+              ? existingValue 
+              : field.type === "checkbox"
               ? false
               : field.type === "file"
               ? null
               : field.type === "multiselect"
               ? []
               : "",
-        }));
+          };
+        });
 
         setFields(resetFields);
         setRecipients(recipients);
+        
+        // Calculate completion status after setting fields
+        const totalFields = resetFields.length;
+        const completedFields = resetFields.filter((field) => {
+          if (field.type === "checkbox") return false;
+          if (field.type === "file" || field.type === "image") {
+            // Count as filled if we have a File object OR a filename from localStorage
+            return (field.value && typeof field.value !== 'string') || 
+                   (typeof field.value === 'string' && field.value.trim() !== '');
+          }
+          if (field.type === "multiselect") {
+            return field.value && field.value.length > 0;
+          }
+          if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+            return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+          }
+          return field.value !== "" && field.value !== null && field.value !== undefined;
+        }).length;
+
+        setCompletionStatus({
+          totalFields,
+          completedFields,
+          isComplete: completedFields === totalFields,
+        });
+        
         setLoading(false);
       } else {
         setError("Failed to fetch form data");
@@ -471,13 +506,29 @@ export default function Onboarding() {
         return field;
       });
 
+      // Save form data to localStorage
+      const formDataToSave = {};
+      updatedFields.forEach((field) => {
+        // Don't save File objects to localStorage as they can't be serialized
+        if (field.type === "file" || field.type === "image") {
+          // For files, we'll save the filename if available
+          if (field.value && field.value.name) {
+            formDataToSave[field.id] = field.value.name;
+          }
+        } else {
+          formDataToSave[field.id] = field.value;
+        }
+      });
+      localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+
       // Update completion status
       const totalFields = updatedFields.length;
       const completedFields = updatedFields.filter((field) => {
         if (field.type === "checkbox") return false;
         if (field.type === "file" || field.type === "image") {
-          // Only count as filled if value is a File object (not empty string/null)
-          return field.value && typeof field.value !== 'string';
+          // Count as filled if we have a File object OR a filename from localStorage
+          return (field.value && typeof field.value !== 'string') || 
+                 (typeof field.value === 'string' && field.value.trim() !== '');
         }
         if (field.type === "multiselect") {
           return field.value && field.value.length > 0;
@@ -534,6 +585,8 @@ export default function Onboarding() {
 
         if (completionStatus.isComplete) {
           localStorage.removeItem("employeeToken");
+          // Clear the saved form data when form is completed
+          localStorage.removeItem(`formData_${token}`);
 
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
@@ -751,12 +804,20 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           />
-                          {field.value && (
+                          {field.value && typeof field.value !== 'string' && (
                             <img
                               src={URL.createObjectURL(field.value)}
                               alt="Preview"
                               className="mt-2 h-32 w-32 object-cover rounded"
                             />
+                          )}
+                          {field.value && typeof field.value === 'string' && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <PhotoIcon className="h-5 w-5 text-gray-400" />
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {field.value} (previously uploaded)
+                              </span>
+                            </div>
                           )}
                         </div>
                       )}
@@ -773,11 +834,19 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           />
-                          {field.value && (
+                          {field.value && typeof field.value !== 'string' && (
                             <div className="mt-2 flex items-center gap-2">
                               <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {field.value.name}
+                              </span>
+                            </div>
+                          )}
+                          {field.value && typeof field.value === 'string' && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {field.value} (previously uploaded)
                               </span>
                             </div>
                           )}
@@ -1003,13 +1072,51 @@ export default function Onboarding() {
                                     : (field.value || []).filter(
                                         (v) => v !== option
                                       );
-                                  setFields((prev) =>
-                                    prev.map((f) =>
+                                  setFields((prev) => {
+                                    const updated = prev.map((f) =>
                                       f.id === field.id
                                         ? { ...f, value: newValue }
                                         : f
-                                    )
-                                  );
+                                    );
+                                    
+                                    // Save form data to localStorage
+                                    const formDataToSave = {};
+                                    updated.forEach((field) => {
+                                      if (field.type === "file" || field.type === "image") {
+                                        if (field.value && field.value.name) {
+                                          formDataToSave[field.id] = field.value.name;
+                                        }
+                                      } else {
+                                        formDataToSave[field.id] = field.value;
+                                      }
+                                    });
+                                    localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+                                    
+                                    // Update completion status
+                                    const totalFields = updated.length;
+                                    const completedFields = updated.filter((field) => {
+                                      if (field.type === "checkbox") return false;
+                                      if (field.type === "file" || field.type === "image") {
+                                        return (field.value && typeof field.value !== 'string') || 
+                                               (typeof field.value === 'string' && field.value.trim() !== '');
+                                      }
+                                      if (field.type === "multiselect") {
+                                        return field.value && field.value.length > 0;
+                                      }
+                                      if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+                                        return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+                                      }
+                                      return field.value !== "" && field.value !== null && field.value !== undefined;
+                                    }).length;
+
+                                    setCompletionStatus({
+                                      totalFields,
+                                      completedFields,
+                                      isComplete: completedFields === totalFields,
+                                    });
+                                    
+                                    return updated;
+                                  });
                                 }}
                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                               />
@@ -1052,7 +1159,9 @@ export default function Onboarding() {
                               className="flex items-center gap-2"
                             >
                               <input
-                                type="checkbox"
+                                type="radio"
+                                name={field.id}
+                                value={option}
                                 checked={field.value === option}
                                 onChange={(e) => handleFieldChange(e, field.id)}
                                 className="text-blue-600 focus:ring-blue-500"
@@ -1073,7 +1182,6 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             placeholder="Enter formula..."
                             className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3"
-                            disabled={true}
                           />
                         </div>
                       )}

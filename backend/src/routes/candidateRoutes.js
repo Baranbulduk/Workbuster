@@ -52,35 +52,6 @@ const generatePassword = () => {
   return crypto.randomBytes(8).toString('hex');
 };
 
-// Send welcome email with password
-const sendWelcomeEmail = async (email, firstName, password) => {
-  console.log(process.env.GMAIL_USER);
-  console.log(process.env.GOOGLE_APP_PASSWORD);
-  console.log(email);
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: 'Welcome to Rexett - Your Account Details',
-    html: `
-      <h1>Welcome to Rexett, ${firstName}!</h1>
-      <p>Your account has been created successfully. Here are your login credentials:</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Password:</strong> ${password}</p>
-      <p>Please change your password after your first login.</p>
-      <p>Best regards,<br>The Rexett Team</p>
-    `
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(mailOptions);
-    console.log('Welcome email sent successfully');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-    throw new Error('Failed to send welcome email');
-  }
-};
-
 // Send update notification email
 const sendUpdateNotificationEmail = async (email, firstName) => {
   const mailOptions = {
