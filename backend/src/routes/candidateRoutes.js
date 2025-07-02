@@ -26,15 +26,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Configure nodemailer
-//const transporter = nodemailer.createTransport({
-//  service: 'gmail',
-//  auth: {
-//    user: 'rexettit@gmail.com',
-//    pass: 'prmursgwotixwilt'
-//  }, debug: true});
-
-
-// Configure nodemailer
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
@@ -46,6 +37,30 @@ const transporter = nodemailer.createTransport({
   debug: true
 });
 
+// Move sendWelcomeEmail here so it is defined before use
+const sendWelcomeEmail = async (email, firstName, password) => {
+  const mailOptions = {
+    from: 'rexettit@gmail.com',
+    to: email,
+    subject: 'Welcome to Rexett! Your Account Credentials',
+    html: `
+      <h1>Hello ${firstName}!</h1>
+      <p>Your candidate account has been created in the Rexett system.</p>
+      <p><b>Login Email:</b> ${email}<br/>
+      <b>Password:</b> ${password}</p>
+      <p>Please log in and change your password after your first login.</p>
+      <p>If you did not request this account, please contact our support team immediately.</p>
+      <p>Best regards,<br>The Rexett Team</p>
+    `
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Welcome email sent successfully');
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    throw new Error('Failed to send welcome email');
+  }
+};
 
 // Generate a random password
 const generatePassword = () => {
@@ -180,11 +195,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
 
     // Try to send welcome email, but don't fail if it doesn't work
     try {
-      if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
-        await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
-      } else {
-        console.log('Email credentials not configured. Skipping welcome email.');
-      }
+      await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError);
       // Don't throw the error, just log it
@@ -355,11 +366,7 @@ router.post('/import', async (req, res) => {
         
         // Try to send welcome email
         try {
-          if (process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD) {
-            await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
-          } else {
-            console.log('Email credentials not configured. Skipping welcome email.');
-          }
+          await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError);
           // Don't throw the error, just log it

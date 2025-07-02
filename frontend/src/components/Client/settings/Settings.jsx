@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -38,21 +38,22 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    // Try to load admin info from localStorage
-    const adminStr = localStorage.getItem('admin');
-    if (adminStr) {
+    // Try to load client info from localStorage
+    const clientStr = localStorage.getItem('client');
+    console.log(clientStr);
+    if (clientStr) {
       try {
-        const admin = JSON.parse(adminStr);
+        const client = JSON.parse(clientStr);
         setSettings(prev => ({
           ...prev,
           profile: {
             ...prev.profile,
-            name: `${admin.firstName && admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.name}` || prev.profile.name,
-            email: admin.email || prev.profile.email,
-            role: admin.role || prev.profile.role,
-            department: admin.department || prev.profile.department,
-            phone: admin.phone || prev.profile.phone,
-            location: admin.location || prev.profile.location,
+            name: (client.firstName && client.lastName) ? `${client.firstName} ${client.lastName}` : client.name || prev.profile.name,
+            email: client.email || prev.profile.email,
+            role: client.role || prev.profile.role,
+            department: client.department || prev.profile.department,
+            phone: client.phone || prev.profile.phone,
+            location: client.location || prev.profile.location,
           }
         }));
       } catch (e) {

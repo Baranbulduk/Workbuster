@@ -12,13 +12,13 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Import all components
-import Dashboard from './components/dashboard/Dashboard';
-import Candidates from './components/candidates/Candidates';
-import CandidateDetails from './components/candidates/CandidateDetails';
-import Clients from './components/clients/Clients';
-import ClientsDetails from './components/clients/ClientsDetails';
-import Statistics from './components/statistics/Statistics';
-import Settings from './components/settings/Settings';
+import Dashboard from './components/Admin/dashboard/Dashboard';
+import Candidates from './components/Admin/candidates/Candidates';
+import CandidateDetails from './components/Admin/candidates/CandidateDetails';
+import Clients from './components/Admin/clients/Clients';
+import ClientsDetails from './components/Admin/clients/ClientsDetails';
+import Statistics from './components/Admin/statistics/Statistics';
+import Settings from './components/Admin/settings/Settings';
 import Onboarding from './components/Admin/onboarding/Onboarding';
 import Login from './pages/Login';
 import Register from './pages/Register';

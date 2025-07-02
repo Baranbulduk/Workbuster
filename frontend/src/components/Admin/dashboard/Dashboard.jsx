@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import {
   UserGroupIcon,
@@ -9,7 +9,7 @@ import {
   UserIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
-import axios from '../../utils/axios';
+import axios from '../../../utils/axios';
 import StatCard from './StatCard';
 
 

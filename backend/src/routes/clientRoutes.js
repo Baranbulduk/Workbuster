@@ -1,6 +1,8 @@
 import express from 'express';
 import Client from '../models/Client.js';
 import { transporter } from '../config/email.js';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -82,27 +84,50 @@ const sendDeletionEmail = async (client) => {
   }
 };
 
+// Password generator
+const generatePassword = () => crypto.randomBytes(8).toString('hex');
+
+// Welcome email for clients
+const sendWelcomeEmail = async (client, plainPassword) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: client.email,
+      subject: 'Welcome to Our Platform - Your Login Credentials',
+      html: `
+        <h1>Welcome ${client.contactPerson}!</h1>
+        <p>Your company ${client.companyName} has been registered with us.</p>
+        <p><b>Login Email:</b> ${client.email}<br/>
+        <b>Password:</b> ${plainPassword}</p>
+        <p>Please log in and change your password after your first login.</p>
+        <p>Best regards,<br>Your Team</p>
+      `
+    });
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+  }
+};
+
 // Create a new client
 router.post('/', async (req, res) => {
-  const client = new Client({
-    companyName: req.body.companyName,
-    contactPerson: req.body.contactPerson,
-    email: req.body.email,
-    phone: req.body.phone,
-    address: req.body.address,
-    industry: req.body.industry,
-    companySize: req.body.companySize,
-    website: req.body.website,
-    description: req.body.description,
-    status: req.body.status
-  });
-
   try {
+    const plainPassword = generatePassword();
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const client = new Client({
+      companyName: req.body.companyName,
+      contactPerson: req.body.contactPerson,
+      email: req.body.email,
+      phone: req.body.phone,
+      address: req.body.address,
+      industry: req.body.industry,
+      companySize: req.body.companySize,
+      website: req.body.website,
+      description: req.body.description,
+      status: req.body.status,
+      password: hashedPassword
+    });
     const newClient = await client.save();
-    
-    // Send registration email
-    await sendRegistrationEmail(newClient);
-    
+    await sendWelcomeEmail(newClient, plainPassword);
     res.status(201).json(newClient);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -180,6 +205,8 @@ router.post('/import', async (req, res) => {
           continue;
         }
 
+        const plainPassword = generatePassword();
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
         // Create client object
         const clientData = {
           companyName: item.companyName || item.company || '',
@@ -197,18 +224,19 @@ router.post('/import', async (req, res) => {
           companySize: item.companySize || item.size || '1-10',
           website: item.website || '',
           description: item.description || item.notes || '',
-          status: item.status || 'active'
+          status: item.status || 'active',
+          password: hashedPassword
         };
         
         // Create and save the client
         const client = new Client(clientData);
         const newClient = await client.save();
         
-        // Try to send registration email
+        // Try to send welcome email
         try {
-          await sendRegistrationEmail(newClient);
+          await sendWelcomeEmail(newClient, plainPassword);
         } catch (emailError) {
-          console.error('Error sending registration email:', emailError);
+          console.error('Error sending welcome email:', emailError);
           // Don't throw the error, just log it
         }
         

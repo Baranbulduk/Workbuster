@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../../utils/axios';
+import axios from '../../../utils/axios';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 ChartJS.register(
   CategoryScale,

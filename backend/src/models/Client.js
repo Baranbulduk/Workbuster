@@ -40,6 +40,10 @@ const clientSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive'],
     default: 'active'
+  },
+  password: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true

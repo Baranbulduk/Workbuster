@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, ClockIcon, XCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import axios from '../../../utils/axios';
 
 function formatDate(dateStr) {
   if (!dateStr) return 'N/A';
