@@ -3,7 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import employeeRoutes from './routes/employees.js';
-import onboardingRoutes from './routes/onboardingRoutes.js';
+import onboarding from './routes/onboarding.js';
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/employees', employeeRoutes);
-app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/onboarding', onboarding);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

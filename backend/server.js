@@ -28,24 +28,24 @@ app.get('/', (req, res) => {
 });
 
 // Import routes
-import candidateRoutes from './src/routes/candidateRoutes.js';
-import clientRoutes from './src/routes/clientRoutes.js';
-import statisticsRoutes from './src/routes/statisticsRoutes.js';
-import settingsRoutes from './src/routes/settingsRoutes.js';
-import onboardingRoutes from './src/routes/onboardingRoutes.js';
-import noteRoutes from './src/routes/noteRoutes.js';
-import logRoutes from './src/routes/logRoutes.js';
+import candidate from './src/routes/candidate.js';
+import client from './src/routes/client.js';
+import statistics from './src/routes/statistics.js';
+import settings from './src/routes/settings.js';
+import onboarding from './src/routes/onboarding.js';
+import note from './src/routes/note.js';
+import log from './src/routes/log.js';
 import authRoutes from './src/routes/auth.js';
 import employeeRoutes from './src/routes/employees.js';
 
 // Routes
-app.use('/api/candidates', candidateRoutes);
-app.use('/api/clients', clientRoutes);
-app.use('/api/statistics', statisticsRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/notes', noteRoutes);
-app.use('/api/logs', logRoutes);
+app.use('/api/candidates', candidate);
+app.use('/api/clients', client);
+app.use('/api/statistics', statistics);
+app.use('/api/settings', settings);
+app.use('/api/onboarding', onboarding);
+app.use('/api/notes', note);
+app.use('/api/logs', log);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 
