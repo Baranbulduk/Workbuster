@@ -48,12 +48,6 @@ const CandidateLogin = () => {
           <h2 className="h-10 text-center text-3xl font-semibold text-gray-900 dark:text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
             Candidate Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Administrators should use the{' '}
-            <Link to="/login" className="font-medium text-red-500 hover:text-red-500">
-              admin login page
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">

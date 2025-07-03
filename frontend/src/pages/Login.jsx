@@ -60,12 +60,6 @@ const Login = () => {
               create a new admin account
             </Link>
           </p>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Employees should use the{' '}
-            <Link to="/employee/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              employee login page
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
