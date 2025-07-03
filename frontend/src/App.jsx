@@ -204,7 +204,12 @@ const EmployeeLayout = () => {
             </div>
             {!isSidebarOpen && (
               <div className="absolute left-20 bg-red-800 dark:bg-red-900 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                Logout
+                <ArrowRightOnRectangleIcon
+                  className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
+                    isSidebarOpen ? "mr-3" : ""
+                  }`}
+                  aria-hidden="true"
+                />
               </div>
             )}
           </button>
@@ -349,11 +354,22 @@ const CandidateLayout = () => {
                 !isSidebarOpen ? "w-full justify-center" : ""
               }`}
             >
-              Logout
+              <ArrowRightOnRectangleIcon
+                className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
+                  isSidebarOpen ? "mr-3" : ""
+                }`}
+                aria-hidden="true"
+              />
+              {isSidebarOpen && "Logout"}
             </div>
             {!isSidebarOpen && (
               <div className="absolute left-20 bg-red-800 dark:bg-red-900 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                Logout
+                <ArrowRightOnRectangleIcon
+                  className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
+                    isSidebarOpen ? "mr-3" : ""
+                  }`}
+                  aria-hidden="true"
+                />
               </div>
             )}
           </button>
@@ -496,11 +512,22 @@ const ClientLayout = () => {
                 !isSidebarOpen ? "w-full justify-center" : ""
               }`}
             >
-              Logout
+              <ArrowRightOnRectangleIcon
+                className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
+                  isSidebarOpen ? "mr-3" : ""
+                }`}
+                aria-hidden="true"
+              />
+              {isSidebarOpen && "Logout"}
             </div>
             {!isSidebarOpen && (
               <div className="absolute left-20 bg-red-800 dark:bg-red-900 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                Logout
+                <ArrowRightOnRectangleIcon
+                  className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
+                    isSidebarOpen ? "mr-3" : ""
+                  }`}
+                  aria-hidden="true"
+                />
               </div>
             )}
           </button>
