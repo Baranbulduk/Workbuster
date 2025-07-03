@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { candidateApiCall } from '../../../utils/tokenManager';
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
@@ -23,9 +23,9 @@ const CandidateDetails = () => {
   useEffect(() => {
     const fetchCandidate = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/candidates/${id}`);
+        const response = await candidateApiCall('get', `/candidates/${id}`);
         console.log('Candidate data received:', response.data);
-        setCandidate(response.data);
+        setCandidate(response);
       } catch (err) {
         console.error('Error fetching candidate:', err);
         setError('Failed to fetch candidate details.');

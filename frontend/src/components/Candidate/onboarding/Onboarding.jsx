@@ -34,9 +34,8 @@ import {
   XCircleIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import axios from "axios";
+import { verifyAndRefreshCandidateToken, candidateApiCall, handleCandidateTokenExpiration } from '../../../utils/tokenManager';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -374,18 +373,16 @@ export default function Onboarding() {
     0;
 
   useEffect(() => {
-    const employeeToken = localStorage.getItem("employeeToken");
-    if (!employeeToken) {
-      navigate(
-        `/employee/login?token=${token}${email ? `&email=${email}` : ""}`
-      );
+    const candidateToken = localStorage.getItem("candidateToken");
+    if (!candidateToken) {
+      handleCandidateTokenExpiration(navigate, token, email);
       return;
     }
 
     const verifyToken = async () => {
-      const { valid, expired } = await verifyAndRefreshToken();
+      const { valid, expired } = await verifyAndRefreshCandidateToken();
       if (!valid) {
-        handleTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       }
     };
 
@@ -403,17 +400,17 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!token) {
-      const employeeStr = localStorage.getItem('employee');
-      let employeeEmail = null;
-      if (employeeStr) {
+      const candidateStr = localStorage.getItem('candidate');
+      let candidateEmail = null;
+      if (candidateStr) {
         try {
-          const employeeObj = JSON.parse(employeeStr);
-          employeeEmail = employeeObj.email;
+          const candidateObj = JSON.parse(candidateStr);
+          candidateEmail = candidateObj.email;
         } catch (e) {}
       }
-      if (employeeEmail) {
+      if (candidateEmail) {
         setFormsLoading(true);
-        apiCall('get', `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`)
+        candidateApiCall('get', `/onboarding/my-forms/${encodeURIComponent(candidateEmail)}`)
           .then(res => {
             console.log('FORMS RESPONSE:', res);
             if (res.success) {
@@ -434,7 +431,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await apiCall('get', `/onboarding/form/${token}`);
+      const response = await candidateApiCall('get', `/onboarding/form/${token}`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -497,7 +494,7 @@ export default function Onboarding() {
     } catch (error) {
       console.error("Error fetching form:", error);
       if (error.response?.data?.message === 'Session expired. Please log in again.') {
-        handleTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       } else {
         setError("Error loading the form. Please try again or contact support.");
       }
@@ -603,7 +600,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await apiCall('post', `/onboarding/submit/${token}`, {
+      const response = await candidateApiCall('post', `/onboarding/submit/${token}`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });
@@ -617,7 +614,7 @@ export default function Onboarding() {
         });
 
         if (completionStatus.isComplete) {
-          localStorage.removeItem("employeeToken");
+          localStorage.removeItem("candidateToken");
           // Clear the saved form data when form is completed
           localStorage.removeItem(`formData_${token}`);
 
@@ -644,7 +641,7 @@ export default function Onboarding() {
     } catch (error) {
       console.error("Error submitting form:", error);
       if (error.response?.data?.message === 'Session expired. Please log in again.') {
-        handleTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
           success: false,
@@ -724,15 +721,15 @@ export default function Onboarding() {
         <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Onboarding Forms</h2>
         <ul className="space-y-4">
           {availableForms.map(form => {
-            const employeeStr = localStorage.getItem('employee');
-            let employeeEmail = null;
-            if (employeeStr) {
+            const candidateStr = localStorage.getItem('candidate');
+            let candidateEmail = null;
+            if (candidateStr) {
               try {
-                const employeeObj = JSON.parse(employeeStr);
-                employeeEmail = employeeObj.email;
+                const candidateObj = JSON.parse(candidateStr);
+                candidateEmail = candidateObj.email;
               } catch (e) {}
             }
-            const recipient = form.recipients.find(r => r.email === employeeEmail);
+            const recipient = form.recipients.find(r => r.email === candidateEmail);
             let status = 'Not Started';
             if (recipient?.completedFields && Array.isArray(recipient.completedFields)) {
               const totalFields = form.fields.length;
@@ -754,7 +751,7 @@ export default function Onboarding() {
                 </div>
                 <button
                   className="mt-3 md:mt-0 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onClick={() => navigate(`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(employeeEmail)}`)}
+                  onClick={() => navigate(`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(candidateEmail)}`)}
                 >
                   Open Form
                 </button>

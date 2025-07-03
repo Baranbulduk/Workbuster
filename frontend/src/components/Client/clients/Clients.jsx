@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { verifyAndRefreshClientToken, clientApiCall, handleClientTokenExpiration } from '../../../utils/tokenManager';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 const Clients = () => {
   const { isDarkMode } = useTheme();
@@ -45,27 +44,21 @@ const Clients = () => {
       try {
         const clientToken = localStorage.getItem('clientToken');
         if (!clientToken) {
-          handleTokenExpiration(navigate, token, email);
+          handleClientTokenExpiration(navigate, token, email);
           return;
         }
-
-        // Verify token with backend
-        const response = await axios.post('http://localhost:5000/api/clients/verify-token', {
-          token: clientToken
-        });
-
-        if (response.data.valid) {
-          // If token was refreshed, update it
-          if (response.data.tokenRefreshed) {
-            localStorage.setItem('clientToken', response.data.token);
+        const { valid, expired, token: refreshedToken } = await verifyAndRefreshClientToken();
+        if (valid) {
+          if (refreshedToken && refreshedToken !== clientToken) {
+            localStorage.setItem('clientToken', refreshedToken);
           }
           fetchClients();
         } else {
-          handleTokenExpiration(navigate, token, email);
+          handleClientTokenExpiration(navigate, token, email);
         }
       } catch (error) {
         console.error('Token verification error:', error);
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       }
     };
 
@@ -78,24 +71,12 @@ const Clients = () => {
       const clientToken = localStorage.getItem('clientToken');
       if (!clientToken) {
         console.log('No client token found in localStorage');
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
         return;
       }
-
-      // Log token for debugging
-      console.log("Fetching with token:", clientToken);
-
-      const response = await axios.get('http://localhost:5000/api/clients/colleagues', {
-        headers: {
-          'Authorization': `Bearer ${clientToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Response from server:', response.data);
-      
+      const response = await clientApiCall('get', '/clients/colleagues');
       // Process client data
-      const processedClients = response.data.map(client => ({
+      const processedClients = response.map(client => ({
         ...client,
         name: client.name || `${client.firstName} ${client.lastName}`,
         fullName: client.fullName || `${client.firstName} ${client.lastName}`,
@@ -105,9 +86,7 @@ const Clients = () => {
         position: client.position || 'Employee',
         hireDate: client.hireDate || client.createdAt
       }));
-      
       setClients(processedClients);
-      
       setError(null);
     } catch (error) {
       console.error('Error fetching clients:', error);
@@ -117,7 +96,7 @@ const Clients = () => {
       }
       if (error.response?.status === 401 || error.response?.status === 403) {
         console.log('Token expired or invalid, redirecting to login');
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       } else {
         setError('Failed to fetch clients');
       }
@@ -137,10 +116,10 @@ const Clients = () => {
       // Get progress for each client
       const progressPromises = clients.map(async (client) => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${client.email}`);
+          const response = await clientApiCall('get', `/onboarding/forms-by-recipient/${client.email}`);
           
-          if (response.data.success) {
-            const formsData = response.data.forms;
+          if (response.success) {
+            const formsData = response.forms;
             let notStarted = 0;
             let inProgress = 0;
             let completed = 0;

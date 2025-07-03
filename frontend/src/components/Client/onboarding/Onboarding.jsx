@@ -34,9 +34,8 @@ import {
   XCircleIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import axios from "axios";
+import { verifyAndRefreshClientToken, clientApiCall, handleClientTokenExpiration } from '../../../utils/tokenManager';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -376,16 +375,14 @@ export default function Onboarding() {
   useEffect(() => {
     const clientToken = localStorage.getItem("clientToken");
     if (!clientToken) {
-      navigate(
-        `/client/login?token=${token}${email ? `&email=${email}` : ""}`
-      );
+      handleClientTokenExpiration(navigate, token, email);
       return;
     }
 
     const verifyToken = async () => {
-      const { valid, expired } = await verifyAndRefreshToken();
+      const { valid, expired } = await verifyAndRefreshClientToken();
       if (!valid) {
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       }
     };
 
@@ -413,7 +410,7 @@ export default function Onboarding() {
       }
       if (clientEmail) {
         setFormsLoading(true);
-        apiCall('get', `/onboarding/my-forms/${encodeURIComponent(clientEmail)}`)
+        clientApiCall('get', `/onboarding/my-forms/${encodeURIComponent(clientEmail)}`)
           .then(res => {
             console.log('FORMS RESPONSE:', res);
             if (res.success) {
@@ -434,7 +431,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await apiCall('get', `/onboarding/form/${token}`);
+      const response = await clientApiCall('get', `/onboarding/form/${token}`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -497,7 +494,7 @@ export default function Onboarding() {
     } catch (error) {
       console.error("Error fetching form:", error);
       if (error.response?.data?.message === 'Session expired. Please log in again.') {
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       } else {
         setError("Error loading the form. Please try again or contact support.");
       }
@@ -603,7 +600,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await apiCall('post', `/onboarding/submit/${token}`, {
+      const response = await clientApiCall('post', `/onboarding/submit/${token}`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });
@@ -644,7 +641,7 @@ export default function Onboarding() {
     } catch (error) {
       console.error("Error submitting form:", error);
       if (error.response?.data?.message === 'Session expired. Please log in again.') {
-        handleTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
           success: false,

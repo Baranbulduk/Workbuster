@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { clientApiCall } from '../../../utils/tokenManager';
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
@@ -23,9 +23,9 @@ const ClientDetails = () => {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/clients/${id}`);
+        const response = await clientApiCall('get', `/clients/${id}`);
         console.log('Client data received:', response.data);
-        setClient(response.data);
+        setClient(response);
       } catch (err) {
         console.error('Error fetching client details:', err);
         setError('Failed to fetch client details.');

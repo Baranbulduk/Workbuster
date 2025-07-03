@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { verifyAndRefreshCandidateToken, candidateApiCall, handleCandidateTokenExpiration } from '../../../utils/tokenManager';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
 
 const Candidates = () => {
   const { isDarkMode } = useTheme();
@@ -43,29 +42,23 @@ const Candidates = () => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const employeeToken = localStorage.getItem('employeeToken');
-        if (!employeeToken) {
-          handleTokenExpiration(navigate, token, email);
+        const candidateToken = localStorage.getItem('candidateToken');
+        if (!candidateToken) {
+          handleCandidateTokenExpiration(navigate, token, email);
           return;
         }
-
-        // Verify token with backend
-        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
-          token: employeeToken
-        });
-
-        if (response.data.valid) {
-          // If token was refreshed, update it
-          if (response.data.tokenRefreshed) {
-            localStorage.setItem('employeeToken', response.data.token);
+        const { valid, expired, token: refreshedToken } = await verifyAndRefreshCandidateToken();
+        if (valid) {
+          if (refreshedToken && refreshedToken !== candidateToken) {
+            localStorage.setItem('candidateToken', refreshedToken);
           }
           fetchCandidates();
         } else {
-          handleTokenExpiration(navigate, token, email);
+          handleCandidateTokenExpiration(navigate, token, email);
         }
       } catch (error) {
         console.error('Token verification error:', error);
-        handleTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       }
     };
 
@@ -75,27 +68,15 @@ const Candidates = () => {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const employeeToken = localStorage.getItem('employeeToken');
-      if (!employeeToken) {
-        console.log('No employee token found in localStorage');
-        handleTokenExpiration(navigate, token, email);
+      const candidateToken = localStorage.getItem('candidateToken');
+      if (!candidateToken) {
+        console.log('No candidate token found in localStorage');
+        handleCandidateTokenExpiration(navigate, token, email);
         return;
       }
-
-      // Log token for debugging
-      console.log("Fetching with token:", employeeToken);
-
-      const response = await axios.get('http://localhost:5000/api/candidates/colleagues', {
-        headers: {
-          'Authorization': `Bearer ${employeeToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Response from server:', response.data);
-      
+      const response = await candidateApiCall('get', '/candidates/colleagues');
       // Process candidate data
-      const processedCandidates = response.data.map(candidate => ({
+      const processedCandidates = response.map(candidate => ({
         ...candidate,
         name: candidate.name || `${candidate.firstName} ${candidate.lastName}`,
         fullName: candidate.fullName || `${candidate.firstName} ${candidate.lastName}`,
@@ -105,9 +86,7 @@ const Candidates = () => {
         position: candidate.position || 'Employee',
         hireDate: candidate.hireDate || candidate.createdAt
       }));
-      
       setCandidates(processedCandidates);
-      
       setError(null);
     } catch (error) {
       console.error('Error fetching candidates:', error);
@@ -117,7 +96,7 @@ const Candidates = () => {
       }
       if (error.response?.status === 401 || error.response?.status === 403) {
         console.log('Token expired or invalid, redirecting to login');
-        handleTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       } else {
         setError('Failed to fetch candidates');
       }
@@ -137,10 +116,10 @@ const Candidates = () => {
       // Get progress for each candidate
       const progressPromises = candidates.map(async (candidate) => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${candidate.email}`);
+          const response = await candidateApiCall('get', `/onboarding/forms-by-recipient/${candidate.email}`);
           
-          if (response.data.success) {
-            const formsData = response.data.forms;
+          if (response.success) {
+            const formsData = response.forms;
             let notStarted = 0;
             let inProgress = 0;
             let completed = 0;
