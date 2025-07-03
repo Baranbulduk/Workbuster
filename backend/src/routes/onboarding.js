@@ -298,18 +298,26 @@ router.post('/send-form', async (req, res) => {
     // Send email to each recipient and collect results
     const results = [];
     for (const recipient of recipients) {
-      // Create the employee dashboard onboarding URL with the form token and recipient email
-      const employeeOnboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
-      
-      // Create email content with link to employee dashboard
+      console.log('Processing recipient:', recipient);
+      // Create the correct onboarding URL based on recipient type
+      let onboardingUrl;
+      if (recipient.type === 'candidate') {
+        onboardingUrl = `http://localhost:5173/candidate/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      } else if (recipient.type === 'client') {
+        onboardingUrl = `http://localhost:5173/client/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      } else {
+        onboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      }
+
+      // Create email content with link to onboarding dashboard
       const emailContent = `
         <h1>${formTitle}</h1>
         <p>You have been requested to complete an onboarding form. Please click the link below to access the form:</p>
         <div style="margin: 20px 0;">
-          <a href="${employeeOnboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
+          <a href="${onboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
         </div>
         <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
-        <p>${employeeOnboardingUrl}</p>
+        <p>${onboardingUrl}</p>
       `;
       
       const mailOptions = {

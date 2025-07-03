@@ -47,14 +47,14 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'employee'],
-    default: 'employee'
+    enum: ['admin', 'employee', 'client', 'candidate'],
+    default: 'admin'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: function() {
-      return this.role === 'employee';
+      return this.role === 'employee' || this.role === 'candidate' || this.role === 'client';
     }
   },
   hireDate: {

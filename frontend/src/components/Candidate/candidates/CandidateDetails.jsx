@@ -24,8 +24,8 @@ const CandidateDetails = () => {
     const fetchCandidate = async () => {
       try {
         const response = await candidateApiCall('get', `/candidates/${id}`);
-        console.log('Candidate data received:', response.data);
         setCandidate(response);
+        console.log('Candidate data received:', response);
       } catch (err) {
         console.error('Error fetching candidate:', err);
         setError('Failed to fetch candidate details.');

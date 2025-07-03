@@ -3,6 +3,7 @@ import Client from '../models/Client.js';
 import { transporter } from '../config/email.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -261,6 +262,62 @@ router.post('/import', async (req, res) => {
       success: false,
       message: error.message 
     });
+  }
+});
+
+// Client login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const client = await Client.findOne({ email });
+    if (!client) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    const isMatch = await bcrypt.compare(password, client.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    // Create JWT token
+    const payload = { user: { id: client._id, role: 'client' } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
+    const clientData = client.toObject();
+    delete clientData.password;
+    res.json({ success: true, token, client: clientData });
+  } catch (error) {
+    res.status(500).json({ message: 'Error during login' });
+  }
+});
+
+// Client verify-token
+router.post('/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(401).json({ valid: false, message: 'No token provided' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const client = await Client.findById(decoded.user.id);
+    if (!client) return res.status(401).json({ valid: false, message: 'Invalid token' });
+    // Optionally refresh token if expiring soon
+    const tokenExp = decoded.exp * 1000;
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    let newToken = null;
+    if (tokenExp - now < oneDay) {
+      const payload = { user: { id: client._id, role: 'client' } };
+      newToken = jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
+    }
+    res.status(200).json({
+      valid: true,
+      token: newToken || token,
+      client: {
+        id: client._id,
+        companyName: client.companyName,
+        contactPerson: client.contactPerson,
+        email: client.email,
+        // ...add other fields as needed
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ valid: false, message: 'Error verifying token' });
   }
 });
 

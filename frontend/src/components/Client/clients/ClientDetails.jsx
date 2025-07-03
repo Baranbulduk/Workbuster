@@ -24,8 +24,8 @@ const ClientDetails = () => {
     const fetchClient = async () => {
       try {
         const response = await clientApiCall('get', `/clients/${id}`);
-        console.log('Client data received:', response.data);
         setClient(response);
+        console.log('Client data received:', response);
       } catch (err) {
         console.error('Error fetching client details:', err);
         setError('Failed to fetch client details.');

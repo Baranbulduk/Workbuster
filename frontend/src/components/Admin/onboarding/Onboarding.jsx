@@ -370,6 +370,14 @@ export default function Onboarding() {
   });
   const [recentActivity, setRecentActivity] = useState([]);
 
+  const recipientOptions = [
+    ...candidates.map(c => ({ type: 'Candidate', name: `${c.firstName} ${c.lastName}`, email: c.email })),
+    ...employees.map(e => ({ type: 'Employee', name: `${e.firstName} ${e.lastName}`, email: e.email })),
+    ...clients.map(cl => ({ type: 'Client', name: cl.companyName, email: cl.email })),
+  ];
+
+  const [recipientType, setRecipientType] = useState('candidate');
+
   useEffect(() => {
     fetchData();
     if (activeView === "overview") {
@@ -378,6 +386,22 @@ export default function Onboarding() {
       const interval = setInterval(fetchRecentActivity, 15000);
       return () => clearInterval(interval);
     }
+    // Fetch all lists for the dropdown
+    const fetchAll = async () => {
+      try {
+        const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
+          axios.get("/candidates"),
+          axios.get("/employees"),
+          axios.get("/clients"),
+        ]);
+        setCandidates(candidatesRes.data);
+        setEmployees(employeesRes.data);
+        setClients(clientsRes.data);
+      } catch (error) {
+        console.error("Error fetching user lists for dropdown:", error);
+      }
+    };
+    fetchAll();
   }, [activeTab, activeView]);
 
   const fetchData = async () => {
@@ -717,10 +741,11 @@ export default function Onboarding() {
     }
     setRecipients((prev) => [
       ...prev,
-      { name: recipientName, email: recipientEmail },
+      { name: recipientName, email: recipientEmail, type: recipientType },
     ]);
     setRecipientName("");
     setRecipientEmail("");
+    setRecipientType('candidate');
   };
 
   const handleBulkAdd = () => {
@@ -733,7 +758,7 @@ export default function Onboarding() {
       .map((line) => {
         const [name, email] = line.includes("@") ? [null, line] : [line, null];
         return emailRegex.test(email || name)
-          ? { name: name || "", email: email || name }
+          ? { name: name || "", email: email || name, type: recipientType }
           : null;
       })
       .filter(Boolean);
@@ -1159,6 +1184,15 @@ export default function Onboarding() {
                           Send this form to:
                         </div>
                         <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
+                          <select
+                            value={recipientType}
+                            onChange={e => setRecipientType(e.target.value)}
+                            className="mt-1 block w-full md:w-1/6 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
+                          >
+                            <option value="candidate">Candidate</option>
+                            <option value="employee">Employee</option>
+                            <option value="client">Client</option>
+                          </select>
                           <input
                             type="text"
                             placeholder="Recipient name (optional)"
@@ -1170,12 +1204,18 @@ export default function Onboarding() {
                             type="email"
                             placeholder="Recipient email"
                             value={recipientEmail}
-                            onChange={(e) => setRecipientEmail(e.target.value)}
+                            onChange={e => setRecipientEmail(e.target.value)}
                             className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
+                            autoComplete="off"
                           />
                           <button
                             type="button"
-                            onClick={handleAddRecipient}
+                            onClick={() => {
+                              setRecipients(prev => [...prev, { name: recipientName, email: recipientEmail, type: recipientType }]);
+                              setRecipientName('');
+                              setRecipientEmail('');
+                              setRecipientType('candidate');
+                            }}
                             className="gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
                           >
                             Add

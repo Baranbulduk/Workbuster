@@ -75,6 +75,7 @@ const Clients = () => {
         return;
       }
       const response = await clientApiCall('get', '/clients/colleagues');
+      console.log('Clients data received:', response);
       // Process client data
       const processedClients = response.map(client => ({
         ...client,

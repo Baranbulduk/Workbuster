@@ -782,7 +782,7 @@ export default function Onboarding() {
               {token && (
             <button
               type="button"
-              onClick={() => navigate('/employee/onboarding')}
+              onClick={() => navigate('/candidate/onboarding')}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Back to forms list"
             >

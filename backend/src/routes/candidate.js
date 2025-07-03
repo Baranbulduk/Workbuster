@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -112,6 +113,16 @@ const sendDeletionNotificationEmail = async (email, firstName) => {
     throw new Error('Failed to send deletion notification email');
   }
 };
+
+// Get all colleagues (all candidates)
+router.get('/colleagues', async (req, res) => {
+  try {
+    const candidates = await Candidate.find();
+    res.json(candidates);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Get all candidates
 router.get('/', async (req, res) => {
@@ -393,6 +404,62 @@ router.post('/import', async (req, res) => {
       success: false,
       message: error.message 
     });
+  }
+});
+
+// Candidate login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const candidate = await Candidate.findOne({ email });
+    if (!candidate) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    const isMatch = await bcrypt.compare(password, candidate.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    // Create JWT token
+    const payload = { user: { id: candidate._id, role: 'candidate' } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
+    const candidateData = candidate.toObject();
+    delete candidateData.password;
+    res.json({ success: true, token, candidate: candidateData });
+  } catch (error) {
+    res.status(500).json({ message: 'Error during login' });
+  }
+});
+
+// Candidate verify-token
+router.post('/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(401).json({ valid: false, message: 'No token provided' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const candidate = await Candidate.findById(decoded.user.id);
+    if (!candidate) return res.status(401).json({ valid: false, message: 'Invalid token' });
+    // Optionally refresh token if expiring soon
+    const tokenExp = decoded.exp * 1000;
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    let newToken = null;
+    if (tokenExp - now < oneDay) {
+      const payload = { user: { id: candidate._id, role: 'candidate' } };
+      newToken = jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
+    }
+    res.status(200).json({
+      valid: true,
+      token: newToken || token,
+      candidate: {
+        id: candidate._id,
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        // ...add other fields as needed
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ valid: false, message: 'Error verifying token' });
   }
 });
 
