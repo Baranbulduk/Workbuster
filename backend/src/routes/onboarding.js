@@ -314,7 +314,7 @@ router.post('/send-form', async (req, res) => {
         <h1>${formTitle}</h1>
         <p>You have been requested to complete an onboarding form. Please click the link below to access the form:</p>
         <div style="margin: 20px 0;">
-          <a href="${onboardingUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
+          <a href="${onboardingUrl}" style="background: linear-gradient(to right, #FFD08E, #FF6868, #926FF3); color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Complete Onboarding Form</a>
         </div>
         <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
         <p>${onboardingUrl}</p>
@@ -552,7 +552,7 @@ router.post('/send-form/:employeeId', async (req, res) => {
         <h1>Welcome to Rexett!</h1>
         <p>Please complete your onboarding form by clicking the button below:</p>
         <a href="http://localhost:5173/employee/onboarding?token=${token}&email=${encodeURIComponent(employee.email)}" 
-           style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">
+           style="display: inline-block; padding: 10px 20px; background: linear-gradient(to right, #FFD08E, #FF6868, #926FF3); color: white; text-decoration: none; border-radius: 5px;">
           Complete Onboarding Form
         </a>
       `
