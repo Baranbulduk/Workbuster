@@ -308,7 +308,7 @@ router.post('/send-form', async (req, res) => {
       } else {
         onboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
       }
-
+      
       // Create email content with link to onboarding dashboard
       const emailContent = `
         <h1>${formTitle}</h1>

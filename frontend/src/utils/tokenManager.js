@@ -130,7 +130,7 @@ export const handleTokenExpiration = (navigate, token, email) => {
 export const handleAdminTokenExpiration = (navigate) => {
   localStorage.removeItem('adminToken');
   navigate('/login');
-};
+}; 
 
 // Function to verify and refresh candidate token if needed
 export const verifyAndRefreshCandidateToken = async () => {
