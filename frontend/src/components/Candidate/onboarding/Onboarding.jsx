@@ -437,25 +437,46 @@ export default function Onboarding() {
         const { title, fields, recipients } = response.form;
         setFormTitle(title);
 
+        // Get the current user's email from URL params
+        const currentUserEmail = searchParams.get("email");
+        
+        // Find the current user's recipient data
+        const currentRecipient = recipients.find(r => r.email === currentUserEmail);
+        
         // Get existing form data from localStorage if available
         const existingFormData = localStorage.getItem(`formData_${token}`);
         const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
 
         const resetFields = fields.map((field) => {
-          // Check if we have existing data for this field
-          const existingValue = parsedExistingData[field.id];
+          // First check if we have completedFields from the backend for this recipient
+          let fieldValue = undefined;
           
-          return {
-            ...field,
-            value: existingValue !== undefined 
-              ? existingValue 
-              : field.type === "checkbox"
+          if (currentRecipient && currentRecipient.completedFields) {
+            const completedField = currentRecipient.completedFields.find(cf => cf.id === field.id);
+            if (completedField) {
+              fieldValue = completedField.value;
+            }
+          }
+          
+          // If no backend data, check localStorage
+          if (fieldValue === undefined) {
+            fieldValue = parsedExistingData[field.id];
+          }
+          
+          // If still no data, use default value
+          if (fieldValue === undefined) {
+            fieldValue = field.type === "checkbox"
               ? false
               : field.type === "file"
               ? null
               : field.type === "multiselect"
               ? []
-              : "",
+              : "";
+          }
+          
+          return {
+            ...field,
+            value: fieldValue,
           };
         });
 
