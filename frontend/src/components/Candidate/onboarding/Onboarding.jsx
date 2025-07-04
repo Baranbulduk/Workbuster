@@ -617,6 +617,9 @@ export default function Onboarding() {
           // Clear the saved form data when form is completed
           localStorage.removeItem(`formData_${token}`);
 
+          // Clear URL parameters to show forms list when navigating back
+          navigate('/candidate/onboarding', { replace: true });
+
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
             ...field,

@@ -614,6 +614,9 @@ export default function Onboarding() {
         });
 
         if (completionStatus.isComplete) {
+          // Clear URL parameters to show forms list when navigating back
+          navigate('/client/onboarding', { replace: true });
+
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
             ...field,
