@@ -617,7 +617,6 @@ export default function Onboarding() {
         });
 
         if (completionStatus.isComplete) {
-          localStorage.removeItem("employeeToken");
           // Clear the saved form data when form is completed
           localStorage.removeItem(`formData_${token}`);
 

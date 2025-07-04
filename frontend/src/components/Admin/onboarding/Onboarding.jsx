@@ -35,6 +35,7 @@ import {
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import axios from "../../../utils/axios";
+import { adminApiCall, handleAdminTokenExpiration } from "../../../utils/tokenManager";
 import { useNavigate } from "react-router-dom";
 import OnboardingDetails from "./OnboardingDetails";
 
@@ -390,13 +391,13 @@ export default function Onboarding() {
     const fetchAll = async () => {
       try {
         const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
-          axios.get("/candidates"),
-          axios.get("/employees"),
-          axios.get("/clients"),
+          adminApiCall("GET", "/candidates"),
+          adminApiCall("GET", "/employees"),
+          adminApiCall("GET", "/clients"),
         ]);
-        setCandidates(candidatesRes.data);
-        setEmployees(employeesRes.data);
-        setClients(clientsRes.data);
+        setCandidates(candidatesRes);
+        setEmployees(employeesRes);
+        setClients(clientsRes);
       } catch (error) {
         console.error("Error fetching user lists for dropdown:", error);
       }
@@ -408,27 +409,30 @@ export default function Onboarding() {
     try {
       switch (activeTab) {
         case "candidates":
-          const candidatesResponse = await axios.get("/candidates");
-          setCandidates(candidatesResponse.data);
+          const candidatesResponse = await adminApiCall("GET", "/candidates");
+          setCandidates(candidatesResponse);
           break;
         case "employees":
-          const employeesResponse = await axios.get("/employees");
-          setEmployees(employeesResponse.data);
+          const employeesResponse = await adminApiCall("GET", "/employees");
+          setEmployees(employeesResponse);
           break;
         case "clients":
-          const clientsResponse = await axios.get("/clients");
-          setClients(clientsResponse.data);
+          const clientsResponse = await adminApiCall("GET", "/clients");
+          setClients(clientsResponse);
           break;
       }
     } catch (error) {
       console.error(`Error fetching ${activeTab}:`, error);
+      if (error.response?.data?.message === "Session expired. Please log in again.") {
+        handleAdminTokenExpiration(navigate);
+      }
     }
   };
 
   const fetchStats = async () => {
     try {
-      const candidatesResponse = await axios.get("/candidates");
-      const totalCandidates = candidatesResponse.data.length;
+      const candidatesResponse = await adminApiCall("GET", "/candidates");
+      const totalCandidates = candidatesResponse.length;
       const newMessages = 3;
 
       setStats({
@@ -436,20 +440,23 @@ export default function Onboarding() {
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
+      if (error.response?.data?.message === "Session expired. Please log in again.") {
+        handleAdminTokenExpiration(navigate);
+      }
     }
   };
 
   const fetchRecentActivity = async () => {
     try {
       const [candidatesRes, employeesRes, clientsRes] = await Promise.all([
-        axios.get("/candidates"),
-        axios.get("/employees"),
-        axios.get("/clients"),
+        adminApiCall("GET", "/candidates"),
+        adminApiCall("GET", "/employees"),
+        adminApiCall("GET", "/clients"),
       ]);
 
       const activities = [];
 
-      candidatesRes.data.forEach((c) =>
+      candidatesRes.forEach((c) =>
         activities.push({
           type: "Candidate",
           name: `${c.firstName} ${c.lastName}`,
@@ -459,7 +466,7 @@ export default function Onboarding() {
         })
       );
 
-      employeesRes.data.forEach((e) =>
+      employeesRes.forEach((e) =>
         activities.push({
           type: "Employee",
           name: `${e.firstName} ${e.lastName}`,
@@ -469,7 +476,7 @@ export default function Onboarding() {
         })
       );
 
-      clientsRes.data.forEach((cl) =>
+      clientsRes.forEach((cl) =>
         activities.push({
           type: "Client",
           name: cl.companyName,
@@ -484,9 +491,8 @@ export default function Onboarding() {
       setRecentActivity(activities.slice(0, 8)); // Show only the 8 most recent
     } catch (error) {
       console.error("Error fetching recent activity:", error);
-      if (error.response?.status === 401) {
-        // Handle unauthorized error - redirect to login
-        window.location.href = "/login";
+      if (error.response?.data?.message === "Session expired. Please log in again.") {
+        handleAdminTokenExpiration(navigate);
       }
     }
   };
@@ -525,11 +531,11 @@ export default function Onboarding() {
             };
           });
 
-          const response = await axios.post(`/${activeTab}/import`, {
+          const response = await adminApiCall("POST", `/${activeTab}/import`, {
             items: newItems,
           });
 
-          if (response.data.success) {
+          if (response.success) {
             // Update only the relevant state based on activeTab
             switch (activeTab) {
               case "candidates":
@@ -552,10 +558,10 @@ export default function Onboarding() {
                 break;
             }
             alert(
-              `Successfully imported ${response.data.results.success.length} ${activeTab}. ${response.data.results.failed.length} failed.`
+              `Successfully imported ${response.results.success.length} ${activeTab}. ${response.results.failed.length} failed.`
             );
           } else {
-            throw new Error(response.data.message || "Failed to import items");
+            throw new Error(response.message || "Failed to import items");
           }
         } catch (error) {
           console.error("Error importing items:", error);
@@ -796,9 +802,9 @@ export default function Onboarding() {
       };
 
       // Send to backend
-      const response = await axios.post("/onboarding/send-form", payload);
+      const response = await adminApiCall("POST", "/onboarding/send-form", payload);
 
-      if (response.data.success) {
+      if (response.success) {
         // Reset form state
         const resetFields = fields.map((field) => ({
           ...field,
@@ -817,7 +823,7 @@ export default function Onboarding() {
         setFieldOptions({});
         alert("Form submitted successfully!");
       } else {
-        throw new Error(response.data.message || "Failed to submit form");
+        throw new Error(response.message || "Failed to submit form");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -827,7 +833,7 @@ export default function Onboarding() {
 
   const handleExportCSV = async () => {
     try {
-      const response = await axios.get("/onboarding/export/csv", {
+      const response = await adminApiCall("GET", "/onboarding/export/csv", {
         responseType: "blob",
       });
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import { useTheme } from '../../../context/ThemeContext';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter } from 'react-icons/fi';
 import { ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
@@ -48,16 +47,10 @@ const Employees = () => {
           handleTokenExpiration(navigate, token, email);
           return;
         }
-
-        // Verify token with backend
-        const response = await axios.post('http://localhost:5000/api/employees/verify-token', {
-          token: employeeToken
-        });
-
-        if (response.data.valid) {
-          // If token was refreshed, update it
-          if (response.data.tokenRefreshed) {
-            localStorage.setItem('employeeToken', response.data.token);
+        const { valid, expired, token: refreshedToken } = await verifyAndRefreshToken();
+        if (valid) {
+          if (refreshedToken && refreshedToken !== employeeToken) {
+            localStorage.setItem('employeeToken', refreshedToken);
           }
           fetchEmployees();
         } else {
@@ -82,20 +75,12 @@ const Employees = () => {
         return;
       }
 
-      // Log token for debugging
-      console.log("Fetching with token:", employeeToken);
-
-      const response = await axios.get('http://localhost:5000/api/employees/colleagues', {
-        headers: {
-          'Authorization': `Bearer ${employeeToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await apiCall('GET', '/employees/colleagues');
       
-      console.log('Response from server:', response.data);
+      console.log('Response from server:', response);
       
       // Process employee data
-      const processedEmployees = response.data.map(employee => ({
+      const processedEmployees = response.map(employee => ({
         ...employee,
         name: employee.name || `${employee.firstName} ${employee.lastName}`,
         fullName: employee.fullName || `${employee.firstName} ${employee.lastName}`,
@@ -137,10 +122,10 @@ const Employees = () => {
       // Get progress for each employee
       const progressPromises = employees.map(async (employee) => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/onboarding/forms-by-recipient/${employee.email}`);
+          const response = await apiCall('GET', `/onboarding/forms-by-recipient/${employee.email}`);
           
-          if (response.data.success) {
-            const formsData = response.data.forms;
+          if (response.success) {
+            const formsData = response.forms;
             let notStarted = 0;
             let inProgress = 0;
             let completed = 0;
