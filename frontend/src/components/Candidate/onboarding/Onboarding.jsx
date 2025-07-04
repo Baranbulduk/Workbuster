@@ -433,85 +433,81 @@ export default function Onboarding() {
       setLoading(true);
       const response = await candidateApiCall('get', `/onboarding/form/${token}`);
 
-      if (response.success) {
-        const { title, fields, recipients } = response.form;
-        setFormTitle(title);
+      // The backend returns the form data directly, not wrapped in success/form
+      const { title, fields, recipients } = response;
+      setFormTitle(title);
 
-        // Get the current user's email from URL params
-        const currentUserEmail = searchParams.get("email");
-        
-        // Find the current user's recipient data
-        const currentRecipient = recipients.find(r => r.email === currentUserEmail);
-        
-        // Get existing form data from localStorage if available
-        const existingFormData = localStorage.getItem(`formData_${token}`);
-        const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
+      // Get the current user's email from URL params
+      const currentUserEmail = searchParams.get("email");
+      
+      // Find the current user's recipient data
+      const currentRecipient = recipients.find(r => r.email === currentUserEmail);
+      
+      // Get existing form data from localStorage if available
+      const existingFormData = localStorage.getItem(`candidate_formData_${token}`);
+      const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
 
-        const resetFields = fields.map((field) => {
-          // First check if we have completedFields from the backend for this recipient
-          let fieldValue = undefined;
-          
-          if (currentRecipient && currentRecipient.completedFields) {
-            const completedField = currentRecipient.completedFields.find(cf => cf.id === field.id);
-            if (completedField) {
-              fieldValue = completedField.value;
-            }
-          }
-          
-          // If no backend data, check localStorage
-          if (fieldValue === undefined) {
-            fieldValue = parsedExistingData[field.id];
-          }
-          
-          // If still no data, use default value
-          if (fieldValue === undefined) {
-            fieldValue = field.type === "checkbox"
-              ? false
-              : field.type === "file"
-              ? null
-              : field.type === "multiselect"
-              ? []
-              : "";
-          }
-          
-          return {
-            ...field,
-            value: fieldValue,
-          };
-        });
-
-        setFields(resetFields);
-        setRecipients(recipients);
+      const resetFields = fields.map((field) => {
+        // First check if we have completedFields from the backend for this recipient
+        let fieldValue = undefined;
         
-        // Calculate completion status after setting fields
-        const totalFields = resetFields.length;
-        const completedFields = resetFields.filter((field) => {
-          if (field.type === "checkbox") return false;
-          if (field.type === "file" || field.type === "image") {
-            // Count as filled if we have a File object OR a filename from localStorage
-            return (field.value && typeof field.value !== 'string') || 
-                   (typeof field.value === 'string' && field.value.trim() !== '');
+        if (currentRecipient && currentRecipient.completedFields) {
+          const completedField = currentRecipient.completedFields.find(cf => cf.id === field.id);
+          if (completedField) {
+            fieldValue = completedField.value;
           }
-          if (field.type === "multiselect") {
-            return field.value && field.value.length > 0;
-          }
-          if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
-            return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
-          }
-          return field.value !== "" && field.value !== null && field.value !== undefined;
-        }).length;
-
-        setCompletionStatus({
-          totalFields,
-          completedFields,
-          isComplete: completedFields === totalFields,
-        });
+        }
         
-        setLoading(false);
-      } else {
-        setError("Failed to fetch form data");
-        setLoading(false);
-      }
+        // If no backend data, check localStorage
+        if (fieldValue === undefined) {
+          fieldValue = parsedExistingData[field.id];
+        }
+        
+        // If still no data, use default value
+        if (fieldValue === undefined) {
+          fieldValue = field.type === "checkbox"
+            ? false
+            : field.type === "file"
+            ? null
+            : field.type === "multiselect"
+            ? []
+            : "";
+        }
+        
+        return {
+          ...field,
+          value: fieldValue,
+        };
+      });
+
+      setFields(resetFields);
+      setRecipients(recipients);
+      
+      // Calculate completion status after setting fields
+      const totalFields = resetFields.length;
+      const completedFields = resetFields.filter((field) => {
+        if (field.type === "checkbox") return false;
+        if (field.type === "file" || field.type === "image") {
+          // Count as filled if we have a File object OR a filename from localStorage
+          return (field.value && typeof field.value !== 'string') || 
+                 (typeof field.value === 'string' && field.value.trim() !== '');
+        }
+        if (field.type === "multiselect") {
+          return field.value && field.value.length > 0;
+        }
+        if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+          return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+        }
+        return field.value !== "" && field.value !== null && field.value !== undefined;
+      }).length;
+
+      setCompletionStatus({
+        totalFields,
+        completedFields,
+        isComplete: completedFields === totalFields,
+      });
+      
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching form:", error);
       if (error.response?.data?.message === 'Session expired. Please log in again.') {
@@ -570,7 +566,7 @@ export default function Onboarding() {
           formDataToSave[field.id] = field.value;
         }
       });
-      localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+      localStorage.setItem(`candidate_formData_${token}`, JSON.stringify(formDataToSave));
 
       // Update completion status
       const totalFields = updatedFields.length;
@@ -636,7 +632,7 @@ export default function Onboarding() {
 
         if (completionStatus.isComplete) {
           // Clear the saved form data when form is completed
-          localStorage.removeItem(`formData_${token}`);
+          localStorage.removeItem(`candidate_formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
           navigate('/candidate/onboarding', { replace: true });
@@ -1215,7 +1211,7 @@ export default function Onboarding() {
                                         formDataToSave[field.id] = field.value;
                                       }
                                     });
-                                    localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+                                    localStorage.setItem(`candidate_formData_${token}`, JSON.stringify(formDataToSave));
                                     
                                     // Update completion status
                                     const totalFields = updated.length;

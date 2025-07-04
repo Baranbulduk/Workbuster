@@ -447,7 +447,7 @@ export default function Onboarding() {
         const currentRecipient = recipients.find(r => r.email === currentUserEmail);
         
         // Get existing form data from localStorage if available
-        const existingFormData = localStorage.getItem(`formData_${token}`);
+        const existingFormData = localStorage.getItem(`employee_formData_${token}`);
         const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
 
         const resetFields = fields.map((field) => {
@@ -573,7 +573,7 @@ export default function Onboarding() {
           formDataToSave[field.id] = field.value;
         }
       });
-      localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+      localStorage.setItem(`employee_formData_${token}`, JSON.stringify(formDataToSave));
 
       // Update completion status
       const totalFields = updatedFields.length;
@@ -639,7 +639,7 @@ export default function Onboarding() {
 
         if (completionStatus.isComplete) {
           // Clear the saved form data when form is completed
-          localStorage.removeItem(`formData_${token}`);
+          localStorage.removeItem(`employee_formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
           navigate('/employee/onboarding', { replace: true });
@@ -1218,7 +1218,7 @@ export default function Onboarding() {
                                         formDataToSave[field.id] = field.value;
                                       }
                                     });
-                                    localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
+                                    localStorage.setItem(`employee_formData_${token}`, JSON.stringify(formDataToSave));
                                     
                                     // Update completion status
                                     const totalFields = updated.length;
