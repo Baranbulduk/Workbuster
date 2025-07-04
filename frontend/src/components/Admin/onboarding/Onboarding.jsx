@@ -719,7 +719,7 @@ export default function Onboarding() {
           ? {
               ...f,
               value:
-                type === "checkbox"
+                (type === "checkbox" || f.type === "decision")
                   ? checked
                   : type === "file"
                   ? files[0]
@@ -803,7 +803,7 @@ export default function Onboarding() {
         const resetFields = fields.map((field) => ({
           ...field,
           value:
-            field.type === "checkbox"
+            (field.type === "checkbox" || field.type === "decision")
               ? false
               : field.type === "file"
               ? null
@@ -1397,22 +1397,18 @@ export default function Onboarding() {
                                 />
                               )}
 
-                              {field.type === "checkbox" && (
+                              {(field.type === "checkbox" || field.type === "decision") && (!fieldOptions[field.id] || fieldOptions[field.id].length === 0) && (
                                 <div className="mt-1">
                                   <label className="inline-flex items-center">
                                     <input
                                       type="checkbox"
                                       checked={field.value}
-                                      onChange={(e) =>
-                                        handleFieldChange(e, field.id)
-                                      }
+                                      onChange={(e) => handleFieldChange(e, field.id)}
                                       className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                       disabled
                                     />
                                     <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                      {field.id === "offerAccepted"
-                                        ? "I accept the offer"
-                                        : field.label}
+                                      {field.label}
                                     </span>
                                   </label>
                                 </div>
