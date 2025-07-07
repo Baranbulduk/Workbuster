@@ -205,7 +205,7 @@ const EmployeeDetails = () => {
   if (!employee) return <div className="p-6">Employee not found.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       {/* Header */}
       <div className="mb-8">
         <button
@@ -232,14 +232,16 @@ const EmployeeDetails = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleUpdate}
-              className="flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm sm:text-base"
+              className="flex items-center gap-2 py-1 pl-1 pr-4  text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
-              <PencilSquareIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <div className="bg-white rounded-3xl p-2 text-black">
+                <PencilSquareIcon className="h-5 w-5" />
+              </div>
               Update
             </button>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center px-3 sm:px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm sm:text-base"
+              className="flex items-center px-3 sm:px-4 py-2 font-medium bg-red-600 text-white rounded-3xl hover:bg-red-700 text-sm sm:text-base"
             >
               <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Delete
@@ -487,13 +489,13 @@ const EmployeeDetails = () => {
                     <button
                       type="button"
                       onClick={() => setShowUpdateForm(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="px-4 py-2 border border-gray-300 rounded-3xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors-"
                     >
                       Update Employee
                     </button>

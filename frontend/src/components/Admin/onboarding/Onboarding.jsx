@@ -895,21 +895,22 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
+    <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
           Onboarding
         </h1>
         <div className="flex gap-2">
           <button
-            className="flex items-center gap-2 pl-4 pr-1 py-1 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
+            className="flex items-center gap-2 pl-1 pr-4 py-1 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
             type="button"
             onClick={() => document.getElementById("csv-upload").click()}
           >
-            Import CSV
+        
             <div className="bg-white rounded-3xl p-2 text-black">
               <ArrowUpTrayIcon className="h-5 w-5" />
             </div>
+            Import CSV
             <input
               id="csv-upload"
               type="file"

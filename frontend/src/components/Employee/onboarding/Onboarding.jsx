@@ -747,8 +747,8 @@ export default function Onboarding() {
     }
     console.log('Rendering forms list', availableForms);
     return (
-      <div className="w-full mx-auto px-4 sm:px-6 py-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Onboarding Forms</h2>
+      <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">Your Onboarding Forms</h1>
         <ul className="space-y-4">
           {availableForms.map(form => {
             const employeeStr = localStorage.getItem('employee');
@@ -797,7 +797,7 @@ export default function Onboarding() {
                   <div className="text-sm text-gray-600 dark:text-gray-300">Status: <span className={status === 'Completed' ? 'text-green-600' : status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'}>{status}</span></div>
                 </div>
                 <button
-                  className="mt-3 md:mt-0 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
                   onClick={() => navigate(`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(employeeEmail)}`)}
                 >
                   Open Form
@@ -843,7 +843,7 @@ export default function Onboarding() {
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
                     onClick={() =>
                       formRef.current && formRef.current.requestSubmit()
                     }

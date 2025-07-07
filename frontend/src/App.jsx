@@ -104,7 +104,7 @@ const EmployeeLayout = () => {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <svg
                 className={`w-5 h-5 text-gray-700 dark:text-gray-300 transform transition-transform duration-200 ${
@@ -144,7 +144,7 @@ const EmployeeLayout = () => {
                   to={item.href}
                   className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-400"
+                      ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
                       : "text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
                 >
@@ -156,7 +156,7 @@ const EmployeeLayout = () => {
                     <item.icon
                       className={`h-5 w-5 ${
                         isActive
-                          ? "text-blue-700 dark:text-blue-400"
+                          ? "text-red-700 dark:text-red-300"
                           : "text-gray-500 group-hover:text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                       } ${isSidebarOpen ? "mr-3" : ""}`}
                       aria-hidden="true"

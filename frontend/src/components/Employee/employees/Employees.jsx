@@ -279,13 +279,15 @@ const Employees = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Employees</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">Employees</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => document.getElementById('csv-upload').click()}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 cursor-pointer"
+            className="inline-flex items-center gap-2 py-1 pl-1 pr-4  text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
           >
-            <ArrowUpTrayIcon className="h-5 w-5 mr-2" />
+            <div className="bg-white rounded-3xl p-2 text-black">
+              <ArrowUpTrayIcon className="h-5 w-5" />
+            </div>
             Import CSV
             <input
               id="csv-upload"
@@ -297,9 +299,11 @@ const Employees = () => {
           </button>
           <button
             onClick={handleExportCSV}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-2 py-1 pl-1 pr-4  text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
           >
-            <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+            <div className="bg-white rounded-3xl p-2 text-black">
+              <ArrowDownTrayIcon className="h-5 w-5" />
+            </div>
             Export CSV
           </button>
         </div>

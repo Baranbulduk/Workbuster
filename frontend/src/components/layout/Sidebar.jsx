@@ -102,10 +102,10 @@ export default function Sidebar() {
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isSidebarOpen ? 'w-64' : 'w-20'}
-        h-full flex flex-col bg-gray-50 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-900                     dark:backdrop-blur-sm rounded-lg shadow border 
+        h-full flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : 'space-x-3'}`}>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -166,7 +166,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-900">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleLogout}
             className="group flex items-center w-full px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md"

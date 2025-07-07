@@ -80,7 +80,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen w-full dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Settings</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">Settings</h1>
 
         {/* Profile Settings */}
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
@@ -153,7 +153,7 @@ export default function Settings() {
           <div className="mt-6 flex justify-end">
             <button
               onClick={() => handleSaveSettings('profile')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800s"
             >
               Save Profile
             </button>
@@ -208,7 +208,7 @@ export default function Settings() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
                 >
                   Update Password
                 </button>
@@ -240,7 +240,7 @@ export default function Settings() {
           <div className="mt-6 flex justify-end">
             <button
               onClick={() => handleSaveSettings('notifications')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
             >
               Save Notifications
             </button>
@@ -334,7 +334,7 @@ export default function Settings() {
           <div className="mt-6 flex justify-end">
             <button
               onClick={() => handleSaveSettings('preferences')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
             >
               Save Preferences
             </button>
@@ -413,7 +413,7 @@ export default function Settings() {
           <div className="mt-6 flex justify-end">
             <button
               onClick={() => handleSaveSettings('security')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
             >
               Save Security Settings
             </button>
