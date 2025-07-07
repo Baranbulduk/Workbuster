@@ -447,7 +447,7 @@ export default function Onboarding() {
         const currentRecipient = recipients.find(r => r.email === currentUserEmail);
         
         // Get existing form data from localStorage if available
-        const existingFormData = localStorage.getItem(`employee_formData_${token}`);
+        const existingFormData = localStorage.getItem(`formData_${token}`);
         const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
 
         const resetFields = fields.map((field) => {
@@ -489,7 +489,9 @@ export default function Onboarding() {
         // Calculate completion status after setting fields
         const totalFields = resetFields.length;
         const completedFields = resetFields.filter((field) => {
-          if (field.type === "checkbox") return false;
+          if (field.type === "checkbox") {
+            return field.value === true;
+          }
           if (field.type === "file" || field.type === "image") {
             // Count as filled if we have a File object OR a filename from localStorage
             return (field.value && typeof field.value !== 'string') || 
@@ -573,12 +575,14 @@ export default function Onboarding() {
           formDataToSave[field.id] = field.value;
         }
       });
-      localStorage.setItem(`employee_formData_${token}`, JSON.stringify(formDataToSave));
+      localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
 
       // Update completion status
       const totalFields = updatedFields.length;
       const completedFields = updatedFields.filter((field) => {
-        if (field.type === "checkbox") return false;
+        if (field.type === "checkbox") {
+          return field.value === true;
+        }
         if (field.type === "file" || field.type === "image") {
           // Count as filled if we have a File object OR a filename from localStorage
           return (field.value && typeof field.value !== 'string') || 
@@ -639,7 +643,7 @@ export default function Onboarding() {
 
         if (completionStatus.isComplete) {
           // Clear the saved form data when form is completed
-          localStorage.removeItem(`employee_formData_${token}`);
+          localStorage.removeItem(`formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
           navigate('/employee/onboarding', { replace: true });
@@ -743,7 +747,7 @@ export default function Onboarding() {
     }
     console.log('Rendering forms list', availableForms);
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="w-full mx-auto px-4 sm:px-6 py-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Onboarding Forms</h2>
         <ul className="space-y-4">
           {availableForms.map(form => {
@@ -1218,12 +1222,14 @@ export default function Onboarding() {
                                         formDataToSave[field.id] = field.value;
                                       }
                                     });
-                                    localStorage.setItem(`employee_formData_${token}`, JSON.stringify(formDataToSave));
+                                    localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
                                     
                                     // Update completion status
                                     const totalFields = updated.length;
                                     const completedFields = updated.filter((field) => {
-                                      if (field.type === "checkbox") return false;
+                                      if (field.type === "checkbox") {
+                                        return field.value === true;
+                                      }
                                       if (field.type === "file" || field.type === "image") {
                                         return (field.value && typeof field.value !== 'string') || 
                                                (typeof field.value === 'string' && field.value.trim() !== '');

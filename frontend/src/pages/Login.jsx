@@ -21,28 +21,32 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+    console.log('Login form submitted');
+
     try {
+      console.log('About to send login request');
       const response = await axios.post('/auth/login', formData);
+      console.log('Login response:', response);
+
       const { token, role, adminId, admin } = response.data;
-      
-      // Only allow admin login
+      console.log('Login data:', { token, role, adminId, admin });
+
       if (role !== 'admin') {
         setError('This login page is for administrators only. Please use the employee login page.');
         return;
       }
-      
-      // Store the token, email, admin ID, and admin profile in localStorage
-      localStorage.setItem('token', token);
+
+      localStorage.setItem('adminToken', token);
       localStorage.setItem('userEmail', formData.email);
       localStorage.setItem('adminId', adminId);
       if (admin) {
         localStorage.setItem('admin', JSON.stringify(admin));
       }
-      
-      // Navigate to dashboard
+
+      console.log('Navigating to dashboard');
       navigate('/dashboard');
     } catch (error) {
+      console.log('Login error:', error);
       setError(error.response?.data?.message || 'An error occurred during login');
     }
   };
@@ -98,6 +102,7 @@ const Login = () => {
           <div>
             <button
               type="submit"
+              onClick={() => console.log('Button clicked')}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Sign in as Admin

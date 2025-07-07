@@ -10,7 +10,7 @@ instance.interceptors.request.use(
   (config) => {
     // Get admin ID and token from localStorage
     const adminId = localStorage.getItem('adminId');
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('adminToken');
     
     // If token exists, add it to the request headers
     if (token) {
@@ -60,7 +60,7 @@ instance.interceptors.response.use(
         }
       } catch (refreshError) {
         // If refresh fails, redirect to login
-        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
         localStorage.removeItem('adminId');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('admin');
@@ -73,7 +73,7 @@ instance.interceptors.response.use(
 
     // If it's a token expiration error, handle it specifically
     if (error.response?.data?.expired) {
-      localStorage.removeItem('token');
+      localStorage.removeItem('adminToken');
       localStorage.removeItem('adminId');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('admin');
