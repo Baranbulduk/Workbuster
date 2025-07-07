@@ -361,7 +361,6 @@ export default function Onboarding() {
     "Zambia",
     "Zimbabwe",
   ];
-  const formRef = useRef(null);
 
   const [stats, setStats] = useState({
     totalCandidates: 0,
@@ -1179,9 +1178,7 @@ export default function Onboarding() {
                         <button
                           type="button"
                           className="gap-2 px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
-                          onClick={() =>
-                            formRef.current && formRef.current.requestSubmit()
-                          }
+                          onClick={handleSubmit}
                         >
                           Submit
                         </button>
@@ -1266,13 +1263,15 @@ export default function Onboarding() {
                         )}
                       </div>
                       <form
-                        ref={formRef}
                         className={`grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg transition-colors ${
                           isDraggingOver
                             ? "bg-red-50 dark:bg-red-900 border-2 border-red-500"
                             : ""
                         }`}
-                        onSubmit={handleSubmit}
+                        onSubmit={(e) => {
+                          e.preventDefault(); // Prevent default form submission
+                          handleSubmit(e);
+                        }}
                       >
                         {fields.map((field, idx) => (
                           <div
@@ -1468,6 +1467,7 @@ export default function Onboarding() {
                                           className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
+                                          type="button"
                                           onClick={() =>
                                             handleAddOption(field.id)
                                           }
@@ -1486,6 +1486,7 @@ export default function Onboarding() {
                                             >
                                               {option}
                                               <button
+                                                type="button"
                                                 onClick={() =>
                                                   handleRemoveOption(
                                                     field.id,
@@ -1501,6 +1502,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleSaveOptions(field.id)
                                         }
@@ -1531,6 +1533,7 @@ export default function Onboarding() {
                                         )}
                                       </select>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleEditOptions(field.id)
                                         }
@@ -1656,6 +1659,7 @@ export default function Onboarding() {
                                           }}
                                         />
                                         <button
+                                          type="button"
                                           onClick={() =>
                                             handleAddOption(field.id)
                                           }
@@ -1688,6 +1692,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleSaveOptions(field.id)
                                         }
@@ -1744,6 +1749,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleEditOptions(field.id)
                                         }
@@ -1810,6 +1816,7 @@ export default function Onboarding() {
                                           className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
+                                          type="button"
                                           onClick={() =>
                                             handleAddOption(field.id)
                                           }
@@ -1842,6 +1849,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleSaveOptions(field.id)
                                         }
@@ -1876,6 +1884,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleEditOptions(field.id)
                                         }
@@ -1903,6 +1912,7 @@ export default function Onboarding() {
                                           className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
+                                          type="button"
                                           onClick={() =>
                                             handleAddOption(field.id)
                                           }
@@ -1935,6 +1945,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleSaveOptions(field.id)
                                         }
@@ -1967,6 +1978,7 @@ export default function Onboarding() {
                                         )}
                                       </div>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleEditOptions(field.id)
                                         }
