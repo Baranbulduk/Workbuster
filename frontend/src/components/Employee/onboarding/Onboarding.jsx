@@ -763,7 +763,24 @@ export default function Onboarding() {
             let status = 'Not Started';
             if (recipient?.completedFields && Array.isArray(recipient.completedFields)) {
               const totalFields = form.fields.length;
-              const filledFields = recipient.completedFields.length;
+              // Use the same logic as the form progress calculation
+              const filledFields = recipient.completedFields.filter((field) => {
+                if (field.type === "checkbox") {
+                  return field.value === true;
+                }
+                if (field.type === "file" || field.type === "image") {
+                  return (field.value && typeof field.value !== 'string') || 
+                         (typeof field.value === 'string' && field.value.trim() !== '');
+                }
+                if (field.type === "multiselect") {
+                  return field.value && field.value.length > 0;
+                }
+                if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+                  return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+                }
+                return field.value !== "" && field.value !== null && field.value !== undefined;
+              }).length;
+              
               if (filledFields === totalFields) {
                 status = 'Completed';
               } else if (filledFields > 0) {

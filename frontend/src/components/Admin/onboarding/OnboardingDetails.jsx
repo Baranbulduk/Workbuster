@@ -70,12 +70,22 @@ export default function OnboardingDetails({ item, type }) {
       if (!recipient) return;
       
       const totalQuestions = form.fields.length;
-      const answeredQuestions = recipient.completedFields?.filter(field => 
-        field.value !== undefined && 
-        field.value !== null && 
-        field.value !== '' &&
-        !(Array.isArray(field.value) && field.value.length === 0)
-      ).length || 0;
+      const answeredQuestions = recipient.completedFields?.filter(field => {
+        if (field.type === "checkbox") {
+          return field.value === true;
+        }
+        if (field.type === "file" || field.type === "image") {
+          return (field.value && typeof field.value !== 'string') || 
+                 (typeof field.value === 'string' && field.value.trim() !== '');
+        }
+        if (field.type === "multiselect") {
+          return field.value && field.value.length > 0;
+        }
+        if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+          return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+        }
+        return field.value !== "" && field.value !== null && field.value !== undefined;
+      }).length || 0;
       
       if (answeredQuestions === 0) {
         notStarted++;
@@ -202,12 +212,22 @@ export default function OnboardingDetails({ item, type }) {
               let statusColor = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
               
               const totalQuestions = form.fields.length;
-              const answeredQuestions = recipient?.completedFields?.filter(field => 
-                field.value !== undefined && 
-                field.value !== null && 
-                field.value !== '' &&
-                !(Array.isArray(field.value) && field.value.length === 0)
-              ).length || 0;
+              const answeredQuestions = recipient?.completedFields?.filter(field => {
+                if (field.type === "checkbox") {
+                  return field.value === true;
+                }
+                if (field.type === "file" || field.type === "image") {
+                  return (field.value && typeof field.value !== 'string') || 
+                         (typeof field.value === 'string' && field.value.trim() !== '');
+                }
+                if (field.type === "multiselect") {
+                  return field.value && field.value.length > 0;
+                }
+                if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+                  return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+                }
+                return field.value !== "" && field.value !== null && field.value !== undefined;
+              }).length || 0;
               
               if (recipient && recipient.completedFields) {
                 if (answeredQuestions === totalQuestions) {

@@ -70,12 +70,33 @@ const Employees = () => {
                 notStarted++;
               } else if (
                 recipient.completedFields &&
-                Array.isArray(recipient.completedFields) &&
-                recipient.completedFields.length === form.fields.length
+                Array.isArray(recipient.completedFields)
               ) {
-                completed++;
-              } else if (recipient.completedFields && recipient.completedFields.length > 0) {
-                inProgress++;
+                // Use the same logic as the form progress calculation
+                const validCompletedFields = recipient.completedFields.filter((field) => {
+                  if (field.type === "checkbox") {
+                    return field.value === true;
+                  }
+                  if (field.type === "file" || field.type === "image") {
+                    return (field.value && typeof field.value !== 'string') || 
+                           (typeof field.value === 'string' && field.value.trim() !== '');
+                  }
+                  if (field.type === "multiselect") {
+                    return field.value && field.value.length > 0;
+                  }
+                  if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
+                    return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+                  }
+                  return field.value !== "" && field.value !== null && field.value !== undefined;
+                });
+                
+                if (validCompletedFields.length === form.fields.length) {
+                  completed++;
+                } else if (validCompletedFields.length > 0) {
+                  inProgress++;
+                } else {
+                  notStarted++;
+                }
               } else {
                 notStarted++;
               }
