@@ -801,15 +801,17 @@ const Employees = () => {
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleUpdate(employee)}
-                      className="text-blue-600 hover:text-blue-900 mr-4 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 mr-2"
                     >
-                      <FiEdit2 className="inline-block" />
+                      <FiEdit2 className="inline-block h-4 w-4 mr-1" />
+                      Update
                     </button>
                     <button
                       onClick={() => handleDelete(employee._id)}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
-                      <FiTrash2 className="inline-block" />
+                      <FiTrash2 className="inline-block h-4 w-4 mr-1" />
+                      Delete
                     </button>
                   </td>
                 </tr>

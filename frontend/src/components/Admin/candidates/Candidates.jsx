@@ -53,6 +53,7 @@ export default function RegisterCandidate() {
   const fetchCandidates = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/candidates");
+      console.log('Fetched candidates:', response.data);
       setCandidates(response.data);
     } catch (error) {
       console.error("Error fetching candidates:", error);
@@ -70,7 +71,7 @@ export default function RegisterCandidate() {
   const filteredCandidates = candidates.filter((candidate) => {
     return (
       (!filters.position ||
-        candidate.position
+        candidate.currentRole
           .toLowerCase()
           .includes(filters.position.toLowerCase())) &&
       (!filters.experience ||
@@ -145,21 +146,90 @@ export default function RegisterCandidate() {
   const handleUpdate = (candidate) => {
     setSelectedCandidate(candidate);
     setIsUpdating(true);
+    
+    // Convert location object to string format for the form
+    let locationString = '';
+    if (candidate.location) {
+      if (typeof candidate.location === 'object') {
+        locationString = [
+          candidate.location.city || '',
+          candidate.location.state || '',
+          candidate.location.country || ''
+        ].filter(part => part).join(', ');
+      } else {
+        locationString = candidate.location;
+      }
+    }
+    
+    // Convert availability enum to date format for the form
+    let availabilityDate = '';
+    if (candidate.availability) {
+      const today = new Date();
+      switch (candidate.availability) {
+        case 'immediate':
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '1-week':
+          today.setDate(today.getDate() + 7);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '2-weeks':
+          today.setDate(today.getDate() + 14);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '1-month':
+          today.setMonth(today.getMonth() + 1);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case 'more-than-1-month':
+          today.setMonth(today.getMonth() + 2);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        default:
+          availabilityDate = today.toISOString().split('T')[0];
+      }
+    }
+    
+    // Convert skills array to string if needed
+    let skillsString = '';
+    if (candidate.skills) {
+      if (Array.isArray(candidate.skills)) {
+        skillsString = candidate.skills.join(', ');
+      } else {
+        skillsString = candidate.skills;
+      }
+    }
+    
+    // Convert education object to string if needed
+    let educationString = '';
+    if (candidate.education) {
+      if (typeof candidate.education === 'object') {
+        educationString = [
+          candidate.education.degree || '',
+          candidate.education.field || '',
+          candidate.education.institution || '',
+          candidate.education.graduationYear || ''
+        ].filter(part => part).join('\n');
+      } else {
+        educationString = candidate.education;
+      }
+    }
+    
     setFormData({
       firstName: candidate.firstName || "",
       lastName: candidate.lastName || "",
       email: candidate.email || "",
       phone: candidate.phone || "",
-      position: candidate.position || "",
+      position: candidate.currentRole || "",
       experience: candidate.experience || "",
-      skills: candidate.skills || "",
-      education: candidate.education || "",
+      skills: skillsString,
+      education: educationString,
       resume: null,
       coverLetter: null,
-      availability: candidate.availability || "",
+      availability: availabilityDate,
       expectedSalary: candidate.expectedSalary || "",
       workPreference: candidate.workPreference || "full-time",
-      location: candidate.location || "",
+      location: locationString,
       portfolio: candidate.portfolio || "",
       linkedin: candidate.linkedin || "",
       github: candidate.github || "",
@@ -227,13 +297,17 @@ export default function RegisterCandidate() {
       "experience",
       "skills",
       "education",
-      "resume",
       "availability",
       "expectedSalary",
       "workPreference",
       "location",
       "personId",
     ];
+
+    // Add resume to required fields only for new registrations, not updates
+    if (!isUpdating) {
+      requiredFields.push("resume");
+    }
 
     // Check if all required fields are present
     const missingFields = requiredFields.filter((field) => {
@@ -380,7 +454,7 @@ export default function RegisterCandidate() {
       candidate.lastName,
       candidate.email,
       candidate.phone,
-      candidate.position,
+      candidate.currentRole || candidate.position || 'No position',
       candidate.experience,
       candidate.skills,
       candidate.education,
@@ -634,7 +708,7 @@ export default function RegisterCandidate() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {candidate.position}
+                        {candidate.currentRole || 'No position'}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {candidate.workPreference}
@@ -645,8 +719,7 @@ export default function RegisterCandidate() {
                         {candidate.experience} years
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Available:{" "}
-                        {new Date(candidate.availability).toLocaleDateString()}
+                        Available: {candidate.availability || 'Not specified'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

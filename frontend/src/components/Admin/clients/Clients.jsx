@@ -69,6 +69,7 @@ export default function RegisterClients() {
   const fetchClients = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/clients');
+      console.log('Fetched clients:', response.data);
       setClients(response.data);
     } catch (error) {
       console.error('Error fetching clients:', error);
@@ -86,16 +87,33 @@ export default function RegisterClients() {
   const handleUpdate = (client) => {
     setSelectedClient(client);
     setIsUpdating(true);
+    
+    // Convert address object to string format for the form
+    let addressString = '';
+    if (client.address) {
+      if (typeof client.address === 'object') {
+        addressString = [
+          client.address.street || '',
+          client.address.city || '',
+          client.address.state || '',
+          client.address.zipCode || '',
+          client.address.country || ''
+        ].filter(part => part).join(', ');
+      } else {
+        addressString = client.address;
+      }
+    }
+    
     setFormData({
-      companyName: client.companyName,
-      contactPerson: client.contactPerson,
-      email: client.email,
-      phone: client.phone,
-      address: client.address,
-      industry: client.industry,
-      companySize: client.companySize,
-      website: client.website,
-      description: client.description
+      companyName: client.companyName || '',
+      contactPerson: client.contactPerson || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      address: addressString,
+      industry: client.industry || '',
+      companySize: client.companySize || '',
+      website: client.website || '',
+      description: client.description || ''
     });
     setShowForm(true);
   };
@@ -244,7 +262,12 @@ export default function RegisterClients() {
                       <div className="text-sm text-gray-900 dark:text-white">{client.companySize}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{client.address}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {typeof client.address === 'object' 
+                          ? `${client.address.street || ''}${client.address.city ? `, ${client.address.city}` : ''}${client.address.state ? `, ${client.address.state}` : ''}${client.address.zipCode ? `, ${client.address.zipCode}` : ''}${client.address.country ? `, ${client.address.country}` : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'No address'
+                          : client.address || 'No address'
+                        }
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>

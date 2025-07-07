@@ -61,12 +61,28 @@ export default function ClientsDetails() {
   };
 
   const handleUpdate = () => {
+    // Convert address object to string format for the form
+    let addressString = '';
+    if (client.address) {
+      if (typeof client.address === 'object') {
+        addressString = [
+          client.address.street || '',
+          client.address.city || '',
+          client.address.state || '',
+          client.address.zipCode || '',
+          client.address.country || ''
+        ].filter(part => part).join(', ');
+      } else {
+        addressString = client.address;
+      }
+    }
+    
     setFormData({
       companyName: client.companyName || '',
       contactPerson: client.contactPerson || '',
       email: client.email || '',
       phone: client.phone || '',
-      address: client.address || '',
+      address: addressString,
       industry: client.industry || '',
       companySize: client.companySize || '',
       website: client.website || '',
@@ -125,7 +141,12 @@ export default function ClientsDetails() {
                   </div>
                   <div className="flex items-center">
                     <MapPinIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{client.address}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {typeof client.address === 'object' 
+                        ? `${client.address.street || ''}${client.address.city ? `, ${client.address.city}` : ''}${client.address.state ? `, ${client.address.state}` : ''}${client.address.zipCode ? `, ${client.address.zipCode}` : ''}${client.address.country ? `, ${client.address.country}` : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'No address'
+                        : client.address || 'No address'
+                      }
+                    </span>
                   </div>
                 </div>
               </div>

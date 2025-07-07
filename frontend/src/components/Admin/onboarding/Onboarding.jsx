@@ -923,7 +923,7 @@ export default function Onboarding() {
       </div>
       <div className="flex h-[calc(100vh-2rem)] overflow-hidden">
         {/* Left Panel */}
-        <aside className="w-80 bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-900 flex flex-col">
+        <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-900 flex flex-col">
           {/* Navigation Tabs */}
           <div className="flex border-b border-gray-200 dark:border-transparent">
             <button
@@ -1018,7 +1018,7 @@ export default function Onboarding() {
           {selectedItem ? (
             <OnboardingDetails item={selectedItem} type={selectedItemType} />
           ) : (
-            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-900/50 dark:backdrop-blur-sm rounded-lg shadow border border-gray-200 dark:border-gray-900">
+            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-900">
               {/* Navigation Tabs */}
               <div className="flex border-b border-gray-200 dark:border-transparent">
                 <button

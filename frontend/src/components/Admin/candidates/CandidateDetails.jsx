@@ -48,6 +48,7 @@ export default function CandidateDetails() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -141,27 +142,96 @@ export default function CandidateDetails() {
   };
 
   const handleUpdate = () => {
+    // Convert location object to string format for the form
+    let locationString = '';
+    if (candidate.location) {
+      if (typeof candidate.location === 'object') {
+        locationString = [
+          candidate.location.city || '',
+          candidate.location.state || '',
+          candidate.location.country || ''
+        ].filter(part => part).join(', ');
+      } else {
+        locationString = candidate.location;
+      }
+    }
+    
+    // Convert availability enum to date format for the form
+    let availabilityDate = '';
+    if (candidate.availability) {
+      const today = new Date();
+      switch (candidate.availability) {
+        case 'immediate':
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '1-week':
+          today.setDate(today.getDate() + 7);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '2-weeks':
+          today.setDate(today.getDate() + 14);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case '1-month':
+          today.setMonth(today.getMonth() + 1);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        case 'more-than-1-month':
+          today.setMonth(today.getMonth() + 2);
+          availabilityDate = today.toISOString().split('T')[0];
+          break;
+        default:
+          availabilityDate = today.toISOString().split('T')[0];
+      }
+    }
+    
+    // Convert skills array to string if needed
+    let skillsString = '';
+    if (candidate.skills) {
+      if (Array.isArray(candidate.skills)) {
+        skillsString = candidate.skills.join(', ');
+      } else {
+        skillsString = candidate.skills;
+      }
+    }
+    
+    // Convert education object to string if needed
+    let educationString = '';
+    if (candidate.education) {
+      if (typeof candidate.education === 'object') {
+        educationString = [
+          candidate.education.degree || '',
+          candidate.education.field || '',
+          candidate.education.institution || '',
+          candidate.education.graduationYear || ''
+        ].filter(part => part).join('\n');
+      } else {
+        educationString = candidate.education;
+      }
+    }
+    
     setFormData({
       firstName: candidate.firstName || '',
       lastName: candidate.lastName || '',
       email: candidate.email || '',
       phone: candidate.phone || '',
-      position: candidate.position || '',
+      position: candidate.currentRole || '',
       experience: candidate.experience || '',
-      skills: candidate.skills || '',
-      education: candidate.education || '',
+      skills: skillsString,
+      education: educationString,
       resume: null,
       coverLetter: null,
-      availability: candidate.availability || '',
+      availability: availabilityDate,
       expectedSalary: candidate.expectedSalary || '',
       workPreference: candidate.workPreference || 'full-time',
-      location: candidate.location || '',
+      location: locationString,
       portfolio: candidate.portfolio || '',
       linkedin: candidate.linkedin || '',
       github: candidate.github || '',
       personId: candidate.personId || '',
     });
     setShowUpdateForm(true);
+    setIsUpdating(true);
   };
 
   const handleSubmit = async (e) => {
@@ -185,6 +255,11 @@ export default function CandidateDetails() {
       'location',
       'personId'
     ];
+
+    // Add resume to required fields only for new registrations, not updates
+    if (!isUpdating) {
+      requiredFields.push('resume');
+    }
 
     // Check if all required fields are present
     const missingFields = requiredFields.filter(field => {
@@ -264,6 +339,7 @@ export default function CandidateDetails() {
 
       if (response.status === 200) {
         setShowUpdateForm(false);
+        setIsUpdating(false);
         // Refresh candidate data
         const updatedCandidate = await axios.get(`http://localhost:5000/api/candidates/${id}`);
         setCandidate(updatedCandidate.data);
@@ -385,9 +461,9 @@ export default function CandidateDetails() {
                   </div>
                   <div key="availability" className="flex items-center">
                     <CalendarIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">
-                      Available: {new Date(candidate.availability).toLocaleDateString()}
-                    </span>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Available: {candidate.availability || 'Not specified'}
+                    </div>
                   </div>
                   <div key="salary" className="flex items-center">
                     <CurrencyDollarIcon className="h-5 w-5 text-gray-400 mr-3" />
@@ -570,7 +646,7 @@ export default function CandidateDetails() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {candidate.firstName} {candidate.lastName}
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">{candidate.position}</p>
+              <p className="text-lg text-gray-600 dark:text-gray-400">{candidate.currentRole}</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -721,7 +797,10 @@ export default function CandidateDetails() {
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => setShowUpdateForm(false)}></div>
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => {
+                setShowUpdateForm(false);
+                setIsUpdating(false);
+              }}></div>
             </div>
 
             <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
@@ -731,7 +810,10 @@ export default function CandidateDetails() {
                     Update Candidate
                   </h3>
                   <button
-                    onClick={() => setShowUpdateForm(false)}
+                    onClick={() => {
+                      setShowUpdateForm(false);
+                      setIsUpdating(false);
+                    }}
                     className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                   >
                     <XMarkIcon className="h-6 w-6" />
@@ -1029,7 +1111,10 @@ export default function CandidateDetails() {
                   <div className="flex justify-end space-x-3">
                     <button
                       type="button"
-                      onClick={() => setShowUpdateForm(false)}
+                      onClick={() => {
+                        setShowUpdateForm(false);
+                        setIsUpdating(false);
+                      }}
                       className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                       Cancel

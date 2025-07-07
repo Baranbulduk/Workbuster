@@ -128,6 +128,7 @@ router.get('/colleagues', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const candidates = await Candidate.find();
+    console.log('Returning candidates:', candidates.map(c => ({ id: c._id, firstName: c.firstName, lastName: c.lastName, currentRole: c.currentRole, position: c.position })));
     res.json(candidates);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -180,6 +181,12 @@ router.post('/', upload.single('resume'), async (req, res) => {
     formData.experience = parseInt(formData.experience, 10);
     formData.expectedSalary = parseInt(formData.expectedSalary, 10);
     
+    // Map position to currentRole
+    if (formData.position) {
+      formData.currentRole = formData.position;
+      delete formData.position;
+    }
+    
     // Handle location data
     if (formData['location[city]']) {
       formData.location = {
@@ -202,7 +209,9 @@ router.post('/', upload.single('resume'), async (req, res) => {
     formData.password = hashedPassword;
 
     const candidate = new Candidate(formData);
+    console.log('Creating candidate with data:', formData);
     const newCandidate = await candidate.save();
+    console.log('Created candidate:', newCandidate);
 
     // Try to send welcome email, but don't fail if it doesn't work
     try {
@@ -234,6 +243,12 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
     formData.experience = parseInt(formData.experience, 10);
     formData.expectedSalary = parseInt(formData.expectedSalary, 10);
     
+    // Map position to currentRole
+    if (formData.position) {
+      formData.currentRole = formData.position;
+      delete formData.position;
+    }
+    
     // Handle location data
     if (formData['location[city]']) {
       formData.location = {
@@ -245,6 +260,14 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
       delete formData['location[city]'];
       delete formData['location[state]'];
       delete formData['location[country]'];
+    } else if (formData.location && typeof formData.location === 'string') {
+      // Handle location as string from frontend
+      const locationParts = formData.location.split(',').map(part => part.trim());
+      formData.location = {
+        city: locationParts[0] || '',
+        state: locationParts[1] || '',
+        country: locationParts[2] || ''
+      };
     }
 
     // Handle education data
@@ -259,6 +282,11 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
           graduationYear: parseInt(educationLines[3]) || new Date().getFullYear()
         };
       }
+    }
+    
+    // Handle skills data
+    if (formData.skills && typeof formData.skills === 'string') {
+      formData.skills = formData.skills.split(',').map(skill => skill.trim());
     }
     
     // Handle resume file
@@ -373,7 +401,9 @@ router.post('/import', async (req, res) => {
         
         // Create and save the candidate
         const candidate = new Candidate(candidateData);
+        console.log('Creating candidate with data:', candidateData);
         const newCandidate = await candidate.save();
+        console.log('Created candidate:', newCandidate);
         
         // Try to send welcome email
         try {

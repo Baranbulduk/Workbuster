@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const clients = await Client.find();
+    console.log('Returning clients:', clients.map(c => ({ id: c._id, companyName: c.companyName, address: c.address })));
     res.json(clients);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -124,12 +125,26 @@ router.post('/', async (req, res) => {
   try {
     const plainPassword = generatePassword();
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    
+    // Handle address field conversion
+    let addressData = req.body.address;
+    if (req.body.address && typeof req.body.address === 'string') {
+      const addressParts = req.body.address.split(',').map(part => part.trim());
+      addressData = {
+        street: addressParts[0] || '',
+        city: addressParts[1] || '',
+        state: addressParts[2] || '',
+        zipCode: addressParts[3] || '',
+        country: addressParts[4] || ''
+      };
+    }
+    
     const client = new Client({
       companyName: req.body.companyName,
       contactPerson: req.body.contactPerson,
       email: req.body.email,
       phone: req.body.phone,
-      address: req.body.address,
+      address: addressData,
       industry: req.body.industry,
       companySize: req.body.companySize,
       website: req.body.website,
@@ -137,7 +152,9 @@ router.post('/', async (req, res) => {
       status: req.body.status,
       password: hashedPassword
     });
+    console.log('Creating client with data:', { ...req.body, address: addressData, password: '[HIDDEN]' });
     const newClient = await client.save();
+    console.log('Created client:', newClient);
     await sendWelcomeEmail(newClient, plainPassword);
     res.status(201).json(newClient);
   } catch (error) {
@@ -151,6 +168,18 @@ router.put('/:id', async (req, res) => {
     const client = await Client.findById(req.params.id);
     if (!client) {
       return res.status(404).json({ message: 'Client not found' });
+    }
+
+    // Handle address field conversion
+    if (req.body.address && typeof req.body.address === 'string') {
+      const addressParts = req.body.address.split(',').map(part => part.trim());
+      req.body.address = {
+        street: addressParts[0] || '',
+        city: addressParts[1] || '',
+        state: addressParts[2] || '',
+        zipCode: addressParts[3] || '',
+        country: addressParts[4] || ''
+      };
     }
 
     Object.assign(client, req.body);
