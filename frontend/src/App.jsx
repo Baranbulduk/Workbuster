@@ -11,11 +11,11 @@ import {
 } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import {
-  HomeIcon,
+import { 
+  HomeIcon, 
   UserIcon,
-  UserGroupIcon,
-  UserPlusIcon,
+  UserGroupIcon, 
+  UserPlusIcon, 
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
@@ -60,14 +60,14 @@ const EmployeeLayout = () => {
   const email = searchParams.get("email");
 
   const navigation = [
-    {
+    { 
       name: "Employees",
       href: `/employee/employees${
         token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
       }`,
       icon: UserGroupIcon,
     },
-    {
+    { 
       name: "Onboarding",
       href: `/employee/onboarding${
         token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
@@ -91,12 +91,12 @@ const EmployeeLayout = () => {
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
       <div
-        className={`h-full flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
+        className={`h-full flex flex-col bg-gradient-to-br from-[#e6b05c] via-[#e05a5a] to-[#7a5fd3] dark:bg-gradient-to-br dark:from-[#e6b05c] dark:via-[#e05a5a] dark:to-[#7a5fd3] border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
           isSidebarOpen ? "w-64" : "w-20"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 bg-white/10 rounded-b-xl">
           <div
             className={`flex items-center ${
               !isSidebarOpen ? "w-full justify-center" : "space-x-3"
@@ -104,10 +104,10 @@ const EmployeeLayout = () => {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white text-white"
             >
               <svg
-                className={`w-5 h-5 text-gray-700 dark:text-gray-300 transform transition-transform duration-200 ${
+                className={`w-5 h-5 text-white transform transition-transform duration-200 ${
                   !isSidebarOpen ? "rotate-180" : ""
                 }`}
                 fill="none"
@@ -123,7 +123,7 @@ const EmployeeLayout = () => {
               </svg>
             </button>
             {isSidebarOpen && (
-              <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
+              <h1 className="text-xl font-semibold text-white">
                 Employee Dashboard
               </h1>
             )}
@@ -144,27 +144,19 @@ const EmployeeLayout = () => {
                   to={item.href}
                   className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                     isActive
-                      ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                      : "text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                      ? 'bg-white text-orange-600'
+                      : 'text-white hover:bg-white/10'
                   }`}
                 >
-                  <div
-                    className={`flex items-center ${
-                      !isSidebarOpen ? "w-full justify-center" : ""
-                    }`}
-                  >
+                  <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}>
                     <item.icon
-                      className={`h-5 w-5 ${
-                        isActive
-                          ? "text-red-700 dark:text-red-300"
-                          : "text-gray-500 group-hover:text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
-                      } ${isSidebarOpen ? "mr-3" : ""}`}
+                      className={`h-5 w-5 ${isActive ? 'text-orange-600' : 'text-white'} ${isSidebarOpen ? 'mr-3' : ''}`}
                       aria-hidden="true"
                     />
                     {isSidebarOpen && item.name}
                   </div>
                   {!isSidebarOpen && (
-                    <div className="absolute left-20 bg-gray-800 dark:bg-gray-800 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="absolute left-20 bg-black bg-opacity-80 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       {item.name}
                     </div>
                   )}
@@ -175,38 +167,29 @@ const EmployeeLayout = () => {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-white/10 rounded-t-xl">
           <button
             onClick={handleLogout}
-            className="group flex items-center w-full px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md"
+            className="group flex items-center w-full px-2 py-2 text-sm font-medium text-white hover:bg-white/10 rounded-md"
           >
             <div
-              className={`flex items-center ${
-                !isSidebarOpen ? "w-full justify-center" : ""
-              }`}
+              className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}
             >
               <ArrowRightOnRectangleIcon
-                className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
-                  isSidebarOpen ? "mr-3" : ""
-                }`}
+                className={`h-5 w-5 text-white ${isSidebarOpen ? 'mr-3' : ''}`}
                 aria-hidden="true"
               />
-              {isSidebarOpen && "Logout"}
+              {isSidebarOpen && 'Logout'}
             </div>
             {!isSidebarOpen && (
-              <div className="absolute left-20 bg-red-800 dark:bg-red-900 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <ArrowRightOnRectangleIcon
-                  className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${
-                    isSidebarOpen ? "mr-3" : ""
-                  }`}
-                  aria-hidden="true"
-                />
+              <div className="absolute left-20 bg-black bg-opacity-80 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                Logout
               </div>
             )}
           </button>
         </div>
       </div>
-
+      
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         <Outlet />
@@ -226,7 +209,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/employee/login" element={<EmployeeLogin />} />
-
+          
           {/* Protected routes with layout */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />

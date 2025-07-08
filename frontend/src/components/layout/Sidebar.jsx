@@ -102,17 +102,17 @@ export default function Sidebar() {
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isSidebarOpen ? 'w-64' : 'w-20'}
-        h-full flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+        h-full flex flex-col bg-gradient-to-br from-[#e6b05c] via-[#e05a5a] to-[#7a5fd3] dark:bg-gradient-to-br dark:from-[#e6b05c] dark:via-[#e05a5a] dark:to-[#7a5fd3] border-r border-gray-200 dark:border-gray-700
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : 'space-x-3'}`}>
+        <div className="flex items-center justify-between p-4 bg-white/10 rounded-b-xl">
+          <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : 'space-x-3'}`}> 
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 hidden lg:block"
+              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white hidden lg:block text-white"
             >
               <svg
-                className={`w-5 h-5 text-gray-700 dark:text-gray-300 transform transition-transform duration-200 ${
+                className={`w-5 h-5 text-white transform transition-transform duration-200 ${
                   !isSidebarOpen ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -123,7 +123,7 @@ export default function Sidebar() {
               </svg>
             </button>
             {isSidebarOpen && (
-              <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Admin Dashboard</h1>
+              <h1 className="text-xl font-semibold text-white">Admin Dashboard</h1>
             )}
           </div>
         </div>
@@ -139,23 +139,19 @@ export default function Sidebar() {
                   onClick={() => handleNavigation(item.href)}
                   className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                     isActive
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                      : 'text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700'
+                      ? 'bg-white text-orange-600'
+                      : 'text-white hover:bg-white/10'
                   }`}
                 >
                   <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}>
                     <item.icon
-                      className={`h-5 w-5 ${
-                        isActive
-                          ? 'text-red-700 dark:text-red-300'
-                          : 'text-gray-500 group-hover:text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300'
-                      } ${isSidebarOpen ? 'mr-3' : ''}`}
+                      className={`h-5 w-5 ${isActive ? 'text-orange-600' : 'text-white'} ${isSidebarOpen ? 'mr-3' : ''}`}
                       aria-hidden="true"
                     />
                     {isSidebarOpen && item.name}
                   </div>
                   {!isSidebarOpen && (
-                    <div className="absolute left-20 bg-gray-800 dark:bg-gray-800 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="absolute left-20 bg-black bg-opacity-80 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       {item.name}
                     </div>
                   )}
@@ -166,20 +162,20 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-white/10 rounded-t-xl">
           <button
             onClick={handleLogout}
-            className="group flex items-center w-full px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 rounded-md"
+            className="group flex items-center w-full px-2 py-2 text-sm font-medium text-white hover:bg-white/10 rounded-md"
           >
             <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}>
               <ArrowRightOnRectangleIcon
-                className={`h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400 dark:group-hover:text-red-300 ${isSidebarOpen ? 'mr-3' : ''}`}
+                className={`h-5 w-5 text-white ${isSidebarOpen ? 'mr-3' : ''}`}
                 aria-hidden="true"
               />
               {isSidebarOpen && 'Logout'}
             </div>
             {!isSidebarOpen && (
-              <div className="absolute left-20 bg-red-800 dark:bg-red-900 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="absolute left-20 bg-black bg-opacity-80 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 Logout
               </div>
             )}

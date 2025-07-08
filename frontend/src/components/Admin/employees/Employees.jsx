@@ -91,9 +91,9 @@ const Employees = () => {
                 });
                 
                 if (validCompletedFields.length === form.fields.length) {
-                  completed++;
+                completed++;
                 } else if (validCompletedFields.length > 0) {
-                  inProgress++;
+                inProgress++;
                 } else {
                   notStarted++;
                 }
@@ -224,10 +224,10 @@ const Employees = () => {
         }
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     }
   };
 
