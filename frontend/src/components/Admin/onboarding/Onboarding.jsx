@@ -29,11 +29,11 @@ import {
   TrashIcon,
   PencilIcon,
   ArrowDownTrayIcon,
-  Bars3Icon,
   PlusIcon,
   XMarkIcon,
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
+import { HiBars4 } from "react-icons/hi2";
 import axios from "../../../utils/axios";
 import { adminApiCall, handleAdminTokenExpiration } from "../../../utils/tokenManager";
 import { useNavigate } from "react-router-dom";
@@ -920,9 +920,9 @@ export default function Onboarding() {
           </button>
         </div>
       </div>
-      <div className="flex h-[calc(100vh-2rem)] overflow-hidden">
+      <div className="flex h-full min-h-[600px] overflow-hidden" style={{height: '100%'}}>
         {/* Left Panel */}
-        <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-900 flex flex-col">
+        <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-900 flex flex-col h-full">
           {/* Navigation Tabs */}
           <div className="flex border-b border-gray-200 dark:border-transparent">
             <button
@@ -1013,11 +1013,11 @@ export default function Onboarding() {
           </div>
         </aside>
         {/* Main Panel */}
-        <main className="flex-1 pl-8 overflow-y-auto">
+        <main className="flex-1 pl-8 overflow-y-auto h-full">
           {selectedItem ? (
             <OnboardingDetails item={selectedItem} type={selectedItemType} />
           ) : (
-            <div className="flex flex-col h-[calc(100vh-10rem)] w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-900">
+            <div className="flex flex-col h-full w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-900">
               {/* Navigation Tabs */}
               <div className="flex border-b border-gray-200 dark:border-transparent">
                 <button
@@ -1124,27 +1124,27 @@ export default function Onboarding() {
                 ) : (
                   <div className="flex h-full">
                     {/* Add Field Section */}
-                    <aside className="w-1/3 border-r dark:border-gray-700 p-8 flex flex-col h-full bg-gray-100 dark:bg-gray-700 rounded-l-[5px]">
-                      <h2 className="text-lg font-semibold mt-2 mb-10 text-gray-900 dark:text-white">
+                    <aside className="w-1/3 border-r dark:border-gray-700 p-8 flex flex-col h-full bg-gradient-to-br from-[#e6b05c] via-[#e05a5a] to-[#7a5fd3] dark:bg-gradient-to-br dark:from-[#e6b05c] dark:via-[#e05a5a] dark:to-[#7a5fd3] rounded-l-[5px]">
+                      <h2 className="text-2xl font-semibold mt-2 mb-10 text-white dark:text-gray-900">
                         Add Field
                       </h2>
                       <div className="grid grid-cols-2 gap-4">
                         {FIELD_TYPES.map((field) => (
                           <div
                             key={field.label}
-                            className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-move hover:bg-gray-200 dark:hover:bg-gray-600 transition group"
+                            className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-black/20 text-white cursor-move hover:bg-black/30 transition group"
                             draggable
                             onDragStart={(e) => handleDragStart(e, field)}
                           >
-                            <div className="flex items-center justify-center w-6 h-6 text-gray-400">
-                              <Bars3Icon className="h-6 w-6" />
+                            <div className="flex items-center justify-center w-6 h-6">
+                              <HiBars4 className="h-4 w-4 text-white" />
                             </div>
                             <div className="flex items-center justify-center w-8 h-8">
                               {field.icon && (
-                                <field.icon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                <field.icon className="h-6 w-6 text-white" />
                               )}
                             </div>
-                            <span className="font-semibold">{field.label}</span>
+                            <span className="font-semibold text-white">{field.label}</span>
                           </div>
                         ))}
                       </div>
@@ -1159,7 +1159,7 @@ export default function Onboarding() {
                       <div className="flex justify-between items-center mb-8">
                         {editingTitle ? (
                           <input
-                            className="text-xl font-semibold  text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
+                            className="text-2xl font-semibold  text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
                             value={formTitle}
                             onChange={handleTitleChange}
                             onBlur={handleTitleBlur}
@@ -1168,7 +1168,7 @@ export default function Onboarding() {
                           />
                         ) : (
                           <h2
-                            className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer"
+                            className="text-2xl font-semibold text-gray-900 dark:text-white cursor-pointer"
                             onClick={handleTitleClick}
                           >
                             {formTitle}
@@ -1285,7 +1285,7 @@ export default function Onboarding() {
                             onDragEnd={handleDragEndField}
                           >
                             <div className="flex items-center justify-center w-8 h-11 text-gray-400 cursor-move">
-                              <Bars3Icon className="h-5 w-5" />
+                              <HiBars4 className="h-4 w-4 text-black dark:text-white" />
                             </div>
                             <div className="flex-1">
                               {editingLabelId === field.id ? (
