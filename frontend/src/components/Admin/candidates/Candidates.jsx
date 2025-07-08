@@ -71,9 +71,10 @@ export default function RegisterCandidate() {
   const filteredCandidates = candidates.filter((candidate) => {
     return (
       (!filters.position ||
-        candidate.currentRole
-          .toLowerCase()
-          .includes(filters.position.toLowerCase())) &&
+        (candidate.currentRole &&
+          candidate.currentRole
+            .toLowerCase()
+            .includes(filters.position.toLowerCase()))) &&
       (!filters.experience ||
         candidate.experience >= parseInt(filters.experience)) &&
       (!filters.availability ||

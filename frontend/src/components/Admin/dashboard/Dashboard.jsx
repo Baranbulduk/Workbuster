@@ -221,21 +221,21 @@ export default function Dashboard() {
           <div className="p-4 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/candidates')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base transition-colors"
               >
                 Register New Candidate
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/employees')}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base transition-colors"
               >
                 Add New Employee
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/clients')}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base transition-colors"
               >
                 Register New Client
               </button>

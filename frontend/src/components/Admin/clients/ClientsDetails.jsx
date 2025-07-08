@@ -256,16 +256,18 @@ export default function ClientsDetails() {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleUpdate}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="flex items-center gap-2 py-1 pl-1 pr-4 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
-              <PencilSquareIcon className="h-5 w-5 mr-2" />
+              <div className="bg-white rounded-3xl p-2 text-black">
+                <PencilSquareIcon className="h-5 w-5" />
+              </div>
               Update
             </button>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              className="flex items-center px-3 sm:px-4 py-2 font-medium bg-red-600 text-white rounded-3xl hover:bg-red-700 text-sm sm:text-base"
             >
-              <TrashIcon className="h-5 w-5 mr-2" />
+              <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Delete
             </button>
           </div>
@@ -277,30 +279,30 @@ export default function ClientsDetails() {
         <nav className="flex">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeTab === 'overview'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab('projects')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeTab === 'projects'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Projects
           </button>
           <button
             onClick={() => setActiveTab('contacts')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeTab === 'contacts'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Contacts

@@ -255,30 +255,30 @@ const EmployeeDetails = () => {
         <nav className="flex min-w-max">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
               activeTab === 'overview'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab('documents')}
-            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
               activeTab === 'documents'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Documents
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
               activeTab === 'history'
-                ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'text-red-600 border-b-2 border-red-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             History
