@@ -1141,7 +1141,7 @@ export default function Onboarding() {
                             </div>
                             <div className="flex items-center justify-center w-8 h-8">
                               {field.icon && (
-                                <field.icon className="h-6 w-6 text-white" />
+                                <field.icon className="h-7 w-7 text-white" />
                               )}
                             </div>
                             <span className="font-semibold text-white">{field.label}</span>
