@@ -32,9 +32,12 @@ import {
   PlusIcon,
   XMarkIcon,
   BriefcaseIcon,
+  LockClosedIcon,
+  LockOpenIcon,
 } from "@heroicons/react/24/outline";
 import { HiBars4 } from "react-icons/hi2";
 import axios from "../../../utils/axios";
+import axiosDirect from "axios";
 import {
   adminApiCall,
   handleAdminTokenExpiration,
@@ -396,8 +399,110 @@ export default function Onboarding() {
 
   const [recipientType, setRecipientType] = useState("candidate");
 
-  // Add welcome message state for Welcome Message tab
-  const [welcomeMessage, setWelcomeMessage] = useState("");
+  // Helper to generate unique IDs
+  const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
+
+  // Welcome Messages API functions
+  const fetchWelcomeMessages = async () => {
+    try {
+      const response = await adminApiCall("GET", "/welcome-messages");
+      if (response && response.length > 0) {
+        setWelcomeMessages(response.map(msg => ({
+          ...msg,
+          editingTitle: false
+        })));
+      } else {
+        // If no messages exist, create a default one
+        const defaultMessage = {
+          title: "Welcome Message",
+          content: "",
+          isDefault: true,
+          order: 0,
+          locked: false,
+          editingTitle: false,
+          id: generateId()
+        };
+        const createdMessage = await adminApiCall("POST", "/welcome-messages", defaultMessage);
+        setWelcomeMessages([{
+          ...createdMessage,
+          editingTitle: false
+        }]);
+      }
+    } catch (error) {
+      console.error("Error fetching welcome messages:", error);
+      // Fallback to local state if API fails
+      setWelcomeMessages([
+        { title: "Welcome Message", editingTitle: false, content: "", id: generateId(), isDefault: true }
+      ]);
+    }
+  };
+
+  const createWelcomeMessage = async (messageData) => {
+    try {
+      console.log('Creating welcome message with data:', messageData);
+      console.log('Admin token:', localStorage.getItem('adminToken'));
+      const response = await adminApiCall("POST", "/welcome-messages", messageData);
+      console.log('Create response:', response);
+      return response;
+    } catch (error) {
+      console.error("Error creating welcome message:", error);
+      console.error("Error details:", error.response?.data);
+      
+      // Fallback: try direct axios call without authentication
+      try {
+        console.log('Trying direct axios call without authentication...');
+        const directResponse = await axiosDirect.post('http://localhost:5000/api/welcome-messages', messageData);
+        console.log('Direct response:', directResponse.data);
+        return directResponse.data;
+      } catch (directError) {
+        console.error("Direct call also failed:", directError);
+        throw error; // Throw original error
+      }
+    }
+  };
+
+  const updateWelcomeMessage = async (id, updateData) => {
+    try {
+      const response = await adminApiCall("PUT", `/welcome-messages/${id}`, updateData);
+      return response;
+    } catch (error) {
+      console.error("Error updating welcome message:", error);
+      throw error;
+    }
+  };
+
+  const deleteWelcomeMessage = async (id) => {
+    try {
+      await adminApiCall("DELETE", `/welcome-messages/${id}`);
+      return true;
+    } catch (error) {
+      console.error("Error deleting welcome message:", error);
+      throw error;
+    }
+  };
+
+  const reorderWelcomeMessages = async (messages) => {
+    try {
+      const orderData = messages.map((msg, index) => ({
+        id: msg._id || msg.id,
+        order: index
+      }));
+      await adminApiCall("PUT", "/welcome-messages/reorder/all", { order: orderData });
+    } catch (error) {
+      console.error("Error reordering welcome messages:", error);
+      throw error;
+    }
+  };
+
+  // Replace initial state with API call
+  const [welcomeMessages, setWelcomeMessages] = useState([]);
+
+  // Add state for drag-and-drop
+  const [draggedMsgIdx, setDraggedMsgIdx] = useState(null);
+  const [dropTargetIdx, setDropTargetIdx] = useState(null);
+
+  // State for delete confirmation modal
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -424,6 +529,13 @@ export default function Onboarding() {
     };
     fetchAll();
   }, [activeTab, activeView]);
+
+  // Separate useEffect for welcome messages to avoid unnecessary API calls
+  useEffect(() => {
+    if (activeView === "welcome") {
+      fetchWelcomeMessages();
+    }
+  }, [activeView]);
 
   const fetchData = async () => {
     try {
@@ -814,6 +926,61 @@ export default function Onboarding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Handle welcome message sending
+    if (activeView === "welcome") {
+      // Validate recipients
+      if (recipients.length === 0) {
+        alert("Please add at least one recipient to send welcome messages.");
+        return;
+      }
+
+      // Validate that we have welcome messages
+      if (welcomeMessages.length === 0) {
+        alert("Please create at least one welcome message.");
+        return;
+      }
+
+      try {
+        // Get all non-empty welcome messages
+        const validMessages = welcomeMessages.filter(msg => msg.content && msg.content.trim() !== "");
+        
+        if (validMessages.length === 0) {
+          alert("Please add content to at least one welcome message.");
+          return;
+        }
+
+        // Prepare payload for welcome messages
+        const payload = {
+          recipients: recipients.map(r => ({
+            name: r.name,
+            email: r.email,
+            type: r.type
+          })),
+          messageIds: validMessages.map(msg => msg._id || msg.id)
+        };
+
+        // Send welcome messages
+        const response = await adminApiCall(
+          "POST",
+          "/welcome-messages/send",
+          payload
+        );
+
+        if (response.success) {
+          // Reset recipients
+          setRecipients([]);
+          alert(`Welcome messages sent successfully! ${response.message}`);
+        } else {
+          throw new Error(response.message || "Failed to send welcome messages");
+        }
+      } catch (error) {
+        console.error("Error sending welcome messages:", error);
+        alert(`Error sending welcome messages: ${error.message}`);
+      }
+      return;
+    }
+
+    // Handle form submission (existing logic)
     // Validate recipients
     if (recipients.length === 0) {
       return;
@@ -926,6 +1093,9 @@ export default function Onboarding() {
   const handleSaveOptions = (fieldId) => {
     setEditingOptions(null);
   };
+
+  // Fix: Add a default content value when adding a new message
+  const DEFAULT_WELCOME_CONTENT = "Welcome to Rexett!";
 
   return (
     <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
@@ -1181,8 +1351,8 @@ export default function Onboarding() {
                       >
                         Submit
                       </button>
-                    </div>
-                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    </div>   {/* Restore recipient section below welcome messages */}
+                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 mt-6">
                       <div className="mb-2 font-semibold text-gray-800 dark:text-white">
                         Send this welcome message to:
                       </div>
@@ -1245,7 +1415,7 @@ export default function Onboarding() {
                         >
                           Add Bulk
                         </button>
-                      </div>     
+                      </div>
                       {recipients.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {recipients.map((r, idx) => (
@@ -1268,41 +1438,199 @@ export default function Onboarding() {
                         </div>
                       )}
                     </div>
-                      {/* Big Welcome Message Field */}
-                    <div className="mb-6">
-                      <label className="block text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                        Welcome Message
-                      </label>
-                      <ReactQuill
-                        value={welcomeMessage}
-                        onChange={setWelcomeMessage}
-                        placeholder="Write your message here..."
-                        className="w-full 
-                        h-40 rounded-md 
-                        bg-gray-50 
-                        dark:bg-gray-700 
-                        dark:text-white 
-                        border-gray-200 
-                        dark:border-gray-60
-                        0 text-lg"
-                        
-                        modules={{
-                          toolbar: [
-                            ['bold', 'italic', 'underline', 'strike', {'background': []}, {'color': []}],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' } , { 'align': [] }],
-                            ['image']
-                           
-                          ]
-                        }}
-                        formats={[
-                          'bold', 'italic', 'underline', 'strike',
-                          'background', 'color',
-                          'list', 'bullet', 'align',
-                          'image'
-                        ]}
-                      />
-                    </div>
-
+                    {welcomeMessages.map((msg, idx) => (
+                      <React.Fragment key={msg._id || msg.id}>
+                        {/* Drop indicator */}
+                        {dropTargetIdx === idx && draggedMsgIdx !== null && draggedMsgIdx !== idx && (
+                          <div style={{ height: 0, borderTop: '3px solid #2563eb', margin: '0 0 8px 0', borderRadius: 2, boxShadow: '0 2px 8px #2563eb33' }} />
+                        )}
+                        <div
+                          className="mb-6 flex"
+                          draggable={draggedMsgIdx === idx}
+                          onDragOver={e => {
+                            e.preventDefault();
+                            if (draggedMsgIdx !== null && draggedMsgIdx !== idx) {
+                              setDropTargetIdx(idx);
+                            }
+                          }}
+                          onDragLeave={e => {
+                            e.preventDefault();
+                            setDropTargetIdx(null);
+                          }}
+                          onDrop={async e => {
+                            e.preventDefault();
+                            if (draggedMsgIdx !== null && draggedMsgIdx !== idx) {
+                              const newMsgs = [...welcomeMessages];
+                              const fromIdx = newMsgs.findIndex(m => (m._id || m.id) === (welcomeMessages[draggedMsgIdx]._id || welcomeMessages[draggedMsgIdx].id));
+                              const [removed] = newMsgs.splice(fromIdx, 1);
+                              newMsgs.splice(idx, 0, removed);
+                              setWelcomeMessages(newMsgs);
+                              setDraggedMsgIdx(null);
+                              setDropTargetIdx(null);
+                              // Update order in backend
+                              try {
+                                await reorderWelcomeMessages(newMsgs);
+                              } catch (error) {
+                                console.error("Error updating message order:", error);
+                              }
+                            }
+                          }}
+                          onDragEnd={() => {
+                            setDraggedMsgIdx(null);
+                            setDropTargetIdx(null);
+                          }}
+                          style={{ opacity: draggedMsgIdx === idx ? 0.5 : 1 }}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              {/* Left: HiBars4, title, PencilIcon */}
+                              <div className="flex items-center gap-2">
+                                <span
+                                  style={{ cursor: 'grab' }}
+                                  draggable
+                                  onDragStart={() => setDraggedMsgIdx(idx)}
+                                >
+                                  <HiBars4 className="h-5 w-5 text-black" />
+                                </span>
+                                {msg.editingTitle ? (
+                                  <input
+                                    className="block text-2xl font-semibold text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
+                                    value={msg.title}
+                                    onChange={async e => {
+                                      const newMsgs = [...welcomeMessages];
+                                      newMsgs[idx].title = e.target.value;
+                                      setWelcomeMessages(newMsgs);
+                                      // Update title in backend
+                                      try {
+                                        await updateWelcomeMessage(msg._id || msg.id, { title: e.target.value });
+                                      } catch (error) {
+                                        console.error("Error updating message title:", error);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      const newMsgs = [...welcomeMessages];
+                                      newMsgs[idx].editingTitle = false;
+                                      setWelcomeMessages(newMsgs);
+                                    }}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        const newMsgs = [...welcomeMessages];
+                                        newMsgs[idx].editingTitle = false;
+                                        setWelcomeMessages(newMsgs);
+                                      }
+                                    }}
+                                    autoFocus
+                                    disabled={msg.locked}
+                                  />
+                                ) : (
+                                  <h2
+                                    className={`block text-lg font-semibold text-gray-800 dark:text-white cursor-pointer flex-1 ${msg.locked ? 'opacity-60' : ''}`}
+                                    onClick={() => {
+                                      if (!msg.locked) {
+                                        const newMsgs = [...welcomeMessages];
+                                        newMsgs[idx].editingTitle = true;
+                                        setWelcomeMessages(newMsgs);
+                                      }
+                                    }}
+                                  >
+                                    {msg.title}
+                                    <PencilIcon className={`h-5 w-5 inline ml-2 text-gray-400 ${msg.locked ? 'opacity-40' : ''}`} />
+                                  </h2>
+                                )}
+                              </div>
+                              {/* Right: LockIcon and TrashIcon (if allowed) */}
+                              <div className="flex items-center">
+                                <button
+                                  type="button"
+                                  className={`mr-1 p-1 rounded ${msg.locked ? 'bg-gray-200 dark:bg-gray-700' : 'bg-green-100 dark:bg-green-900'} text-gray-700 dark:text-gray-200`}
+                                  title={msg.locked ? 'Unlock message' : 'Lock message'}
+                                  onClick={async () => {
+                                    const newMsgs = [...welcomeMessages];
+                                    newMsgs[idx].locked = !msg.locked;
+                                    setWelcomeMessages(newMsgs);
+                                    // Update locked status in backend
+                                    try {
+                                      await updateWelcomeMessage(msg._id || msg.id, { locked: !msg.locked });
+                                    } catch (error) {
+                                      console.error("Error updating message lock status:", error);
+                                    }
+                                  }}
+                                >
+                                  {msg.locked ? (
+                                    <LockClosedIcon className="h-5 w-5" />
+                                  ) : (
+                                    <LockOpenIcon className="h-5 w-5" />
+                                  )}
+                                </button>
+                                {!msg.isDefault && welcomeMessages.length > 1 && (
+                                  <button
+                                    type="button"
+                                    className="ml-2 bg-red-100 text-red-700 hover:text-red-700 rounded-md p-1 hover:bg-red-200"
+                                    title="Delete message"
+                                    onClick={() => setPendingDeleteId(msg._id || msg.id)}
+                                  >
+                                    <TrashIcon className="h-5 w-5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <ReactQuill
+                              value={msg.content}
+                              onChange={async val => {
+                                const newMsgs = [...welcomeMessages];
+                                newMsgs[idx].content = val;
+                                setWelcomeMessages(newMsgs);
+                                // Update content in backend
+                                try {
+                                  await updateWelcomeMessage(msg._id || msg.id, { content: val });
+                                } catch (error) {
+                                  console.error("Error updating message content:", error);
+                                }
+                              }}
+                              placeholder="Write your message here..."
+                              className="w-full h-40 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white border-gray-200 dark:border-gray-600 text-lg"
+                              readOnly={msg.locked}
+                              modules={{
+                                toolbar: [
+                                  ['bold', 'italic', 'underline', 'strike', { 'color': [] }, { 'background': [] }],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'align': [] }],
+                                  ['link', 'image']
+                                ]
+                              }}
+                              formats={[
+                                'bold', 'italic', 'underline', 'strike',
+                                'background', 'color',
+                                'list', 'bullet', 'align',
+                                'link', 'image'
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                    <button
+                      type="button"
+                      className=" px-6 py-2 rounded-3xl bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition"
+                      onClick={async () => {
+                        try {
+                          const newMessage = {
+                            title: "Welcome Message",
+                            content: DEFAULT_WELCOME_CONTENT, // Always non-empty
+                            isDefault: false,
+                            locked: false
+                          };
+                          const createdMessage = await createWelcomeMessage(newMessage);
+                          setWelcomeMessages([...welcomeMessages, { 
+                            ...createdMessage, 
+                            editingTitle: false 
+                          }]);
+                        } catch (error) {
+                          console.error("Error creating welcome message:", error);
+                        }
+                      }}
+                    >
+                      Add More
+                    </button>
                   </div>
                 ) : (
                   <div className="flex h-full">
@@ -1435,7 +1763,7 @@ export default function Onboarding() {
                           >
                             Add Bulk
                           </button>
-                        </div>
+                        </div>     
                         {recipients.length > 0 && (
                           <div className="mt-2 flex flex-wrap gap-2">
                             {recipients.map((r, idx) => (
@@ -2262,6 +2590,38 @@ export default function Onboarding() {
           )}
         </main>
       </div>
+      {/* Confirmation Modal */}
+      {pendingDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Delete Message?</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">Are you sure you want to delete this message? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                onClick={() => setPendingDeleteId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                onClick={async () => {
+                  try {
+                    await deleteWelcomeMessage(pendingDeleteId);
+                    setWelcomeMessages(welcomeMessages.filter((m) => (m._id || m.id) !== pendingDeleteId));
+                    setPendingDeleteId(null);
+                  } catch (error) {
+                    console.error("Error deleting welcome message:", error);
+                    setPendingDeleteId(null);
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

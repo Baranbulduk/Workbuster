@@ -37,6 +37,7 @@ import note from './src/routes/note.js';
 import log from './src/routes/log.js';
 import authRoutes from './src/routes/auth.js';
 import employeeRoutes from './src/routes/employees.js';
+import welcomeMessagesRoutes from './src/routes/welcomeMessages.js';
 
 // Routes
 app.use('/api/candidates', candidate);
@@ -48,6 +49,7 @@ app.use('/api/notes', note);
 app.use('/api/logs', log);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/welcome-messages', welcomeMessagesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

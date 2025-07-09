@@ -1,5 +1,21 @@
 .ql-toolbar, .ql-container {
   border: none !important;
   box-shadow: none !important;
+}
+
+.ql-container.ql-snow {
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 0.5rem !important;
+}
+
+.ql-editor {
+  min-height: 100px !important; /* or whatever height you want */
+  padding: 12px 16px !important;
+  line-height: 1.5 !important;
+}
+
+.ql-editor.ql-blank::before {
+  left: 16px !important; /* align placeholder with padding */
 } 
 
