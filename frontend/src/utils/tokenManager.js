@@ -9,12 +9,12 @@ export const verifyAndRefreshAdminToken = async () => {
 
   try {
     const response = await axios.post(`${API_URL}/auth/verify-token`, { token });
-    
+
     if (response.data.token && response.data.token !== token) {
       // Update token in localStorage if it was refreshed
       localStorage.setItem('adminToken', response.data.token);
     }
-    
+
     return { valid: true, token: response.data.token };
   } catch (error) {
     if (error.response?.data?.expired) {
@@ -33,12 +33,12 @@ export const verifyAndRefreshToken = async () => {
 
   try {
     const response = await axios.post(`${API_URL}/employees/verify-token`, { token });
-    
+
     if (response.data.tokenRefreshed) {
       // Update token in localStorage if it was refreshed
       localStorage.setItem('employeeToken', response.data.token);
     }
-    
+
     return { valid: true, token: response.data.token };
   } catch (error) {
     if (error.response?.data?.expired) {
@@ -55,7 +55,7 @@ export const apiCall = async (method, endpoint, data = null, config = {}) => {
   try {
     // Verify token before making the request
     const { valid, expired, token } = await verifyAndRefreshToken();
-    
+
     if (!valid) {
       if (expired) {
         throw new Error('TOKEN_EXPIRED');
@@ -90,7 +90,7 @@ export const adminApiCall = async (method, endpoint, data = null, config = {}) =
   try {
     // Verify token before making the request
     const { valid, expired, token } = await verifyAndRefreshAdminToken();
-    
+
     if (!valid) {
       if (expired) {
         throw new Error('TOKEN_EXPIRED');
@@ -130,110 +130,4 @@ export const handleTokenExpiration = (navigate, token, email) => {
 export const handleAdminTokenExpiration = (navigate) => {
   localStorage.removeItem('adminToken');
   navigate('/login');
-}; 
-
-// Function to verify and refresh candidate token if needed
-export const verifyAndRefreshCandidateToken = async () => {
-  const token = localStorage.getItem('candidateToken');
-  if (!token) return { valid: false, expired: true };
-
-  try {
-    const response = await axios.post(`${API_URL}/candidates/verify-token`, { token });
-    if (response.data.tokenRefreshed) {
-      localStorage.setItem('candidateToken', response.data.token);
-    }
-    return { valid: true, token: response.data.token };
-  } catch (error) {
-    if (error.response?.data?.expired) {
-      localStorage.removeItem('candidateToken');
-      return { valid: false, expired: true };
-    }
-    return { valid: false, expired: false };
-  }
-};
-
-// Function to handle API calls with automatic token refresh (for candidates)
-export const candidateApiCall = async (method, endpoint, data = null, config = {}) => {
-  try {
-    const { valid, expired, token } = await verifyAndRefreshCandidateToken();
-    if (!valid) {
-      if (expired) throw new Error('TOKEN_EXPIRED');
-      throw new Error('INVALID_TOKEN');
-    }
-    const headers = {
-      ...config.headers,
-      'Authorization': `Bearer ${token || localStorage.getItem('candidateToken')}`
-    };
-    const response = await axios({
-      method,
-      url: `${API_URL}${endpoint}`,
-      data,
-      headers
-    });
-    return response.data;
-  } catch (error) {
-    if (error.message === 'TOKEN_EXPIRED') {
-      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
-    }
-    throw error;
-  }
-};
-
-// Function to handle candidate token expiration
-export const handleCandidateTokenExpiration = (navigate, token, email) => {
-  localStorage.removeItem('candidateToken');
-  navigate(`/candidate/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
-};
-
-// Function to verify and refresh client token if needed
-export const verifyAndRefreshClientToken = async () => {
-  const token = localStorage.getItem('clientToken');
-  if (!token) return { valid: false, expired: true };
-
-  try {
-    const response = await axios.post(`${API_URL}/clients/verify-token`, { token });
-    if (response.data.tokenRefreshed) {
-      localStorage.setItem('clientToken', response.data.token);
-    }
-    return { valid: true, token: response.data.token };
-  } catch (error) {
-    if (error.response?.data?.expired) {
-      localStorage.removeItem('clientToken');
-      return { valid: false, expired: true };
-    }
-    return { valid: false, expired: false };
-  }
-};
-
-// Function to handle API calls with automatic token refresh (for clients)
-export const clientApiCall = async (method, endpoint, data = null, config = {}) => {
-  try {
-    const { valid, expired, token } = await verifyAndRefreshClientToken();
-    if (!valid) {
-      if (expired) throw new Error('TOKEN_EXPIRED');
-      throw new Error('INVALID_TOKEN');
-    }
-    const headers = {
-      ...config.headers,
-      'Authorization': `Bearer ${token || localStorage.getItem('clientToken')}`
-    };
-    const response = await axios({
-      method,
-      url: `${API_URL}${endpoint}`,
-      data,
-      headers
-    });
-    return response.data;
-  } catch (error) {
-    if (error.message === 'TOKEN_EXPIRED') {
-      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
-    }
-    throw error;
-  }
-};
-
-// Function to handle client token expiration
-export const handleClientTokenExpiration = (navigate, token, email) => {
-  localStorage.removeItem('clientToken');
-  navigate(`/client/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
 }; 

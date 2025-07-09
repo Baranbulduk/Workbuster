@@ -158,7 +158,7 @@ router.get('/:id/resume', async (req, res) => {
     if (!candidate.resume) {
       return res.status(404).json({ message: 'Resume not found' });
     }
-    
+
     const resumePath = path.join(__dirname, '../../', candidate.resume);
     res.sendFile(resumePath);
   } catch (error) {
@@ -171,22 +171,22 @@ router.post('/', upload.single('resume'), async (req, res) => {
   try {
     // Parse form data
     const formData = req.body;
-    
+
     // Generate password and hash it
     const userPassword = generatePassword();
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userPassword, salt);
-    
+
     // Convert experience and expectedSalary to numbers
     formData.experience = parseInt(formData.experience, 10);
     formData.expectedSalary = parseInt(formData.expectedSalary, 10);
-    
+
     // Map position to currentRole
     if (formData.position) {
       formData.currentRole = formData.position;
       delete formData.position;
     }
-    
+
     // Handle location data
     if (formData['location[city]']) {
       formData.location = {
@@ -199,7 +199,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
       delete formData['location[state]'];
       delete formData['location[country]'];
     }
-    
+
     // Handle resume file
     if (req.file) {
       formData.resume = path.relative(path.join(__dirname, '../../'), req.file.path);
@@ -238,17 +238,17 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
 
     // Parse form data
     const formData = req.body;
-    
+
     // Convert experience and expectedSalary to numbers
     formData.experience = parseInt(formData.experience, 10);
     formData.expectedSalary = parseInt(formData.expectedSalary, 10);
-    
+
     // Map position to currentRole
     if (formData.position) {
       formData.currentRole = formData.position;
       delete formData.position;
     }
-    
+
     // Handle location data
     if (formData['location[city]']) {
       formData.location = {
@@ -283,12 +283,12 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
         };
       }
     }
-    
+
     // Handle skills data
     if (formData.skills && typeof formData.skills === 'string') {
       formData.skills = formData.skills.split(',').map(skill => skill.trim());
     }
-    
+
     // Handle resume file
     if (req.file) {
       formData.resume = path.relative(path.join(__dirname, '../../'), req.file.path);
@@ -354,10 +354,10 @@ router.delete('/:id', async (req, res) => {
 router.post('/import', async (req, res) => {
   try {
     const { items } = req.body;
-    
+
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ 
-        message: 'Invalid input. Expected an array of candidate items.' 
+      return res.status(400).json({
+        message: 'Invalid input. Expected an array of candidate items.'
       });
     }
 
@@ -370,12 +370,12 @@ router.post('/import', async (req, res) => {
       try {
         // Generate a unique personId for each candidate
         const personId = `CAND-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        
+
         // Generate password and hash it
         const userPassword = generatePassword();
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(userPassword, salt);
-        
+
         // Create candidate object
         const candidateData = {
           firstName: item.firstName || '',
@@ -398,13 +398,13 @@ router.post('/import', async (req, res) => {
           password: hashedPassword,
           personId: personId
         };
-        
+
         // Create and save the candidate
         const candidate = new Candidate(candidateData);
         console.log('Creating candidate with data:', candidateData);
         const newCandidate = await candidate.save();
         console.log('Created candidate:', newCandidate);
-        
+
         // Try to send welcome email
         try {
           await sendWelcomeEmail(newCandidate.email, newCandidate.firstName, userPassword);
@@ -412,7 +412,7 @@ router.post('/import', async (req, res) => {
           console.error('Error sending welcome email:', emailError);
           // Don't throw the error, just log it
         }
-        
+
         results.success.push(newCandidate);
       } catch (itemError) {
         console.error('Error importing candidate item:', itemError);
@@ -430,9 +430,9 @@ router.post('/import', async (req, res) => {
     });
   } catch (error) {
     console.error('Error importing candidates:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 });

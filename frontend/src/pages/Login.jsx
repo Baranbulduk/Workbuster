@@ -1,53 +1,57 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from '../utils/axios';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "../utils/axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    console.log('Login form submitted');
+    setError("");
+    console.log("Login form submitted");
 
     try {
-      console.log('About to send login request');
-      const response = await axios.post('/auth/login', formData);
-      console.log('Login response:', response);
+      console.log("About to send login request");
+      const response = await axios.post("/auth/login", formData);
+      console.log("Login response:", response);
 
       const { token, role, adminId, admin } = response.data;
-      console.log('Login data:', { token, role, adminId, admin });
+      console.log("Login data:", { token, role, adminId, admin });
 
-      if (role !== 'admin') {
-        setError('This login page is for administrators only. Please use the employee login page.');
+      if (role !== "admin") {
+        setError(
+          "This login page is for administrators only. Please use the employee login page."
+        );
         return;
       }
 
-      localStorage.setItem('adminToken', token);
-      localStorage.setItem('userEmail', formData.email);
-      localStorage.setItem('adminId', adminId);
+      localStorage.setItem("adminToken", token);
+      localStorage.setItem("userEmail", formData.email);
+      localStorage.setItem("adminId", adminId);
       if (admin) {
-        localStorage.setItem('admin', JSON.stringify(admin));
+        localStorage.setItem("admin", JSON.stringify(admin));
       }
 
-      console.log('Navigating to dashboard');
-      navigate('/dashboard');
+      console.log("Navigating to dashboard");
+      navigate("/dashboard");
     } catch (error) {
-      console.log('Login error:', error);
-      setError(error.response?.data?.message || 'An error occurred during login');
+      console.log("Login error:", error);
+      setError(
+        error.response?.data?.message || "An error occurred during login"
+      );
     }
   };
 
@@ -59,14 +63,20 @@ const Login = () => {
             Admin Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Or{" "}
+            <Link
+              to="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               create a new admin account
             </Link>
           </p>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/employee/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Or{" "}
+            <Link
+              to="/employee/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               login as employee
             </Link>
           </p>
@@ -79,7 +89,9 @@ const Login = () => {
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
@@ -92,7 +104,9 @@ const Login = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -108,7 +122,7 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              onClick={() => console.log('Button clicked')}
+              onClick={() => console.log("Button clicked")}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
               Sign in as Admin
@@ -120,4 +134,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

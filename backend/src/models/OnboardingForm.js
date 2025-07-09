@@ -69,7 +69,7 @@ const onboardingFormSchema = new mongoose.Schema({
 });
 
 // Update the 'updatedAt' field on save
-onboardingFormSchema.pre('save', function(next) {
+onboardingFormSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });

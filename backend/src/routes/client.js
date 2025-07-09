@@ -125,7 +125,7 @@ router.post('/', async (req, res) => {
   try {
     const plainPassword = generatePassword();
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
-    
+
     // Handle address field conversion
     let addressData = req.body.address;
     if (req.body.address && typeof req.body.address === 'string') {
@@ -138,7 +138,7 @@ router.post('/', async (req, res) => {
         country: addressParts[4] || ''
       };
     }
-    
+
     const client = new Client({
       companyName: req.body.companyName,
       contactPerson: req.body.contactPerson,
@@ -184,10 +184,10 @@ router.put('/:id', async (req, res) => {
 
     Object.assign(client, req.body);
     const updatedClient = await client.save();
-    
+
     // Send update email
     await sendUpdateEmail(updatedClient);
-    
+
     res.json(updatedClient);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -201,15 +201,15 @@ router.delete('/:id', async (req, res) => {
     if (!client) {
       return res.status(404).json({ message: 'Client not found' });
     }
-    
+
     // Store client info before deletion
     const clientInfo = { ...client.toObject() };
-    
+
     await client.deleteOne();
-    
+
     // Send deletion email
     await sendDeletionEmail(clientInfo);
-    
+
     res.json({ message: 'Client deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -220,11 +220,11 @@ router.delete('/:id', async (req, res) => {
 router.post('/import', async (req, res) => {
   try {
     const { items } = req.body;
-    
+
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No client data provided' 
+      return res.status(400).json({
+        success: false,
+        message: 'No client data provided'
       });
     }
 
@@ -267,11 +267,11 @@ router.post('/import', async (req, res) => {
           status: item.status || 'active',
           password: hashedPassword
         };
-        
+
         // Create and save the client
         const client = new Client(clientData);
         const newClient = await client.save();
-        
+
         // Try to send welcome email
         try {
           await sendWelcomeEmail(newClient, plainPassword);
@@ -279,7 +279,7 @@ router.post('/import', async (req, res) => {
           console.error('Error sending welcome email:', emailError);
           // Don't throw the error, just log it
         }
-        
+
         results.success.push(newClient);
       } catch (itemError) {
         console.error('Error importing client item:', itemError);
@@ -297,9 +297,9 @@ router.post('/import', async (req, res) => {
     });
   } catch (error) {
     console.error('Error importing clients:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 });

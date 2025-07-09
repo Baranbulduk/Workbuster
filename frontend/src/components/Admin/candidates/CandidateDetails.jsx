@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../../../context/ThemeContext';
-import axios from 'axios';
-import path from 'path';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useTheme } from "../../../context/ThemeContext";
+import axios from "axios";
+import path from "path";
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
@@ -25,13 +25,13 @@ import {
   TrashIcon,
   DocumentIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 // Helper function to get initials from name
 const getInitials = (firstName, lastName) => {
-  if (!firstName && !lastName) return '?';
-  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
-  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+  if (!firstName && !lastName) return "?";
+  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : "";
+  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : "";
   return `${firstInitial}${lastInitial}`;
 };
 
@@ -45,29 +45,29 @@ export default function CandidateDetails() {
   const [error, setError] = useState(null);
   const [notes, setNotes] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    position: '',
-    experience: '',
-    skills: '',
-    education: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    position: "",
+    experience: "",
+    skills: "",
+    education: "",
     resume: null,
     coverLetter: null,
-    availability: '',
-    expectedSalary: '',
-    workPreference: 'full-time',
-    location: '',
-    portfolio: '',
-    linkedin: '',
-    github: '',
-    personId: '',
+    availability: "",
+    expectedSalary: "",
+    workPreference: "full-time",
+    location: "",
+    portfolio: "",
+    linkedin: "",
+    github: "",
+    personId: "",
   });
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function CandidateDetails() {
         const [candidateRes, notesRes, logsRes] = await Promise.all([
           axios.get(`http://localhost:5000/api/candidates/${id}`),
           axios.get(`http://localhost:5000/api/notes?candidate=${id}`),
-          axios.get(`http://localhost:5000/api/logs?candidate=${id}`)
+          axios.get(`http://localhost:5000/api/logs?candidate=${id}`),
         ]);
 
         setCandidate(candidateRes.data);
@@ -84,7 +84,7 @@ export default function CandidateDetails() {
         setLogs(logsRes.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch candidate details');
+        setError("Failed to fetch candidate details");
         setLoading(false);
       }
     };
@@ -94,141 +94,147 @@ export default function CandidateDetails() {
 
   const handleBack = () => {
     if (location.state?.fromOnboarding) {
-      navigate('/onboarding');
+      navigate("/onboarding");
     } else {
-      navigate('/candidates');
+      navigate("/candidates");
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this candidate?')) {
+    if (window.confirm("Are you sure you want to delete this candidate?")) {
       try {
         await axios.delete(`http://localhost:5000/api/candidates/${id}`);
-        navigate(location.state?.fromOnboarding ? '/onboarding' : '/candidates');
+        navigate(
+          location.state?.fromOnboarding ? "/onboarding" : "/candidates"
+        );
       } catch (error) {
-        setError('Failed to delete candidate');
+        setError("Failed to delete candidate");
       }
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
-    
-    if (name === 'personId') {
+
+    if (name === "personId") {
       // Remove any non-digit characters
-      let cleaned = value.replace(/\D/g, '');
-      
+      let cleaned = value.replace(/\D/g, "");
+
       // Format as YYYY-MM-DD-XXXX
       if (cleaned.length > 8) {
-        cleaned = cleaned.slice(0, 8) + '-' + cleaned.slice(8, 12);
+        cleaned = cleaned.slice(0, 8) + "-" + cleaned.slice(8, 12);
       }
       if (cleaned.length > 6) {
-        cleaned = cleaned.slice(0, 6) + '-' + cleaned.slice(6);
+        cleaned = cleaned.slice(0, 6) + "-" + cleaned.slice(6);
       }
       if (cleaned.length > 4) {
-        cleaned = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+        cleaned = cleaned.slice(0, 4) + "-" + cleaned.slice(4);
       }
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        [name]: cleaned
+        [name]: cleaned,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === 'file' ? files[0] : value
+        [name]: type === "file" ? files[0] : value,
       }));
     }
   };
 
   const handleUpdate = () => {
     // Convert location object to string format for the form
-    let locationString = '';
+    let locationString = "";
     if (candidate.location) {
-      if (typeof candidate.location === 'object') {
+      if (typeof candidate.location === "object") {
         locationString = [
-          candidate.location.city || '',
-          candidate.location.state || '',
-          candidate.location.country || ''
-        ].filter(part => part).join(', ');
+          candidate.location.city || "",
+          candidate.location.state || "",
+          candidate.location.country || "",
+        ]
+          .filter((part) => part)
+          .join(", ");
       } else {
         locationString = candidate.location;
       }
     }
-    
+
     // Convert availability enum to date format for the form
-    let availabilityDate = '';
+    let availabilityDate = "";
     if (candidate.availability) {
       const today = new Date();
       switch (candidate.availability) {
-        case 'immediate':
-          availabilityDate = today.toISOString().split('T')[0];
+        case "immediate":
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '1-week':
+        case "1-week":
           today.setDate(today.getDate() + 7);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '2-weeks':
+        case "2-weeks":
           today.setDate(today.getDate() + 14);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '1-month':
+        case "1-month":
           today.setMonth(today.getMonth() + 1);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case 'more-than-1-month':
+        case "more-than-1-month":
           today.setMonth(today.getMonth() + 2);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
         default:
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
       }
     }
-    
+
     // Convert skills array to string if needed
-    let skillsString = '';
+    let skillsString = "";
     if (candidate.skills) {
       if (Array.isArray(candidate.skills)) {
-        skillsString = candidate.skills.join(', ');
+        skillsString = candidate.skills.join(", ");
       } else {
         skillsString = candidate.skills;
       }
     }
-    
+
     // Convert education object to string if needed
-    let educationString = '';
+    let educationString = "";
     if (candidate.education) {
-      if (typeof candidate.education === 'object') {
+      if (typeof candidate.education === "object") {
         educationString = [
-          candidate.education.degree || '',
-          candidate.education.field || '',
-          candidate.education.institution || '',
-          candidate.education.graduationYear || ''
-        ].filter(part => part).join('\n');
+          candidate.education.degree || "",
+          candidate.education.field || "",
+          candidate.education.institution || "",
+          candidate.education.graduationYear || "",
+        ]
+          .filter((part) => part)
+          .join("\n");
       } else {
         educationString = candidate.education;
       }
     }
-    
+
     setFormData({
-      firstName: candidate.firstName || '',
-      lastName: candidate.lastName || '',
-      email: candidate.email || '',
-      phone: candidate.phone || '',
-      position: candidate.currentRole || '',
-      experience: candidate.experience || '',
+      firstName: candidate.firstName || "",
+      lastName: candidate.lastName || "",
+      email: candidate.email || "",
+      phone: candidate.phone || "",
+      position: candidate.currentRole || "",
+      experience: candidate.experience || "",
       skills: skillsString,
       education: educationString,
       resume: null,
       coverLetter: null,
       availability: availabilityDate,
-      expectedSalary: candidate.expectedSalary || '',
-      workPreference: candidate.workPreference || 'full-time',
+      expectedSalary: candidate.expectedSalary || "",
+      workPreference: candidate.workPreference || "full-time",
       location: locationString,
-      portfolio: candidate.portfolio || '',
-      linkedin: candidate.linkedin || '',
-      github: candidate.github || '',
-      personId: candidate.personId || '',
+      portfolio: candidate.portfolio || "",
+      linkedin: candidate.linkedin || "",
+      github: candidate.github || "",
+      personId: candidate.personId || "",
     });
     setShowUpdateForm(true);
     setIsUpdating(true);
@@ -236,62 +242,64 @@ export default function CandidateDetails() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formDataToSend = new FormData();
-    
+
     // Required fields that must be present
     const requiredFields = [
-      'firstName',
-      'lastName',
-      'email',
-      'phone',
-      'position',
-      'experience',
-      'skills',
-      'education',
-      'availability',
-      'expectedSalary',
-      'workPreference',
-      'location',
-      'personId'
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "position",
+      "experience",
+      "skills",
+      "education",
+      "availability",
+      "expectedSalary",
+      "workPreference",
+      "location",
+      "personId",
     ];
 
     // Add resume to required fields only for new registrations, not updates
     if (!isUpdating) {
-      requiredFields.push('resume');
+      requiredFields.push("resume");
     }
 
     // Check if all required fields are present
-    const missingFields = requiredFields.filter(field => {
+    const missingFields = requiredFields.filter((field) => {
       const value = formData[field];
-      return !value || (typeof value === 'string' && value.trim() === '');
+      return !value || (typeof value === "string" && value.trim() === "");
     });
 
     if (missingFields.length > 0) {
-      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
       return;
     }
 
     // Convert experience to number
     const experience = parseInt(formData.experience, 10);
     if (isNaN(experience)) {
-      alert('Experience must be a valid number');
+      alert("Experience must be a valid number");
       return;
     }
 
     // Convert expectedSalary to number
     const expectedSalary = parseInt(formData.expectedSalary, 10);
     if (isNaN(expectedSalary)) {
-      alert('Expected salary must be a valid number');
+      alert("Expected salary must be a valid number");
       return;
     }
 
     // Format location as an object
-    const locationParts = formData.location.split(',').map(part => part.trim());
+    const locationParts = formData.location
+      .split(",")
+      .map((part) => part.trim());
     const location = {
-      city: locationParts[0] || '',
-      state: locationParts[1] || '',
-      country: locationParts[2] || ''
+      city: locationParts[0] || "",
+      state: locationParts[1] || "",
+      country: locationParts[2] || "",
     };
 
     // Format availability as an enum value
@@ -299,30 +307,30 @@ export default function CandidateDetails() {
     const today = new Date();
     const diffTime = Math.abs(availabilityDate - today);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     let availability;
     if (diffDays <= 7) {
-      availability = '1-week';
+      availability = "1-week";
     } else if (diffDays <= 14) {
-      availability = '2-weeks';
+      availability = "2-weeks";
     } else if (diffDays <= 30) {
-      availability = '1-month';
+      availability = "1-month";
     } else {
-      availability = 'more-than-1-month';
+      availability = "more-than-1-month";
     }
 
     // Add all form fields to FormData
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       if (formData[key] !== null) {
-        if (key === 'experience') {
+        if (key === "experience") {
           formDataToSend.append(key, experience);
-        } else if (key === 'expectedSalary') {
+        } else if (key === "expectedSalary") {
           formDataToSend.append(key, expectedSalary);
-        } else if (key === 'location') {
-          formDataToSend.append('location[city]', location.city);
-          formDataToSend.append('location[state]', location.state);
-          formDataToSend.append('location[country]', location.country);
-        } else if (key === 'availability') {
+        } else if (key === "location") {
+          formDataToSend.append("location[city]", location.city);
+          formDataToSend.append("location[state]", location.state);
+          formDataToSend.append("location[country]", location.country);
+        } else if (key === "availability") {
           formDataToSend.append(key, availability);
         } else {
           formDataToSend.append(key, formData[key]);
@@ -331,27 +339,40 @@ export default function CandidateDetails() {
     });
 
     try {
-      const response = await axios.put(`http://localhost:5000/api/candidates/${id}`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/candidates/${id}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.status === 200) {
         setShowUpdateForm(false);
         setIsUpdating(false);
         // Refresh candidate data
-        const updatedCandidate = await axios.get(`http://localhost:5000/api/candidates/${id}`);
+        const updatedCandidate = await axios.get(
+          `http://localhost:5000/api/candidates/${id}`
+        );
         setCandidate(updatedCandidate.data);
       }
     } catch (error) {
-      console.error('Error updating candidate:', error);
+      console.error("Error updating candidate:", error);
       if (error.response) {
-        alert(`Error: ${error.response.data.message || 'Failed to update candidate. Please check your input and try again.'}`);
+        alert(
+          `Error: ${
+            error.response.data.message ||
+            "Failed to update candidate. Please check your input and try again."
+          }`
+        );
       } else if (error.request) {
-        alert('No response from server. Please check your connection and try again.');
+        alert(
+          "No response from server. Please check your connection and try again."
+        );
       } else {
-        alert('Error setting up the request. Please try again.');
+        alert("Error setting up the request. Please try again.");
       }
     }
   };
@@ -359,45 +380,56 @@ export default function CandidateDetails() {
   const handleViewCV = () => {
     if (candidate.resume) {
       const resumeUrl = `http://localhost:5000/api/candidates/${id}/resume`;
-      window.open(resumeUrl, '_blank');
+      window.open(resumeUrl, "_blank");
     }
   };
 
   const handleDownloadCV = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/candidates/${id}/resume`, {
-        responseType: 'blob'
-      });
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/candidates/${id}/resume`,
+        {
+          responseType: "blob",
+        }
+      );
+
       // Create a blob from the response data
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
-      
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
+
       // Create a URL for the blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary link element
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      
+
       // Get the file extension from the content type or default to .pdf
-      const contentType = response.headers['content-type'];
-      const extension = contentType === 'application/pdf' ? '.pdf' : 
-                       contentType === 'application/msword' ? '.doc' :
-                       contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? '.docx' : '.pdf';
-      
+      const contentType = response.headers["content-type"];
+      const extension =
+        contentType === "application/pdf"
+          ? ".pdf"
+          : contentType === "application/msword"
+          ? ".doc"
+          : contentType ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          ? ".docx"
+          : ".pdf";
+
       // Set the download filename
       link.download = `${candidate.firstName}_${candidate.lastName}_CV${extension}`;
-      
+
       // Append to body, click, and remove
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up the URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading CV:', error);
-      alert('Error downloading CV. Please try again.');
+      console.error("Error downloading CV:", error);
+      alert("Error downloading CV. Please try again.");
     }
   };
 
@@ -412,12 +444,12 @@ export default function CandidateDetails() {
   if (error || !candidate) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-red-500 mb-4">{error || 'Candidate not found'}</p>
+        <p className="text-red-500 mb-4">{error || "Candidate not found"}</p>
         <button
           onClick={handleBack}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Back to {location.state?.fromOnboarding ? 'Onboarding' : 'Candidates'}
+          Back to {location.state?.fromOnboarding ? "Onboarding" : "Candidates"}
         </button>
       </div>
     );
@@ -425,27 +457,41 @@ export default function CandidateDetails() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case "overview":
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Contact & Basic Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contact Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Contact Information
+                </h2>
                 <div className="space-y-4">
                   <div key="contact-email" className="flex items-center">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{candidate.email}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {candidate.email}
+                    </span>
                   </div>
                   <div key="contact-phone" className="flex items-center">
                     <PhoneIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{candidate.phone}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {candidate.phone}
+                    </span>
                   </div>
                   <div key="contact-location" className="flex items-center">
                     <MapPinIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600 dark:text-gray-300">
-                      {typeof candidate.location === 'object'
-                        ? `${candidate.location.city}${candidate.location.state ? `, ${candidate.location.state}` : ''}${candidate.location.country ? `, ${candidate.location.country}` : ''}`
+                      {typeof candidate.location === "object"
+                        ? `${candidate.location.city}${
+                            candidate.location.state
+                              ? `, ${candidate.location.state}`
+                              : ""
+                          }${
+                            candidate.location.country
+                              ? `, ${candidate.location.country}`
+                              : ""
+                          }`
                         : candidate.location}
                     </span>
                   </div>
@@ -453,16 +499,20 @@ export default function CandidateDetails() {
               </div>
 
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Professional Details</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Professional Details
+                </h2>
                 <div className="space-y-4">
                   <div key="work-preference" className="flex items-center">
                     <BriefcaseIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{candidate.workPreference}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {candidate.workPreference}
+                    </span>
                   </div>
                   <div key="availability" className="flex items-center">
                     <CalendarIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Available: {candidate.availability || 'Not specified'}
+                      Available: {candidate.availability || "Not specified"}
                     </div>
                   </div>
                   <div key="salary" className="flex items-center">
@@ -484,10 +534,15 @@ export default function CandidateDetails() {
             {/* Right Column - Skills, Education, etc. */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skills</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Skills
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {candidate.skills ? (
-                    (typeof candidate.skills === 'string' ? candidate.skills.split(',') : candidate.skills).map((skill, index) => (
+                    (typeof candidate.skills === "string"
+                      ? candidate.skills.split(",")
+                      : candidate.skills
+                    ).map((skill, index) => (
                       <span
                         key={`skill-${index}-${skill.trim()}`}
                         className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
@@ -496,13 +551,17 @@ export default function CandidateDetails() {
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-500 dark:text-gray-400">No skills listed</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      No skills listed
+                    </span>
                   )}
                 </div>
               </div>
 
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Education</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Education
+                </h2>
                 <div className="space-y-4">
                   {candidate.education ? (
                     Array.isArray(candidate.education) ? (
@@ -510,24 +569,34 @@ export default function CandidateDetails() {
                         <div key={`edu-${index}`} className="flex items-start">
                           <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-3 mt-1" />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-white">{edu.degree}</h3>
-                            <p className="text-gray-600 dark:text-gray-300">{edu.institution}</p>
+                            <h3 className="font-medium text-gray-900 dark:text-white">
+                              {edu.degree}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              {edu.institution}
+                            </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               {edu.field && <span>{edu.field} - </span>}
-                              {edu.graduationYear || 'Present'}
+                              {edu.graduationYear || "Present"}
                             </p>
                           </div>
                         </div>
                       ))
-                    ) : typeof candidate.education === 'object' ? (
+                    ) : typeof candidate.education === "object" ? (
                       <div className="flex items-start">
                         <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-3 mt-1" />
                         <div>
-                          <h3 className="font-medium text-gray-900 dark:text-white">{candidate.education.degree}</h3>
-                          <p className="text-gray-600 dark:text-gray-300">{candidate.education.institution}</p>
+                          <h3 className="font-medium text-gray-900 dark:text-white">
+                            {candidate.education.degree}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-300">
+                            {candidate.education.institution}
+                          </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {candidate.education.field && <span>{candidate.education.field} - </span>}
-                            {candidate.education.graduationYear || 'Present'}
+                            {candidate.education.field && (
+                              <span>{candidate.education.field} - </span>
+                            )}
+                            {candidate.education.graduationYear || "Present"}
                           </p>
                         </div>
                       </div>
@@ -535,74 +604,105 @@ export default function CandidateDetails() {
                       <div className="flex items-start">
                         <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-3 mt-1" />
                         <div>
-                          <p className="text-gray-600 dark:text-gray-300">{String(candidate.education)}</p>
+                          <p className="text-gray-600 dark:text-gray-300">
+                            {String(candidate.education)}
+                          </p>
                         </div>
                       </div>
                     )
                   ) : (
-                    <span className="text-gray-500 dark:text-gray-400">No education history listed</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      No education history listed
+                    </span>
                   )}
                 </div>
               </div>
             </div>
           </div>
         );
-      case 'notes':
+      case "notes":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notes</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Notes
+            </h2>
             <div className="space-y-4">
               {notes.length > 0 ? (
                 notes.map((note, index) => (
-                  <div key={`note-${index}`} className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <p className="text-gray-600 dark:text-gray-300">{note.content}</p>
+                  <div
+                    key={`note-${index}`}
+                    className="border-b border-gray-200 dark:border-gray-700 pb-4"
+                  >
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {note.content}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       {new Date(note.createdAt).toLocaleString()}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 dark:text-gray-400">No notes available</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No notes available
+                </p>
               )}
             </div>
           </div>
         );
-      case 'logs':
+      case "logs":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Activity Logs</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Activity Logs
+            </h2>
             <div className="space-y-4">
               {logs.length > 0 ? (
                 logs.map((log, index) => (
-                  <div key={`log-${index}`} className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <p className="text-gray-600 dark:text-gray-300">{log.action}</p>
+                  <div
+                    key={`log-${index}`}
+                    className="border-b border-gray-200 dark:border-gray-700 pb-4"
+                  >
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {log.action}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       {new Date(log.timestamp).toLocaleString()}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 dark:text-gray-400">No activity logs available</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No activity logs available
+                </p>
               )}
             </div>
           </div>
         );
-      case 'documents':
+      case "documents":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Documents</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Documents
+            </h2>
             <div className="space-y-4">
               {candidate.documents?.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                >
                   <div className="flex items-center">
                     <DocumentIcon className="h-6 w-6 text-gray-400 mr-3" />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{doc.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{doc.type}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {doc.name}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {doc.type}
+                      </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => window.open(doc.url, '_blank')}
+                    onClick={() => window.open(doc.url, "_blank")}
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     View
@@ -612,11 +712,15 @@ export default function CandidateDetails() {
             </div>
           </div>
         );
-      case 'history':
+      case "history":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Application History</h2>
-            <div className="text-gray-600 dark:text-gray-300">No application history available.</div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Application History
+            </h2>
+            <div className="text-gray-600 dark:text-gray-300">
+              No application history available.
+            </div>
           </div>
         );
       default:
@@ -633,7 +737,7 @@ export default function CandidateDetails() {
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Back to {location.state?.fromOnboarding ? 'Onboarding' : 'Candidates'}
+          Back to {location.state?.fromOnboarding ? "Onboarding" : "Candidates"}
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -646,7 +750,9 @@ export default function CandidateDetails() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {candidate.firstName} {candidate.lastName}
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">{candidate.currentRole}</p>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                {candidate.currentRole}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -696,51 +802,51 @@ export default function CandidateDetails() {
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab("overview")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'overview'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "overview"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('notes')}
+            onClick={() => setActiveTab("notes")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'notes'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "notes"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Notes
           </button>
           <button
-            onClick={() => setActiveTab('logs')}
+            onClick={() => setActiveTab("logs")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'logs'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "logs"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Activity Logs
           </button>
           <button
-            onClick={() => setActiveTab('documents')}
+            onClick={() => setActiveTab("documents")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'documents'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "documents"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Documents
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab("history")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'history'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "history"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             History
@@ -755,7 +861,10 @@ export default function CandidateDetails() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
               <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>
 
@@ -771,7 +880,8 @@ export default function CandidateDetails() {
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Are you sure you want to delete {candidate?.firstName} {candidate?.lastName}? This action cannot be undone.
+                        Are you sure you want to delete {candidate?.firstName}{" "}
+                        {candidate?.lastName}? This action cannot be undone.
                       </p>
                     </div>
                   </div>
@@ -802,11 +912,17 @@ export default function CandidateDetails() {
       {showUpdateForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => {
-                setShowUpdateForm(false);
-                setIsUpdating(false);
-              }}></div>
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+                onClick={() => {
+                  setShowUpdateForm(false);
+                  setIsUpdating(false);
+                }}
+              ></div>
             </div>
 
             <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
@@ -828,7 +944,9 @@ export default function CandidateDetails() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Personal Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -907,7 +1025,9 @@ export default function CandidateDetails() {
 
                   {/* Professional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Professional Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Professional Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -925,7 +1045,8 @@ export default function CandidateDetails() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Years of Experience <span className="text-red-500">*</span>
+                          Years of Experience{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -956,7 +1077,9 @@ export default function CandidateDetails() {
 
                   {/* Education and Documents */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Education and Documents</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Education and Documents
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -990,7 +1113,9 @@ export default function CandidateDetails() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cover Letter</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Cover Letter
+                        </label>
                         <input
                           type="file"
                           name="coverLetter"
@@ -1009,7 +1134,9 @@ export default function CandidateDetails() {
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Additional Information</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Additional Information
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1027,7 +1154,8 @@ export default function CandidateDetails() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Expected Salary <span className="text-red-500">*</span>
+                          Expected Salary{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1041,7 +1169,8 @@ export default function CandidateDetails() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Work Preference <span className="text-red-500">*</span>
+                          Work Preference{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <select
                           name="workPreference"
@@ -1075,10 +1204,14 @@ export default function CandidateDetails() {
 
                   {/* Social Links */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Social Links</h2>
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Social Links
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Portfolio URL</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Portfolio URL
+                        </label>
                         <input
                           type="url"
                           name="portfolio"
@@ -1089,7 +1222,9 @@ export default function CandidateDetails() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">LinkedIn</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          LinkedIn
+                        </label>
                         <input
                           type="url"
                           name="linkedin"
@@ -1100,7 +1235,9 @@ export default function CandidateDetails() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          GitHub
+                        </label>
                         <input
                           type="url"
                           name="github"

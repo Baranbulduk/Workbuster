@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'admin' // Default to admin
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "admin", // Default to admin
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    
+    setError("");
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords don't match!");
       return;
@@ -37,38 +37,43 @@ const Register = () => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        role: formData.role
+        role: formData.role,
       };
 
       // Use different endpoints based on role
-      const endpoint = formData.role === 'admin' 
-        ? 'http://localhost:5000/api/auth/register'
-        : 'http://localhost:5000/api/employees';
+      const endpoint =
+        formData.role === "admin"
+          ? "http://localhost:5000/api/auth/register"
+          : "http://localhost:5000/api/employees";
 
       const response = await axios.post(endpoint, userData);
-      
-      if (formData.role === 'admin') {
+
+      if (formData.role === "admin") {
         const { token } = response.data;
         // Store the token and email in localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('userEmail', formData.email);
+        localStorage.setItem("token", token);
+        localStorage.setItem("userEmail", formData.email);
         // Navigate to admin dashboard
-        navigate('/');
+        navigate("/");
       } else {
         // For employee creation, show success message and stay on page
-        alert('Employee account created successfully. Credentials have been sent to their email.');
+        alert(
+          "Employee account created successfully. Credentials have been sent to their email."
+        );
         // Reset form
         setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          role: 'admin'
+          firstName: "",
+          lastName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          role: "admin",
         });
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred during registration');
+      setError(
+        error.response?.data?.message || "An error occurred during registration"
+      );
     }
   };
 
@@ -80,8 +85,11 @@ const Register = () => {
             Create New Account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Or{" "}
+            <Link
+              to="/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               sign in to your existing account
             </Link>
           </p>
@@ -95,7 +103,9 @@ const Register = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="sr-only">First name</label>
+                <label htmlFor="firstName" className="sr-only">
+                  First name
+                </label>
                 <input
                   id="firstName"
                   name="firstName"
@@ -108,7 +118,9 @@ const Register = () => {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="sr-only">Last name</label>
+                <label htmlFor="lastName" className="sr-only">
+                  Last name
+                </label>
                 <input
                   id="lastName"
                   name="lastName"
@@ -122,7 +134,9 @@ const Register = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
@@ -135,7 +149,9 @@ const Register = () => {
               />
             </div>
             <div>
-              <label htmlFor="role" className="sr-only">Account Type</label>
+              <label htmlFor="role" className="sr-only">
+                Account Type
+              </label>
               <select
                 id="role"
                 name="role"
@@ -149,7 +165,9 @@ const Register = () => {
               </select>
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -162,7 +180,9 @@ const Register = () => {
               />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="sr-only">Confirm password</label>
+              <label htmlFor="confirmPassword" className="sr-only">
+                Confirm password
+              </label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -181,7 +201,7 @@ const Register = () => {
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
-              Create {formData.role === 'admin' ? 'Admin' : 'Employee'} Account
+              Create {formData.role === "admin" ? "Admin" : "Employee"} Account
             </button>
           </div>
         </form>
@@ -190,4 +210,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Register;

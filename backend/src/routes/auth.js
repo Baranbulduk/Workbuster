@@ -92,7 +92,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }, // Extended to 7 days like employee tokens
       (err, token) => {
         if (err) throw err;
-        res.json({ 
+        res.json({
           token,
           role: user.role,
           adminId: user._id,
@@ -165,10 +165,10 @@ router.post('/verify-token', async (req, res) => {
   } catch (error) {
     console.error('Error verifying admin token:', error);
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        valid: false, 
+      return res.status(401).json({
+        valid: false,
         expired: true,
-        message: 'Token has expired' 
+        message: 'Token has expired'
       });
     }
     res.status(500).json({ valid: false, message: 'Error verifying token' });

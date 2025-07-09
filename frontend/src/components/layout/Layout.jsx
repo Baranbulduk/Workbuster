@@ -1,6 +1,6 @@
-import React from 'react';
-import Sidebar from './Sidebar';
-import { Outlet } from 'react-router-dom';
+import React from "react";
+import Sidebar from "./Sidebar";
+import { Outlet } from "react-router-dom";
 
 const Layout = () => {
   return (
@@ -15,4 +15,4 @@ const Layout = () => {
   );
 };
 
-export default Layout; 
+export default Layout;

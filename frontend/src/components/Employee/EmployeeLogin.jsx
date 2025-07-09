@@ -1,41 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { verifyAndRefreshToken } from '../../utils/tokenManager';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { verifyAndRefreshToken } from "../../utils/tokenManager";
 
 const EmployeeLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get('token');
-  const emailParam = searchParams.get('email');
+  const token = searchParams.get("token");
+  const emailParam = searchParams.get("email");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/employees/login', {
-        email,
-        password
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/employees/login",
+        {
+          email,
+          password,
+        }
+      );
 
       if (response.data.success) {
         // Store token and employee data in localStorage
-        localStorage.setItem('employeeToken', response.data.token);
-        localStorage.setItem('employee', JSON.stringify(response.data.employee));
-        
+        localStorage.setItem("employeeToken", response.data.token);
+        localStorage.setItem(
+          "employee",
+          JSON.stringify(response.data.employee)
+        );
+
         // Navigate to onboarding form with any existing token/email params
-        navigate(`/employee/onboarding${token ? `?token=${token}${emailParam ? `&email=${emailParam}` : ''}` : ''}`);
+        navigate(
+          `/employee/onboarding${
+            token
+              ? `?token=${token}${emailParam ? `&email=${emailParam}` : ""}`
+              : ""
+          }`
+        );
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.response?.data?.message || 'An error occurred during login');
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.message || "An error occurred during login"
+      );
     } finally {
       setLoading(false);
     }
@@ -49,8 +63,11 @@ const EmployeeLogin = () => {
             Employee Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Or{" "}
+            <Link
+              to="/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               login as admin
             </Link>
           </p>
@@ -58,7 +75,9 @@ const EmployeeLogin = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
@@ -71,7 +90,9 @@ const EmployeeLogin = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -86,9 +107,7 @@ const EmployeeLogin = () => {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center">
-              {error}
-            </div>
+            <div className="text-red-500 text-sm text-center">{error}</div>
           )}
 
           <div>
@@ -97,7 +116,7 @@ const EmployeeLogin = () => {
               disabled={loading}
               className="flex items-center justify-center px-4 py-2 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>
@@ -106,4 +125,4 @@ const EmployeeLogin = () => {
   );
 };
 
-export default EmployeeLogin; 
+export default EmployeeLogin;

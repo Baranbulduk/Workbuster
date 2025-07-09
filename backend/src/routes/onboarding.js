@@ -110,11 +110,11 @@ router.get('/:id', async (req, res) => {
 router.post('/import', async (req, res) => {
   try {
     const { candidates } = req.body;
-    
+
     if (!Array.isArray(candidates) || candidates.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No candidates data provided' 
+      return res.status(400).json({
+        success: false,
+        message: 'No candidates data provided'
       });
     }
 
@@ -208,7 +208,7 @@ router.post('/import', async (req, res) => {
 router.get('/export/csv', async (req, res) => {
   try {
     const employees = await User.find().sort({ createdAt: -1 });
-    
+
     const headers = [
       'First Name',
       'Last Name',
@@ -258,7 +258,7 @@ router.put('/:id/status', async (req, res) => {
   try {
     const { onboardingStep, welcomeSent, formCompleted, tasks } = req.body;
     const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
-    
+
     if (!employee) {
       return res.status(404).json({ message: 'Candidate not found' });
     }
@@ -279,10 +279,10 @@ router.put('/:id/status', async (req, res) => {
 router.post('/send-form', async (req, res) => {
   try {
     const { formTitle, fields, recipients } = req.body;
-    
+
     // Generate a unique token for this form submission
     const formToken = crypto.randomBytes(16).toString('hex');
-    
+
     // Store the form data in the database
     const formData = new OnboardingForm({
       token: formToken,
@@ -291,10 +291,10 @@ router.post('/send-form', async (req, res) => {
       recipients: recipients.map(r => ({ name: r.name, email: r.email })),
       createdAt: new Date()
     });
-    
+
     await formData.save();
     console.log('Form data saved with token:', formToken);
-    
+
     // Send email to each recipient and collect results
     const results = [];
     for (const recipient of recipients) {
@@ -308,7 +308,7 @@ router.post('/send-form', async (req, res) => {
       } else {
         onboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
       }
-      
+
       // Create email content with link to onboarding dashboard
       const emailContent = `
         <h1>${formTitle}</h1>
@@ -319,7 +319,7 @@ router.post('/send-form', async (req, res) => {
         <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
         <p>${onboardingUrl}</p>
       `;
-      
+
       const mailOptions = {
         from: 'rexettit@gmail.com',
         to: recipient.email,
@@ -362,15 +362,15 @@ router.post('/send-form', async (req, res) => {
 router.get('/form/:token', async (req, res) => {
   try {
     const { token } = req.params;
-    
+
     const formData = await OnboardingForm.findOne({ token });
-    
+
     if (!formData) {
       return res.status(404).json({ success: false, message: 'Form not found' });
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       form: {
         title: formData.title,
         fields: formData.fields,
@@ -389,46 +389,46 @@ router.post('/submit/:token', async (req, res) => {
   try {
     const { token } = req.params;
     const { completedFields, recipientEmail } = req.body;
-    
+
     if (!token || !recipientEmail) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields: token and recipientEmail are required' 
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: token and recipientEmail are required'
       });
     }
-    
+
     // Find the form by token
     const formData = await OnboardingForm.findOne({ token });
-    
+
     if (!formData) {
       return res.status(404).json({ success: false, message: 'Form not found' });
     }
-    
+
     // Check if this email is actually a recipient for this form
     const isRecipient = formData.recipients.some(r => r.email === recipientEmail);
     if (!isRecipient) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'The provided email is not authorized to submit this form' 
+      return res.status(403).json({
+        success: false,
+        message: 'The provided email is not authorized to submit this form'
       });
     }
-    
+
     // Mark this form as completed by this recipient
     const updatedForm = await OnboardingForm.findOneAndUpdate(
       { token, 'recipients.email': recipientEmail },
-      { 
-        $set: { 
+      {
+        $set: {
           'recipients.$.completedAt': new Date(),
-          'recipients.$.completedFields': completedFields 
-        } 
+          'recipients.$.completedFields': completedFields
+        }
       },
       { new: true }
     );
-    
+
     if (!updatedForm) {
       return res.status(400).json({ success: false, message: 'Failed to update form completion status' });
     }
-    
+
     res.json({ success: true, message: 'Form submitted successfully' });
   } catch (error) {
     console.error('Error submitting form:', error);
@@ -440,18 +440,18 @@ router.post('/submit/:token', async (req, res) => {
 router.get('/forms-by-recipient/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    
+
     // Find all forms where this email is a recipient
-    const forms = await OnboardingForm.find({ 
-      'recipients.email': email 
+    const forms = await OnboardingForm.find({
+      'recipients.email': email
     });
-    
+
     if (!forms || forms.length === 0) {
       return res.json({ success: true, forms: [] });
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       forms
     });
   } catch (error) {
@@ -464,18 +464,18 @@ router.get('/forms-by-recipient/:email', async (req, res) => {
 router.get('/my-forms/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    
+
     // Find all forms where this email is a recipient
-    const forms = await OnboardingForm.find({ 
-      'recipients.email': email 
+    const forms = await OnboardingForm.find({
+      'recipients.email': email
     });
-    
+
     if (!forms || forms.length === 0) {
       return res.json({ success: true, forms: [] });
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       forms
     });
   } catch (error) {
@@ -585,7 +585,7 @@ router.post('/submit-form/:token', async (req, res) => {
   try {
     const { email, completedFields } = req.body;
     const form = await OnboardingForm.findOne({ token: req.params.token });
-    
+
     if (!form) {
       return res.status(404).json({ message: 'Form not found' });
     }
@@ -609,7 +609,7 @@ router.post('/submit-form/:token', async (req, res) => {
 router.get('/progress', async (req, res) => {
   try {
     console.log('Fetching onboarding progress for all employees');
-    
+
     // Get all employees with their forms
     const employees = await Employee.find()
       .populate('forms')
@@ -626,7 +626,7 @@ router.get('/progress', async (req, res) => {
 
       formsData.forEach(form => {
         if (!form) return;
-        
+
         const recipient = form.recipients?.find(r => r.email === employee.email);
         if (!recipient) {
           notStarted++;
@@ -667,8 +667,8 @@ router.get('/progress', async (req, res) => {
     res.json(progressData);
   } catch (error) {
     console.error('Error in GET /progress:', error);
-    res.status(500).json({ 
-      message: 'Server error', 
+    res.status(500).json({
+      message: 'Server error',
       error: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });

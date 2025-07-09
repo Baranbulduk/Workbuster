@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  UserGroupIcon,
-  MagnifyingGlassIcon,
-  ChevronDownIcon,
   CheckCircleIcon,
-  ArrowUpTrayIcon,
   DocumentTextIcon,
   Bars3BottomLeftIcon,
   EnvelopeIcon,
@@ -26,17 +22,15 @@ import {
   GlobeAltIcon,
   Squares2X2Icon,
   SquaresPlusIcon,
-  TrashIcon,
-  PencilIcon,
-  ArrowDownTrayIcon,
-  Bars3Icon,
-  PlusIcon,
   XCircleIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import axios from "axios";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { verifyAndRefreshToken, apiCall, handleTokenExpiration } from '../../../utils/tokenManager';
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  verifyAndRefreshToken,
+  apiCall,
+  handleTokenExpiration,
+} from "../../../utils/tokenManager";
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -403,7 +397,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!token) {
-      const employeeStr = localStorage.getItem('employee');
+      const employeeStr = localStorage.getItem("employee");
       let employeeEmail = null;
       if (employeeStr) {
         try {
@@ -413,9 +407,12 @@ export default function Onboarding() {
       }
       if (employeeEmail) {
         setFormsLoading(true);
-        apiCall('get', `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`)
-          .then(res => {
-            console.log('FORMS RESPONSE:', res);
+        apiCall(
+          "get",
+          `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`
+        )
+          .then((res) => {
+            console.log("FORMS RESPONSE:", res);
             if (res.success) {
               setAvailableForms(res.forms);
             } else {
@@ -434,7 +431,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await apiCall('get', `/onboarding/form/${token}`);
+      const response = await apiCall("get", `/onboarding/form/${token}`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -442,41 +439,48 @@ export default function Onboarding() {
 
         // Get the current user's email from URL params
         const currentUserEmail = searchParams.get("email");
-        
+
         // Find the current user's recipient data
-        const currentRecipient = recipients.find(r => r.email === currentUserEmail);
-        
+        const currentRecipient = recipients.find(
+          (r) => r.email === currentUserEmail
+        );
+
         // Get existing form data from localStorage if available
         const existingFormData = localStorage.getItem(`formData_${token}`);
-        const parsedExistingData = existingFormData ? JSON.parse(existingFormData) : {};
+        const parsedExistingData = existingFormData
+          ? JSON.parse(existingFormData)
+          : {};
 
         const resetFields = fields.map((field) => {
           // First check if we have completedFields from the backend for this recipient
           let fieldValue = undefined;
-          
+
           if (currentRecipient && currentRecipient.completedFields) {
-            const completedField = currentRecipient.completedFields.find(cf => cf.id === field.id);
+            const completedField = currentRecipient.completedFields.find(
+              (cf) => cf.id === field.id
+            );
             if (completedField) {
               fieldValue = completedField.value;
             }
           }
-          
+
           // If no backend data, check localStorage
           if (fieldValue === undefined) {
             fieldValue = parsedExistingData[field.id];
           }
-          
+
           // If still no data, use default value
           if (fieldValue === undefined) {
-            fieldValue = field.type === "checkbox"
-              ? false
-              : field.type === "file"
-              ? null
-              : field.type === "multiselect"
-              ? []
-              : "";
+            fieldValue =
+              field.type === "checkbox"
+                ? false
+                : field.type === "file"
+                ? null
+                : field.type === "multiselect"
+                ? []
+                : "";
           }
-          
+
           return {
             ...field,
             value: fieldValue,
@@ -485,7 +489,7 @@ export default function Onboarding() {
 
         setFields(resetFields);
         setRecipients(recipients);
-        
+
         // Calculate completion status after setting fields
         const totalFields = resetFields.length;
         const completedFields = resetFields.filter((field) => {
@@ -494,16 +498,32 @@ export default function Onboarding() {
           }
           if (field.type === "file" || field.type === "image") {
             // Count as filled if we have a File object OR a filename from localStorage
-            return (field.value && typeof field.value !== 'string') || 
-                   (typeof field.value === 'string' && field.value.trim() !== '');
+            return (
+              (field.value && typeof field.value !== "string") ||
+              (typeof field.value === "string" && field.value.trim() !== "")
+            );
           }
           if (field.type === "multiselect") {
             return field.value && field.value.length > 0;
           }
-          if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
-            return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+          if (
+            field.type === "number" ||
+            field.type === "currency" ||
+            field.type === "decimal"
+          ) {
+            return (
+              field.value !== "" &&
+              field.value !== null &&
+              field.value !== undefined &&
+              field.value !== 0 &&
+              field.value !== "0"
+            );
           }
-          return field.value !== "" && field.value !== null && field.value !== undefined;
+          return (
+            field.value !== "" &&
+            field.value !== null &&
+            field.value !== undefined
+          );
         }).length;
 
         setCompletionStatus({
@@ -511,7 +531,7 @@ export default function Onboarding() {
           completedFields,
           isComplete: completedFields === totalFields,
         });
-        
+
         setLoading(false);
       } else {
         setError("Failed to fetch form data");
@@ -519,10 +539,15 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error("Error fetching form:", error);
-      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+      if (
+        error.response?.data?.message ===
+        "Session expired. Please log in again."
+      ) {
         handleTokenExpiration(navigate, token, email);
       } else {
-        setError("Error loading the form. Please try again or contact support.");
+        setError(
+          "Error loading the form. Please try again or contact support."
+        );
       }
       setLoading(false);
     }
@@ -585,16 +610,32 @@ export default function Onboarding() {
         }
         if (field.type === "file" || field.type === "image") {
           // Count as filled if we have a File object OR a filename from localStorage
-          return (field.value && typeof field.value !== 'string') || 
-                 (typeof field.value === 'string' && field.value.trim() !== '');
+          return (
+            (field.value && typeof field.value !== "string") ||
+            (typeof field.value === "string" && field.value.trim() !== "")
+          );
         }
         if (field.type === "multiselect") {
           return field.value && field.value.length > 0;
         }
-        if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
-          return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+        if (
+          field.type === "number" ||
+          field.type === "currency" ||
+          field.type === "decimal"
+        ) {
+          return (
+            field.value !== "" &&
+            field.value !== null &&
+            field.value !== undefined &&
+            field.value !== 0 &&
+            field.value !== "0"
+          );
         }
-        return field.value !== "" && field.value !== null && field.value !== undefined;
+        return (
+          field.value !== "" &&
+          field.value !== null &&
+          field.value !== undefined
+        );
       }).length;
 
       setCompletionStatus({
@@ -628,7 +669,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await apiCall('post', `/onboarding/submit/${token}`, {
+      const response = await apiCall("post", `/onboarding/submit/${token}`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });
@@ -646,7 +687,7 @@ export default function Onboarding() {
           localStorage.removeItem(`formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
-          navigate('/employee/onboarding', { replace: true });
+          navigate("/employee/onboarding", { replace: true });
 
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
@@ -670,7 +711,10 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      if (error.response?.data?.message === 'Session expired. Please log in again.') {
+      if (
+        error.response?.data?.message ===
+        "Session expired. Please log in again."
+      ) {
         handleTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
@@ -696,7 +740,6 @@ export default function Onboarding() {
       </div>
     );
   }
-
 
   if (
     submissionStatus &&
@@ -739,19 +782,22 @@ export default function Onboarding() {
               No Onboarding Forms Found
             </h2>
             <p className="mt-2 text-yellow-700 dark:text-yellow-300">
-              You do not have any onboarding forms assigned. Please contact your administrator if you believe this is a mistake.
+              You do not have any onboarding forms assigned. Please contact your
+              administrator if you believe this is a mistake.
             </p>
           </div>
         </div>
       );
     }
-    console.log('Rendering forms list', availableForms);
+    console.log("Rendering forms list", availableForms);
     return (
       <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
-        <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">Your Onboarding Forms</h1>
+        <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
+          Your Onboarding Forms
+        </h1>
         <ul className="space-y-4">
-          {availableForms.map(form => {
-            const employeeStr = localStorage.getItem('employee');
+          {availableForms.map((form) => {
+            const employeeStr = localStorage.getItem("employee");
             let employeeEmail = null;
             if (employeeStr) {
               try {
@@ -759,9 +805,14 @@ export default function Onboarding() {
                 employeeEmail = employeeObj.email;
               } catch (e) {}
             }
-            const recipient = form.recipients.find(r => r.email === employeeEmail);
-            let status = 'Not Started';
-            if (recipient?.completedFields && Array.isArray(recipient.completedFields)) {
+            const recipient = form.recipients.find(
+              (r) => r.email === employeeEmail
+            );
+            let status = "Not Started";
+            if (
+              recipient?.completedFields &&
+              Array.isArray(recipient.completedFields)
+            ) {
               const totalFields = form.fields.length;
               // Use the same logic as the form progress calculation
               const filledFields = recipient.completedFields.filter((field) => {
@@ -769,36 +820,77 @@ export default function Onboarding() {
                   return field.value === true;
                 }
                 if (field.type === "file" || field.type === "image") {
-                  return (field.value && typeof field.value !== 'string') || 
-                         (typeof field.value === 'string' && field.value.trim() !== '');
+                  return (
+                    (field.value && typeof field.value !== "string") ||
+                    (typeof field.value === "string" &&
+                      field.value.trim() !== "")
+                  );
                 }
                 if (field.type === "multiselect") {
                   return field.value && field.value.length > 0;
                 }
-                if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
-                  return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
+                if (
+                  field.type === "number" ||
+                  field.type === "currency" ||
+                  field.type === "decimal"
+                ) {
+                  return (
+                    field.value !== "" &&
+                    field.value !== null &&
+                    field.value !== undefined &&
+                    field.value !== 0 &&
+                    field.value !== "0"
+                  );
                 }
-                return field.value !== "" && field.value !== null && field.value !== undefined;
+                return (
+                  field.value !== "" &&
+                  field.value !== null &&
+                  field.value !== undefined
+                );
               }).length;
-              
+
               if (filledFields === totalFields) {
-                status = 'Completed';
+                status = "Completed";
               } else if (filledFields > 0) {
-                status = 'In Progress';
+                status = "In Progress";
               }
             } else if (recipient?.completedAt) {
               // fallback for legacy data
-              status = 'Completed';
+              status = "Completed";
             }
             return (
-              <li key={form.token} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between">
+              <li
+                key={form.token}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between"
+              >
                 <div>
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">{form.title}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Status: <span className={status === 'Completed' ? 'text-green-600' : status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'}>{status}</span></div>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {form.title}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                    Status:{" "}
+                    <span
+                      className={
+                        status === "Completed"
+                          ? "text-green-600"
+                          : status === "In Progress"
+                          ? "text-yellow-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {status}
+                    </span>
+                  </div>
                 </div>
                 <button
                   className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
-                  onClick={() => navigate(`/employee/onboarding?token=${form.token}&email=${encodeURIComponent(employeeEmail)}`)}
+                  onClick={() =>
+                    navigate(
+                      `/employee/onboarding?token=${
+                        form.token
+                      }&email=${encodeURIComponent(employeeEmail)}`
+                    )
+                  }
                 >
                   Open Form
                 </button>
@@ -813,10 +905,10 @@ export default function Onboarding() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Onboarding
-          </h1>
-        </div>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Onboarding
+        </h1>
+      </div>
 
       <div className="flex">
         {/* Main Panel */}
@@ -826,19 +918,19 @@ export default function Onboarding() {
             <div className="flex-1 p-8 overflow-y-auto transition-all duration-150">
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-2">
-              {token && (
-            <button
-              type="button"
-              onClick={() => navigate('/employee/onboarding')}
-              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              title="Back to forms list"
-            >
-              <ArrowLeftIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-            </button>
-          )}
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {formTitle}
-                </h2>
+                  {token && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/employee/onboarding")}
+                      className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      title="Back to forms list"
+                    >
+                      <ArrowLeftIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                    </button>
+                  )}
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {formTitle}
+                  </h2>
                 </div>
                 <div className="flex items-center gap-4">
                   <button
@@ -953,14 +1045,14 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           />
-                          {field.value && typeof field.value !== 'string' && (
+                          {field.value && typeof field.value !== "string" && (
                             <img
                               src={URL.createObjectURL(field.value)}
                               alt="Preview"
                               className="mt-2 h-32 w-32 object-cover rounded"
                             />
                           )}
-                          {field.value && typeof field.value === 'string' && (
+                          {field.value && typeof field.value === "string" && (
                             <div className="mt-2 flex items-center gap-2">
                               <PhotoIcon className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -983,7 +1075,7 @@ export default function Onboarding() {
                             onChange={(e) => handleFieldChange(e, field.id)}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           />
-                          {field.value && typeof field.value !== 'string' && (
+                          {field.value && typeof field.value !== "string" && (
                             <div className="mt-2 flex items-center gap-2">
                               <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -991,7 +1083,7 @@ export default function Onboarding() {
                               </span>
                             </div>
                           )}
-                          {field.value && typeof field.value === 'string' && (
+                          {field.value && typeof field.value === "string" && (
                             <div className="mt-2 flex items-center gap-2">
                               <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -1227,45 +1319,80 @@ export default function Onboarding() {
                                         ? { ...f, value: newValue }
                                         : f
                                     );
-                                    
+
                                     // Save form data to localStorage
                                     const formDataToSave = {};
                                     updated.forEach((field) => {
-                                      if (field.type === "file" || field.type === "image") {
+                                      if (
+                                        field.type === "file" ||
+                                        field.type === "image"
+                                      ) {
                                         if (field.value && field.value.name) {
-                                          formDataToSave[field.id] = field.value.name;
+                                          formDataToSave[field.id] =
+                                            field.value.name;
                                         }
                                       } else {
                                         formDataToSave[field.id] = field.value;
                                       }
                                     });
-                                    localStorage.setItem(`formData_${token}`, JSON.stringify(formDataToSave));
-                                    
+                                    localStorage.setItem(
+                                      `formData_${token}`,
+                                      JSON.stringify(formDataToSave)
+                                    );
+
                                     // Update completion status
                                     const totalFields = updated.length;
-                                    const completedFields = updated.filter((field) => {
-                                      if (field.type === "checkbox") {
-                                        return field.value === true;
+                                    const completedFields = updated.filter(
+                                      (field) => {
+                                        if (field.type === "checkbox") {
+                                          return field.value === true;
+                                        }
+                                        if (
+                                          field.type === "file" ||
+                                          field.type === "image"
+                                        ) {
+                                          return (
+                                            (field.value &&
+                                              typeof field.value !==
+                                                "string") ||
+                                            (typeof field.value === "string" &&
+                                              field.value.trim() !== "")
+                                          );
+                                        }
+                                        if (field.type === "multiselect") {
+                                          return (
+                                            field.value &&
+                                            field.value.length > 0
+                                          );
+                                        }
+                                        if (
+                                          field.type === "number" ||
+                                          field.type === "currency" ||
+                                          field.type === "decimal"
+                                        ) {
+                                          return (
+                                            field.value !== "" &&
+                                            field.value !== null &&
+                                            field.value !== undefined &&
+                                            field.value !== 0 &&
+                                            field.value !== "0"
+                                          );
+                                        }
+                                        return (
+                                          field.value !== "" &&
+                                          field.value !== null &&
+                                          field.value !== undefined
+                                        );
                                       }
-                                      if (field.type === "file" || field.type === "image") {
-                                        return (field.value && typeof field.value !== 'string') || 
-                                               (typeof field.value === 'string' && field.value.trim() !== '');
-                                      }
-                                      if (field.type === "multiselect") {
-                                        return field.value && field.value.length > 0;
-                                      }
-                                      if (field.type === "number" || field.type === "currency" || field.type === "decimal") {
-                                        return field.value !== "" && field.value !== null && field.value !== undefined && field.value !== 0 && field.value !== "0";
-                                      }
-                                      return field.value !== "" && field.value !== null && field.value !== undefined;
-                                    }).length;
+                                    ).length;
 
                                     setCompletionStatus({
                                       totalFields,
                                       completedFields,
-                                      isComplete: completedFields === totalFields,
+                                      isComplete:
+                                        completedFields === totalFields,
                                     });
-                                    
+
                                     return updated;
                                   });
                                 }}

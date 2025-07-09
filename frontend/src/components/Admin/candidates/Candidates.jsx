@@ -53,7 +53,7 @@ export default function RegisterCandidate() {
   const fetchCandidates = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/candidates");
-      console.log('Fetched candidates:', response.data);
+      console.log("Fetched candidates:", response.data);
       setCandidates(response.data);
     } catch (error) {
       console.error("Error fetching candidates:", error);
@@ -147,75 +147,79 @@ export default function RegisterCandidate() {
   const handleUpdate = (candidate) => {
     setSelectedCandidate(candidate);
     setIsUpdating(true);
-    
+
     // Convert location object to string format for the form
-    let locationString = '';
+    let locationString = "";
     if (candidate.location) {
-      if (typeof candidate.location === 'object') {
+      if (typeof candidate.location === "object") {
         locationString = [
-          candidate.location.city || '',
-          candidate.location.state || '',
-          candidate.location.country || ''
-        ].filter(part => part).join(', ');
+          candidate.location.city || "",
+          candidate.location.state || "",
+          candidate.location.country || "",
+        ]
+          .filter((part) => part)
+          .join(", ");
       } else {
         locationString = candidate.location;
       }
     }
-    
+
     // Convert availability enum to date format for the form
-    let availabilityDate = '';
+    let availabilityDate = "";
     if (candidate.availability) {
       const today = new Date();
       switch (candidate.availability) {
-        case 'immediate':
-          availabilityDate = today.toISOString().split('T')[0];
+        case "immediate":
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '1-week':
+        case "1-week":
           today.setDate(today.getDate() + 7);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '2-weeks':
+        case "2-weeks":
           today.setDate(today.getDate() + 14);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case '1-month':
+        case "1-month":
           today.setMonth(today.getMonth() + 1);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
-        case 'more-than-1-month':
+        case "more-than-1-month":
           today.setMonth(today.getMonth() + 2);
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
           break;
         default:
-          availabilityDate = today.toISOString().split('T')[0];
+          availabilityDate = today.toISOString().split("T")[0];
       }
     }
-    
+
     // Convert skills array to string if needed
-    let skillsString = '';
+    let skillsString = "";
     if (candidate.skills) {
       if (Array.isArray(candidate.skills)) {
-        skillsString = candidate.skills.join(', ');
+        skillsString = candidate.skills.join(", ");
       } else {
         skillsString = candidate.skills;
       }
     }
-    
+
     // Convert education object to string if needed
-    let educationString = '';
+    let educationString = "";
     if (candidate.education) {
-      if (typeof candidate.education === 'object') {
+      if (typeof candidate.education === "object") {
         educationString = [
-          candidate.education.degree || '',
-          candidate.education.field || '',
-          candidate.education.institution || '',
-          candidate.education.graduationYear || ''
-        ].filter(part => part).join('\n');
+          candidate.education.degree || "",
+          candidate.education.field || "",
+          candidate.education.institution || "",
+          candidate.education.graduationYear || "",
+        ]
+          .filter((part) => part)
+          .join("\n");
       } else {
         educationString = candidate.education;
       }
     }
-    
+
     setFormData({
       firstName: candidate.firstName || "",
       lastName: candidate.lastName || "",
@@ -455,7 +459,7 @@ export default function RegisterCandidate() {
       candidate.lastName,
       candidate.email,
       candidate.phone,
-      candidate.currentRole || candidate.position || 'No position',
+      candidate.currentRole || candidate.position || "No position",
       candidate.experience,
       candidate.skills,
       candidate.education,
@@ -494,39 +498,50 @@ export default function RegisterCandidate() {
 
   const handleDownloadCV = async (candidate) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/candidates/${candidate._id}/resume`, {
-        responseType: 'blob'
-      });
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/candidates/${candidate._id}/resume`,
+        {
+          responseType: "blob",
+        }
+      );
+
       // Create a blob from the response data
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
-      
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
+
       // Create a URL for the blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary link element
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      
+
       // Get the file extension from the content type or default to .pdf
-      const contentType = response.headers['content-type'];
-      const extension = contentType === 'application/pdf' ? '.pdf' : 
-                       contentType === 'application/msword' ? '.doc' :
-                       contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? '.docx' : '.pdf';
-      
+      const contentType = response.headers["content-type"];
+      const extension =
+        contentType === "application/pdf"
+          ? ".pdf"
+          : contentType === "application/msword"
+          ? ".doc"
+          : contentType ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          ? ".docx"
+          : ".pdf";
+
       // Set the download filename
       link.download = `${candidate.firstName}_${candidate.lastName}_CV${extension}`;
-      
+
       // Append to body, click, and remove
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up the URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading CV:', error);
-      alert('Error downloading CV. Please try again.');
+      console.error("Error downloading CV:", error);
+      alert("Error downloading CV. Please try again.");
     }
   };
 
@@ -709,7 +724,7 @@ export default function RegisterCandidate() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {candidate.currentRole || 'No position'}
+                        {candidate.currentRole || "No position"}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {candidate.workPreference}
@@ -720,7 +735,7 @@ export default function RegisterCandidate() {
                         {candidate.experience} years
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Available: {candidate.availability || 'Not specified'}
+                        Available: {candidate.availability || "Not specified"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

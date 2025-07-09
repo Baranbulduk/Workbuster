@@ -11,11 +11,11 @@ import {
 } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { 
-  HomeIcon, 
+import {
+  HomeIcon,
   UserIcon,
-  UserGroupIcon, 
-  UserPlusIcon, 
+  UserGroupIcon,
+  UserPlusIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
@@ -39,7 +39,6 @@ import EmployeeEmployeeDetails from "./components/Employee/employees/EmployeeDet
 import EmployeeOnboarding from "./components/Employee/onboarding/Onboarding";
 import EmployeeSettings from "./components/Employee/settings/Settings";
 
-
 // Layout wrapper component
 const LayoutWrapper = () => {
   return (
@@ -60,14 +59,14 @@ const EmployeeLayout = () => {
   const email = searchParams.get("email");
 
   const navigation = [
-    { 
+    {
       name: "Employees",
       href: `/employee/employees${
         token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
       }`,
       icon: UserGroupIcon,
     },
-    { 
+    {
       name: "Onboarding",
       href: `/employee/onboarding${
         token ? `?token=${token}${email ? `&email=${email}` : ""}` : ""
@@ -144,13 +143,19 @@ const EmployeeLayout = () => {
                   to={item.href}
                   className={`group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${
                     isActive
-                      ? 'bg-white text-orange-600'
-                      : 'text-white hover:bg-white/10'
+                      ? "bg-white text-orange-600"
+                      : "text-white hover:bg-white/10"
                   }`}
                 >
-                  <div className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}>
+                  <div
+                    className={`flex items-center ${
+                      !isSidebarOpen ? "w-full justify-center" : ""
+                    }`}
+                  >
                     <item.icon
-                      className={`h-5 w-5 ${isActive ? 'text-orange-600' : 'text-white'} ${isSidebarOpen ? 'mr-3' : ''}`}
+                      className={`h-5 w-5 ${
+                        isActive ? "text-orange-600" : "text-white"
+                      } ${isSidebarOpen ? "mr-3" : ""}`}
                       aria-hidden="true"
                     />
                     {isSidebarOpen && item.name}
@@ -173,13 +178,15 @@ const EmployeeLayout = () => {
             className="group flex items-center w-full px-2 py-2 text-sm font-medium text-white hover:bg-white/10 rounded-md"
           >
             <div
-              className={`flex items-center ${!isSidebarOpen ? 'w-full justify-center' : ''}`}
+              className={`flex items-center ${
+                !isSidebarOpen ? "w-full justify-center" : ""
+              }`}
             >
               <ArrowRightOnRectangleIcon
-                className={`h-5 w-5 text-white ${isSidebarOpen ? 'mr-3' : ''}`}
+                className={`h-5 w-5 text-white ${isSidebarOpen ? "mr-3" : ""}`}
                 aria-hidden="true"
               />
-              {isSidebarOpen && 'Logout'}
+              {isSidebarOpen && "Logout"}
             </div>
             {!isSidebarOpen && (
               <div className="absolute left-20 bg-black bg-opacity-80 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -189,7 +196,7 @@ const EmployeeLayout = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         <Outlet />
@@ -197,8 +204,6 @@ const EmployeeLayout = () => {
     </div>
   );
 };
-
-
 
 function App() {
   return (
@@ -209,7 +214,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/employee/login" element={<EmployeeLogin />} />
-          
+
           {/* Protected routes with layout */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />

@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { 
-  ArrowLeftIcon, 
-  EnvelopeIcon, 
-  PhoneIcon, 
-  MapPinIcon, 
-  UserGroupIcon, 
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import {
+  ArrowLeftIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  UserGroupIcon,
   LinkIcon,
   PencilSquareIcon,
   TrashIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 export default function ClientsDetails() {
   const { id } = useParams();
@@ -21,29 +21,31 @@ export default function ClientsDetails() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [formData, setFormData] = useState({
-    companyName: '',
-    contactPerson: '',
-    email: '',
-    phone: '',
-    address: '',
-    industry: '',
-    companySize: '',
-    website: '',
-    description: ''
+    companyName: "",
+    contactPerson: "",
+    email: "",
+    phone: "",
+    address: "",
+    industry: "",
+    companySize: "",
+    website: "",
+    description: "",
   });
 
   useEffect(() => {
     const fetchClientDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/clients/${id}`);
+        const response = await axios.get(
+          `http://localhost:5000/api/clients/${id}`
+        );
         setClient(response.data);
         setLoading(false);
       } catch (error) {
-        setError('Failed to fetch client details');
+        setError("Failed to fetch client details");
         setLoading(false);
       }
     };
@@ -54,108 +56,149 @@ export default function ClientsDetails() {
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:5000/api/clients/${id}`);
-      navigate(location.state?.fromOnboarding ? '/onboarding' : '/clients');
+      navigate(location.state?.fromOnboarding ? "/onboarding" : "/clients");
     } catch (error) {
-      setError('Failed to delete client');
+      setError("Failed to delete client");
     }
   };
 
   const handleUpdate = () => {
     // Convert address object to string format for the form
-    let addressString = '';
+    let addressString = "";
     if (client.address) {
-      if (typeof client.address === 'object') {
+      if (typeof client.address === "object") {
         addressString = [
-          client.address.street || '',
-          client.address.city || '',
-          client.address.state || '',
-          client.address.zipCode || '',
-          client.address.country || ''
-        ].filter(part => part).join(', ');
+          client.address.street || "",
+          client.address.city || "",
+          client.address.state || "",
+          client.address.zipCode || "",
+          client.address.country || "",
+        ]
+          .filter((part) => part)
+          .join(", ");
       } else {
         addressString = client.address;
       }
     }
-    
+
     setFormData({
-      companyName: client.companyName || '',
-      contactPerson: client.contactPerson || '',
-      email: client.email || '',
-      phone: client.phone || '',
+      companyName: client.companyName || "",
+      contactPerson: client.contactPerson || "",
+      email: client.email || "",
+      phone: client.phone || "",
       address: addressString,
-      industry: client.industry || '',
-      companySize: client.companySize || '',
-      website: client.website || '',
-      description: client.description || ''
+      industry: client.industry || "",
+      companySize: client.companySize || "",
+      website: client.website || "",
+      description: client.description || "",
     });
     setShowUpdateForm(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`http://localhost:5000/api/clients/${id}`, formData);
+      const response = await axios.put(
+        `http://localhost:5000/api/clients/${id}`,
+        formData
+      );
       if (response.status === 200) {
         setShowUpdateForm(false);
         // Refresh client data
-        const updatedClient = await axios.get(`http://localhost:5000/api/clients/${id}`);
+        const updatedClient = await axios.get(
+          `http://localhost:5000/api/clients/${id}`
+        );
         setClient(updatedClient.data);
       }
     } catch (error) {
-      console.error('Error updating client:', error);
+      console.error("Error updating client:", error);
       if (error.response) {
-        alert(`Error: ${error.response.data.message || 'Failed to update client. Please check your input and try again.'}`);
+        alert(
+          `Error: ${
+            error.response.data.message ||
+            "Failed to update client. Please check your input and try again."
+          }`
+        );
       } else if (error.request) {
-        alert('No response from server. Please check your connection and try again.');
+        alert(
+          "No response from server. Please check your connection and try again."
+        );
       } else {
-        alert('Error setting up the request. Please try again.');
+        alert("Error setting up the request. Please try again.");
       }
     }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case "overview":
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Contact & Basic Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contact Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Contact Information
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{client.email}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {client.email}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <PhoneIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{client.phone}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {client.phone}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <MapPinIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600 dark:text-gray-300">
-                      {typeof client.address === 'object' 
-                        ? `${client.address.street || ''}${client.address.city ? `, ${client.address.city}` : ''}${client.address.state ? `, ${client.address.state}` : ''}${client.address.zipCode ? `, ${client.address.zipCode}` : ''}${client.address.country ? `, ${client.address.country}` : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'No address'
-                        : client.address || 'No address'
-                      }
+                      {typeof client.address === "object"
+                        ? `${client.address.street || ""}${
+                            client.address.city
+                              ? `, ${client.address.city}`
+                              : ""
+                          }${
+                            client.address.state
+                              ? `, ${client.address.state}`
+                              : ""
+                          }${
+                            client.address.zipCode
+                              ? `, ${client.address.zipCode}`
+                              : ""
+                          }${
+                            client.address.country
+                              ? `, ${client.address.country}`
+                              : ""
+                          }`
+                            .replace(/^,\s*/, "")
+                            .replace(/,\s*$/, "") || "No address"
+                        : client.address || "No address"}
                     </span>
                   </div>
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Company Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Company Information
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <UserGroupIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">Size: {client.companySize}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Size: {client.companySize}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <LinkIcon className="h-5 w-5 text-gray-400 mr-3" />
@@ -170,7 +213,7 @@ export default function ClientsDetails() {
                           {client.website}
                         </a>
                       ) : (
-                        'No website provided'
+                        "No website provided"
                       )}
                     </span>
                   </div>
@@ -181,24 +224,36 @@ export default function ClientsDetails() {
             {/* Right Column - Additional Info */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Description</h2>
-                <div className="text-gray-600 dark:text-gray-300">{client.description || 'No description provided'}</div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Description
+                </h2>
+                <div className="text-gray-600 dark:text-gray-300">
+                  {client.description || "No description provided"}
+                </div>
               </div>
             </div>
           </div>
         );
-      case 'projects':
+      case "projects":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Projects</h2>
-            <div className="text-gray-600 dark:text-gray-300">No projects available.</div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Projects
+            </h2>
+            <div className="text-gray-600 dark:text-gray-300">
+              No projects available.
+            </div>
           </div>
         );
-      case 'contacts':
+      case "contacts":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Key Contacts</h2>
-            <div className="text-gray-600 dark:text-gray-300">No contacts available.</div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Key Contacts
+            </h2>
+            <div className="text-gray-600 dark:text-gray-300">
+              No contacts available.
+            </div>
           </div>
         );
       default:
@@ -235,11 +290,15 @@ export default function ClientsDetails() {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate(location.state?.fromOnboarding ? '/onboarding' : '/clients')}
+          onClick={() =>
+            navigate(
+              location.state?.fromOnboarding ? "/onboarding" : "/clients"
+            )
+          }
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Back to {location.state?.fromOnboarding ? 'Onboarding' : 'Clients'}
+          Back to {location.state?.fromOnboarding ? "Onboarding" : "Clients"}
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -249,8 +308,12 @@ export default function ClientsDetails() {
               </span>
             </div>
             <div className="ml-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{client.companyName}</h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">{client.industry}</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {client.companyName}
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                {client.industry}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -278,31 +341,31 @@ export default function ClientsDetails() {
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab("overview")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'overview'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "overview"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('projects')}
+            onClick={() => setActiveTab("projects")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'projects'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "projects"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Projects
           </button>
           <button
-            onClick={() => setActiveTab('contacts')}
+            onClick={() => setActiveTab("contacts")}
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'contacts'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "contacts"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Contacts
@@ -317,7 +380,10 @@ export default function ClientsDetails() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
               <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>
 
@@ -333,7 +399,8 @@ export default function ClientsDetails() {
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Are you sure you want to delete {client.companyName}? This action cannot be undone.
+                        Are you sure you want to delete {client.companyName}?
+                        This action cannot be undone.
                       </p>
                     </div>
                   </div>
@@ -364,8 +431,14 @@ export default function ClientsDetails() {
       {showUpdateForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => setShowUpdateForm(false)}></div>
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+                onClick={() => setShowUpdateForm(false)}
+              ></div>
             </div>
 
             <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
@@ -529,4 +602,4 @@ export default function ClientsDetails() {
       )}
     </div>
   );
-} 
+}

@@ -45,7 +45,7 @@ router.get('/colleagues', requireEmployee, async (req, res) => {
 
     // Get employees created by the same admin
     const employees = await Employee.find({ createdBy: employee.createdBy });
-    
+
     // Format the response
     const formattedEmployees = employees.map(emp => ({
       ...emp.toObject(),
@@ -105,8 +105,8 @@ router.get('/:id', async (req, res) => {
       stack: error.stack,
       id: req.params.id
     });
-    res.status(500).json({ 
-      message: 'Server error', 
+    res.status(500).json({
+      message: 'Server error',
       error: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });

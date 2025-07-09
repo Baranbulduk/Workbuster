@@ -52,7 +52,7 @@ app.use('/api/employees', employeeRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
@@ -63,16 +63,16 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rexett', 
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => {
-  console.log('Connected to MongoDB');
-  
-  // Start server only after successful database connection
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-})
-.catch((error) => {
-  console.error('MongoDB connection error:', error);
-  process.exit(1);
-}); 
+  .then(() => {
+    console.log('Connected to MongoDB');
+
+    // Start server only after successful database connection
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }); 

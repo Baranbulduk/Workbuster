@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import {
   ArrowLeftIcon,
   EnvelopeIcon,
@@ -13,7 +13,7 @@ import {
   TrashIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 const EmployeeDetails = () => {
   const { id } = useParams();
@@ -22,34 +22,36 @@ const EmployeeDetails = () => {
   const fromOnboarding = location.state?.fromOnboarding;
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    position: '',
-    department: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    position: "",
+    department: "",
     address: {
-      street: '',
-      zipCode: '',
-      city: '',
-      country: ''
+      street: "",
+      zipCode: "",
+      city: "",
+      country: "",
     },
-    hireDate: ''
+    hireDate: "",
   });
 
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/employees/${id}`);
+        const res = await axios.get(
+          `http://localhost:5000/api/employees/${id}`
+        );
         setEmployee(res.data);
       } catch (err) {
-        console.error('Error fetching employee:', err);
-        setError('Failed to fetch employee details.');
+        console.error("Error fetching employee:", err);
+        setError("Failed to fetch employee details.");
       } finally {
         setLoading(false);
       }
@@ -60,46 +62,46 @@ const EmployeeDetails = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:5000/api/employees/${id}`);
-      navigate(fromOnboarding ? '/onboarding' : '/employees');
+      navigate(fromOnboarding ? "/onboarding" : "/employees");
     } catch (err) {
-      setError('Failed to delete employee.');
+      setError("Failed to delete employee.");
     }
   };
 
   const handleUpdate = () => {
     setFormData({
-      firstName: employee.firstName || '',
-      lastName: employee.lastName || '',
-      email: employee.email || '',
-      phone: employee.phone || '',
-      position: employee.position || '',
-      department: employee.department || '',
+      firstName: employee.firstName || "",
+      lastName: employee.lastName || "",
+      email: employee.email || "",
+      phone: employee.phone || "",
+      position: employee.position || "",
+      department: employee.department || "",
       address: {
-        street: employee.address?.street || '',
-        zipCode: employee.address?.zipCode || '',
-        city: employee.address?.city || '',
-        country: employee.address?.country || ''
+        street: employee.address?.street || "",
+        zipCode: employee.address?.zipCode || "",
+        city: employee.address?.city || "",
+        country: employee.address?.country || "",
       },
-      hireDate: employee.hireDate || ''
+      hireDate: employee.hireDate || "",
     });
     setShowUpdateForm(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
-      setFormData(prev => ({
+    if (name.startsWith("address.")) {
+      const addressField = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         address: {
           ...prev.address,
-          [addressField]: value
-        }
+          [addressField]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -107,66 +109,94 @@ const EmployeeDetails = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`http://localhost:5000/api/employees/${id}`, formData);
+      const response = await axios.put(
+        `http://localhost:5000/api/employees/${id}`,
+        formData
+      );
       if (response.status === 200) {
         setShowUpdateForm(false);
         // Refresh employee data
-        const updatedEmployee = await axios.get(`http://localhost:5000/api/employees/${id}`);
+        const updatedEmployee = await axios.get(
+          `http://localhost:5000/api/employees/${id}`
+        );
         setEmployee(updatedEmployee.data);
       }
     } catch (error) {
-      console.error('Error updating employee:', error);
+      console.error("Error updating employee:", error);
       if (error.response) {
-        alert(`Error: ${error.response.data.message || 'Failed to update employee. Please check your input and try again.'}`);
+        alert(
+          `Error: ${
+            error.response.data.message ||
+            "Failed to update employee. Please check your input and try again."
+          }`
+        );
       } else if (error.request) {
-        alert('No response from server. Please check your connection and try again.');
+        alert(
+          "No response from server. Please check your connection and try again."
+        );
       } else {
-        alert('Error setting up the request. Please try again.');
+        alert("Error setting up the request. Please try again.");
       }
     }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case "overview":
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Contact & Basic Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contact Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Contact Information
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{employee.email}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {employee.email}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <PhoneIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{employee.phone}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {employee.phone}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <MapPinIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600 dark:text-gray-300">
-                      {employee.address?.street}, {employee.address?.zipCode}, {employee.address?.city}, {employee.address?.country}
+                      {employee.address?.street}, {employee.address?.zipCode},{" "}
+                      {employee.address?.city}, {employee.address?.country}
                     </span>
                   </div>
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Employment Details</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Employment Details
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <BriefcaseIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{employee.department}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {employee.department}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <UserGroupIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600 dark:text-gray-300">{employee.position}</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {employee.position}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <CalendarIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <span className="text-gray-600 dark:text-gray-300">
-                      Hired: {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : '-'}
+                      Hired:{" "}
+                      {employee.hireDate
+                        ? new Date(employee.hireDate).toLocaleDateString()
+                        : "-"}
                     </span>
                   </div>
                 </div>
@@ -175,24 +205,36 @@ const EmployeeDetails = () => {
             {/* Right Column - Additional Info */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notes</h2>
-                <div className="text-gray-600 dark:text-gray-300">No notes available.</div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Notes
+                </h2>
+                <div className="text-gray-600 dark:text-gray-300">
+                  No notes available.
+                </div>
               </div>
             </div>
           </div>
         );
-      case 'documents':
+      case "documents":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Documents</h2>
-            <div className="text-gray-600 dark:text-gray-300">No documents available.</div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Documents
+            </h2>
+            <div className="text-gray-600 dark:text-gray-300">
+              No documents available.
+            </div>
           </div>
         );
-      case 'history':
+      case "history":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Employment History</h2>
-            <div className="text-gray-600 dark:text-gray-300">No history available.</div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Employment History
+            </h2>
+            <div className="text-gray-600 dark:text-gray-300">
+              No history available.
+            </div>
           </div>
         );
       default:
@@ -209,7 +251,7 @@ const EmployeeDetails = () => {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate('/employees')}
+          onClick={() => navigate("/employees")}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
@@ -219,14 +261,17 @@ const EmployeeDetails = () => {
           <div className="flex items-center">
             <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
               <span className="text-xl sm:text-2xl font-semibold text-blue-600 dark:text-blue-300">
-                {employee.firstName?.[0]}{employee.lastName?.[0]}
+                {employee.firstName?.[0]}
+                {employee.lastName?.[0]}
               </span>
             </div>
             <div className="ml-4 sm:ml-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {employee.firstName} {employee.lastName}
               </h1>
-              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">{employee.position}</p>
+              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
+                {employee.position}
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -254,31 +299,31 @@ const EmployeeDetails = () => {
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
         <nav className="flex min-w-max">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab("overview")}
             className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-              activeTab === 'overview'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "overview"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('documents')}
+            onClick={() => setActiveTab("documents")}
             className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-              activeTab === 'documents'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "documents"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Documents
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab("history")}
             className={`flex-1 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-              activeTab === 'history'
-                ? 'text-red-600 border-b-2 border-red-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "history"
+                ? "text-red-600 border-b-2 border-red-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             History
@@ -287,17 +332,18 @@ const EmployeeDetails = () => {
       </div>
 
       {/* Main Content */}
-      <div>
-          {renderTabContent()}
-      </div>
+      <div>{renderTabContent()}</div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Confirm Delete</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Confirm Delete
+            </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete this employee? This action cannot be undone.
+              Are you sure you want to delete this employee? This action cannot
+              be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -321,8 +367,14 @@ const EmployeeDetails = () => {
       {showUpdateForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={() => setShowUpdateForm(false)}></div>
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+                onClick={() => setShowUpdateForm(false)}
+              ></div>
             </div>
 
             <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
@@ -477,7 +529,11 @@ const EmployeeDetails = () => {
                       <input
                         type="date"
                         name="hireDate"
-                        value={formData.hireDate ? formData.hireDate.split('T')[0] : ''}
+                        value={
+                          formData.hireDate
+                            ? formData.hireDate.split("T")[0]
+                            : ""
+                        }
                         onChange={handleInputChange}
                         required
                         className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
@@ -510,4 +566,4 @@ const EmployeeDetails = () => {
   );
 };
 
-export default EmployeeDetails; 
+export default EmployeeDetails;

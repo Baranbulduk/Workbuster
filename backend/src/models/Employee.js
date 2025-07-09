@@ -83,7 +83,7 @@ const employeeSchema = new mongoose.Schema({
 });
 
 // Auto-generate employeeId if not provided
-employeeSchema.pre('save', async function(next) {
+employeeSchema.pre('save', async function (next) {
   if (!this.employeeId) {
     const lastEmployee = await this.constructor.findOne().sort({ createdAt: -1 });
     let nextNum = 1;

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../../../utils/axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../../../utils/axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,10 +11,9 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement
-} from 'chart.js';
-import { Line, Bar, Pie } from 'react-chartjs-2';
-import { useTheme } from '../../../context/ThemeContext';
+  ArcElement,
+} from "chart.js";
+import { useTheme } from "../../../context/ThemeContext";
 
 ChartJS.register(
   CategoryScale,
@@ -38,22 +37,22 @@ const Statistics = () => {
       total: 0,
       active: 0,
       placed: 0,
-      inProgress: 0
+      inProgress: 0,
     },
     clients: {
       total: 0,
       active: 0,
-      new: 0
+      new: 0,
     },
     revenue: {
-      monthly: [0, 0, 0, 0, 0, 0] // Initialize with zeros for 6 months
+      monthly: [0, 0, 0, 0, 0, 0], // Initialize with zeros for 6 months
     },
     performance: {
       placementRate: 0,
       averageTimeToFill: 0,
       clientSatisfaction: 0,
-      candidateSatisfaction: 0
-    }
+      candidateSatisfaction: 0,
+    },
   });
   const [employees, setEmployees] = useState([]);
   const [candidates, setCandidates] = useState([]);
@@ -78,35 +77,35 @@ const Statistics = () => {
     try {
       setLoading(true);
       // Fetch candidates data
-      const candidatesResponse = await axios.get('/candidates');
+      const candidatesResponse = await axios.get("/candidates");
       const candidates = candidatesResponse.data;
-    
+
       // Fetch clients data
-      const clientsResponse = await axios.get('/clients');
+      const clientsResponse = await axios.get("/clients");
       const clients = clientsResponse.data;
 
       // Calculate statistics
       const candidateStats = {
         total: candidates.length,
-        active: candidates.filter(c => c.status === 'active').length,
-        placed: candidates.filter(c => c.status === 'placed').length,
-        inProgress: candidates.filter(c => c.status === 'in-progress').length
+        active: candidates.filter((c) => c.status === "active").length,
+        placed: candidates.filter((c) => c.status === "placed").length,
+        inProgress: candidates.filter((c) => c.status === "in-progress").length,
       };
 
       const clientStats = {
         total: clients.length,
-        active: clients.filter(c => c.status === 'active').length,
-        new: clients.filter(c => {
+        active: clients.filter((c) => c.status === "active").length,
+        new: clients.filter((c) => {
           const createdDate = new Date(c.createdAt);
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           return createdDate >= thirtyDaysAgo;
-        }).length
+        }).length,
       };
 
       // Calculate revenue data (example calculation)
       const revenueData = {
-        monthly: [0, 0, 0, 0, 0, 0] // Initialize with zeros
+        monthly: [0, 0, 0, 0, 0, 0], // Initialize with zeros
       };
 
       // Calculate performance metrics (example calculation)
@@ -114,19 +113,19 @@ const Statistics = () => {
         placementRate: 0,
         averageTimeToFill: 0,
         clientSatisfaction: 0,
-        candidateSatisfaction: 0
+        candidateSatisfaction: 0,
       };
 
       setStatistics({
         candidates: candidateStats,
         clients: clientStats,
         revenue: revenueData,
-        performance: performanceData
+        performance: performanceData,
       });
       setError(null);
     } catch (err) {
-      setError('Failed to fetch statistics');
-      console.error('Error fetching statistics:', err);
+      setError("Failed to fetch statistics");
+      console.error("Error fetching statistics:", err);
     } finally {
       setLoading(false);
     }
@@ -134,39 +133,39 @@ const Statistics = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get('/employees');
+      const response = await axios.get("/employees");
       setEmployees(response.data);
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error("Error fetching employees:", error);
       if (error.response?.status === 401) {
         // Handle unauthorized error - redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
   };
 
   const fetchCandidates = async () => {
     try {
-      const response = await axios.get('/candidates');
+      const response = await axios.get("/candidates");
       setCandidates(response.data);
     } catch (error) {
-      console.error('Error fetching candidates:', error);
+      console.error("Error fetching candidates:", error);
       if (error.response?.status === 401) {
         // Handle unauthorized error - redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
   };
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get('/clients');
+      const response = await axios.get("/clients");
       setClients(response.data);
     } catch (error) {
-      console.error('Error fetching clients:', error);
+      console.error("Error fetching clients:", error);
       if (error.response?.status === 401) {
         // Handle unauthorized error - redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
   };
@@ -180,59 +179,53 @@ const Statistics = () => {
   }
 
   if (error) {
-    return (
-      <div className="text-red-500 text-center p-4">
-        {error}
-      </div>
-    );
+    return <div className="text-red-500 text-center p-4">{error}</div>;
   }
 
   const candidateData = {
     labels: Object.keys(statistics.candidates.byStatus || {}),
     datasets: [
       {
-        label: 'Candidates by Status',
+        label: "Candidates by Status",
         data: Object.values(statistics.candidates.byStatus || {}),
         backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(153, 102, 255, 0.6)'
-        ]
-      }
-    ]
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+        ],
+      },
+    ],
   };
 
-
-
   const revenueData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
-        label: 'Monthly Revenue',
+        label: "Monthly Revenue",
         data: statistics.revenue?.monthly || [0, 0, 0, 0, 0, 0],
         fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      }
-    ]
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1,
+      },
+    ],
   };
 
   const clientData = {
     labels: Object.keys(statistics.clients.byIndustry || {}),
     datasets: [
       {
-        label: 'Clients by Industry',
+        label: "Clients by Industry",
         data: Object.values(statistics.clients.byIndustry || {}),
         backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)'
-        ]
-      }
-    ]
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+        ],
+      },
+    ],
   };
 
   // Employee statistics
@@ -250,13 +243,15 @@ const Statistics = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">Statistics Dashboard</h1>
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">
+        Statistics Dashboard
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 
+          <h2
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-            onClick={() => navigate('/candidates')}
+            onClick={() => navigate("/candidates")}
           >
             Candidate Overview
           </h2>
@@ -269,9 +264,9 @@ const Statistics = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 
+          <h2
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-            onClick={() => navigate('/clients')}
+            onClick={() => navigate("/clients")}
           >
             Client Overview
           </h2>
@@ -283,9 +278,9 @@ const Statistics = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 
+          <h2
             className="text-lg font-semibold mb-4 cursor-pointer hover:text-green-600 dark:hover:text-green-400"
-            onClick={() => navigate('/employees')}
+            onClick={() => navigate("/employees")}
           >
             Employee Overview
           </h2>
@@ -294,14 +289,20 @@ const Statistics = () => {
             <p>By Status:</p>
             <ul className="ml-4 list-disc">
               {Object.entries(employeeStats.byStatus).map(([status, count]) => (
-                <li key={status}>{status}: {count}</li>
+                <li key={status}>
+                  {status}: {count}
+                </li>
               ))}
             </ul>
             <p>By Department:</p>
             <ul className="ml-4 list-disc">
-              {Object.entries(employeeStats.byDepartment).map(([dept, count]) => (
-                <li key={dept}>{dept}: {count}</li>
-              ))}
+              {Object.entries(employeeStats.byDepartment).map(
+                ([dept, count]) => (
+                  <li key={dept}>
+                    {dept}: {count}
+                  </li>
+                )
+              )}
             </ul>
           </div>
         </div>
@@ -310,4 +311,4 @@ const Statistics = () => {
   );
 };
 
-export default Statistics; 
+export default Statistics;

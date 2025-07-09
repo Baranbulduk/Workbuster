@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   UserGroupIcon,
   MagnifyingGlassIcon,
@@ -35,9 +35,15 @@ import {
 } from "@heroicons/react/24/outline";
 import { HiBars4 } from "react-icons/hi2";
 import axios from "../../../utils/axios";
-import { adminApiCall, handleAdminTokenExpiration } from "../../../utils/tokenManager";
+import {
+  adminApiCall,
+  handleAdminTokenExpiration,
+} from "../../../utils/tokenManager";
 import { useNavigate } from "react-router-dom";
 import OnboardingDetails from "./OnboardingDetails";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import '../../../quill-overrides.css'; // Add this import for custom overrides
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -371,12 +377,27 @@ export default function Onboarding() {
   const [recentActivity, setRecentActivity] = useState([]);
 
   const recipientOptions = [
-    ...candidates.map(c => ({ type: 'Candidate', name: `${c.firstName} ${c.lastName}`, email: c.email })),
-    ...employees.map(e => ({ type: 'Employee', name: `${e.firstName} ${e.lastName}`, email: e.email })),
-    ...clients.map(cl => ({ type: 'Client', name: cl.companyName, email: cl.email })),
+    ...candidates.map((c) => ({
+      type: "Candidate",
+      name: `${c.firstName} ${c.lastName}`,
+      email: c.email,
+    })),
+    ...employees.map((e) => ({
+      type: "Employee",
+      name: `${e.firstName} ${e.lastName}`,
+      email: e.email,
+    })),
+    ...clients.map((cl) => ({
+      type: "Client",
+      name: cl.companyName,
+      email: cl.email,
+    })),
   ];
 
-  const [recipientType, setRecipientType] = useState('candidate');
+  const [recipientType, setRecipientType] = useState("candidate");
+
+  // Add welcome message state for Welcome Message tab
+  const [welcomeMessage, setWelcomeMessage] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -422,7 +443,10 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error(`Error fetching ${activeTab}:`, error);
-      if (error.response?.data?.message === "Session expired. Please log in again.") {
+      if (
+        error.response?.data?.message ===
+        "Session expired. Please log in again."
+      ) {
         handleAdminTokenExpiration(navigate);
       }
     }
@@ -439,7 +463,10 @@ export default function Onboarding() {
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
-      if (error.response?.data?.message === "Session expired. Please log in again.") {
+      if (
+        error.response?.data?.message ===
+        "Session expired. Please log in again."
+      ) {
         handleAdminTokenExpiration(navigate);
       }
     }
@@ -490,7 +517,10 @@ export default function Onboarding() {
       setRecentActivity(activities.slice(0, 8)); // Show only the 8 most recent
     } catch (error) {
       console.error("Error fetching recent activity:", error);
-      if (error.response?.data?.message === "Session expired. Please log in again.") {
+      if (
+        error.response?.data?.message ===
+        "Session expired. Please log in again."
+      ) {
         handleAdminTokenExpiration(navigate);
       }
     }
@@ -724,7 +754,7 @@ export default function Onboarding() {
           ? {
               ...f,
               value:
-                (type === "checkbox" || f.type === "decision")
+                type === "checkbox" || f.type === "decision"
                   ? checked
                   : type === "file"
                   ? files[0]
@@ -750,7 +780,7 @@ export default function Onboarding() {
     ]);
     setRecipientName("");
     setRecipientEmail("");
-    setRecipientType('candidate');
+    setRecipientType("candidate");
   };
 
   const handleBulkAdd = () => {
@@ -801,14 +831,18 @@ export default function Onboarding() {
       };
 
       // Send to backend
-      const response = await adminApiCall("POST", "/onboarding/send-form", payload);
+      const response = await adminApiCall(
+        "POST",
+        "/onboarding/send-form",
+        payload
+      );
 
       if (response.success) {
         // Reset form state
         const resetFields = fields.map((field) => ({
           ...field,
           value:
-            (field.type === "checkbox" || field.type === "decision")
+            field.type === "checkbox" || field.type === "decision"
               ? false
               : field.type === "file"
               ? null
@@ -905,7 +939,6 @@ export default function Onboarding() {
             type="button"
             onClick={() => document.getElementById("csv-upload").click()}
           >
-        
             <div className="bg-white rounded-3xl p-2 text-black">
               <ArrowUpTrayIcon className="h-5 w-5" />
             </div>
@@ -920,7 +953,10 @@ export default function Onboarding() {
           </button>
         </div>
       </div>
-      <div className="flex h-full min-h-[600px] overflow-hidden" style={{height: '100%'}}>
+      <div
+        className="flex h-full min-h-[600px] overflow-hidden"
+        style={{ height: "100%" }}
+      >
         {/* Left Panel */}
         <aside className="w-80 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-900 flex flex-col h-full">
           {/* Navigation Tabs */}
@@ -1032,6 +1068,16 @@ export default function Onboarding() {
                 </button>
                 <button
                   className={`flex-1 px-4 py-2 text-sm font-medium ${
+                    activeView === "welcome"
+                      ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  }`}
+                  onClick={() => setActiveView("welcome")}
+                >
+                  Welcome Message
+                </button>
+                <button
+                  className={`flex-1 px-4 py-2 text-sm font-medium ${
                     activeView === "form"
                       ? "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -1121,18 +1167,159 @@ export default function Onboarding() {
                       </div>
                     </div>
                   </div>
+                ) : activeView === "welcome" ? (
+                  <div className="flex-1 p-8 overflow-y-auto">
+                    {/* Static Welcome Message Title */}
+                    <div className="flex justify-between items-center mb-8">
+                      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                        Welcome Message
+                      </h2>
+                      <button
+                        type="button"
+                        className="gap-2 px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
+                        onClick={handleSubmit}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <div className="mb-2 font-semibold text-gray-800 dark:text-white">
+                        Send this welcome message to:
+                      </div>
+                      <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
+                        <select
+                          value={recipientType}
+                          onChange={(e) => setRecipientType(e.target.value)}
+                          className="mt-1 block w-full md:w-1/6 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
+                        >
+                          <option value="candidate">Candidate</option>
+                          <option value="employee">Employee</option>
+                          <option value="client">Client</option>
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Recipient name (optional)"
+                          value={recipientName}
+                          onChange={(e) => setRecipientName(e.target.value)}
+                          className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Recipient email"
+                          value={recipientEmail}
+                          onChange={(e) => setRecipientEmail(e.target.value)}
+                          className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRecipients((prev) => [
+                              ...prev,
+                              {
+                                name: recipientName,
+                                email: recipientEmail,
+                                type: recipientType,
+                              },
+                            ]);
+                            setRecipientName("");
+                            setRecipientEmail("");
+                            setRecipientType("candidate");
+                          }}
+                          className="gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
+                        <textarea
+                          placeholder="Paste or type multiple emails/names (comma, semicolon, or newline separated)"
+                          value={bulkInput}
+                          onChange={(e) => setBulkInput(e.target.value)}
+                          className="mt-1 block w-full md:w-2/3 h-24 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700  pl-3 pt-3"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleBulkAdd}
+                          className="px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
+                        >
+                          Add Bulk
+                        </button>
+                      </div>     
+                      {recipients.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {recipients.map((r, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm"
+                            >
+                              {r.name ? `${r.name} ` : ""}
+                              {r.email}
+                              <button
+                                type="button"
+                                className="ml-2 text-red-500 hover:text-red-700 "
+                                onClick={() => handleRemoveRecipient(idx)}
+                                title="Remove"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                      {/* Big Welcome Message Field */}
+                    <div className="mb-6">
+                      <label className="block text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                        Welcome Message
+                      </label>
+                      <ReactQuill
+                        value={welcomeMessage}
+                        onChange={setWelcomeMessage}
+                        placeholder="Write your message here..."
+                        className="w-full 
+                        h-40 rounded-md 
+                        bg-gray-50 
+                        dark:bg-gray-700 
+                        dark:text-white 
+                        border-gray-200 
+                        dark:border-gray-60
+                        0 text-lg"
+                        
+                        modules={{
+                          toolbar: [
+                            ['bold', 'italic', 'underline', 'strike', {'background': []}, {'color': []}],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' } , { 'align': [] }],
+                            ['image']
+                           
+                          ]
+                        }}
+                        formats={[
+                          'bold', 'italic', 'underline', 'strike',
+                          'background', 'color',
+                          'list', 'bullet', 'align',
+                          'image'
+                        ]}
+                      />
+                    </div>
+
+                  </div>
                 ) : (
                   <div className="flex h-full">
                     {/* Add Field Section */}
-                    <aside className="w-1/3 border-r dark:border-gray-700 p-8 flex flex-col h-full bg-gradient-to-br from-[#e6b05c] via-[#e05a5a] to-[#7a5fd3] dark:bg-gradient-to-br dark:from-[#e6b05c] dark:via-[#e05a5a] dark:to-[#7a5fd3] rounded-l-[5px]">
-                      <h2 className="text-2xl font-semibold mt-2 mb-10 text-white dark:text-gray-900">
+                    <aside className="w-1/3 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 flex flex-col h-full] rounded-bl-[5px]">
+                      <h2 className="text-2xl font-semibold mt-2 mb-10 text-gray-900 dark:text-white">
                         Add Field
                       </h2>
                       <div className="grid grid-cols-2 gap-4">
                         {FIELD_TYPES.map((field) => (
                           <div
                             key={field.label}
-                            className="flex items-center gap-2 rounded px-4 py-4 text-xs bg-black/20 text-white cursor-move hover:bg-black/30 transition group"
+                            className="flex items-center gap-2 rounded px-4 py-4 text-xs text-white
+                            
+                            bg-gradient-to-br from-[#e6b05c] via-[#e05a5a] to-[#7a5fd3] dark:bg-gradient-to-br dark:from-[#e6b05c] dark:via-[#e05a5a] dark:to-[#7a5fd3]
+                            
+                            dark:text-gray-900 cursor-move transition group"
                             draggable
                             onDragStart={(e) => handleDragStart(e, field)}
                           >
@@ -1144,7 +1331,9 @@ export default function Onboarding() {
                                 <field.icon className="h-7 w-7 text-white" />
                               )}
                             </div>
-                            <span className="font-semibold text-white">{field.label}</span>
+                            <span className="font-semibold text-white">
+                              {field.label}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1183,14 +1372,14 @@ export default function Onboarding() {
                           Submit
                         </button>
                       </div>
-                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-600">
+                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="mb-2 font-semibold text-gray-800 dark:text-white">
                           Send this form to:
                         </div>
                         <div className="flex flex-col md:flex-row gap-2 mb-2 items-start">
                           <select
                             value={recipientType}
-                            onChange={e => setRecipientType(e.target.value)}
+                            onChange={(e) => setRecipientType(e.target.value)}
                             className="mt-1 block w-full md:w-1/6 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
                           >
                             <option value="candidate">Candidate</option>
@@ -1208,17 +1397,24 @@ export default function Onboarding() {
                             type="email"
                             placeholder="Recipient email"
                             value={recipientEmail}
-                            onChange={e => setRecipientEmail(e.target.value)}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
                             className="mt-1 block w-full md:w-1/3 h-11 rounded-md bg-white dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 pl-3"
                             autoComplete="off"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              setRecipients(prev => [...prev, { name: recipientName, email: recipientEmail, type: recipientType }]);
-                              setRecipientName('');
-                              setRecipientEmail('');
-                              setRecipientType('candidate');
+                              setRecipients((prev) => [
+                                ...prev,
+                                {
+                                  name: recipientName,
+                                  email: recipientEmail,
+                                  type: recipientType,
+                                },
+                              ]);
+                              setRecipientName("");
+                              setRecipientEmail("");
+                              setRecipientType("candidate");
                             }}
                             className="gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400"
                           >
@@ -1374,7 +1570,7 @@ export default function Onboarding() {
                                       ? "Enter official email address..."
                                       : "Enter email address..."
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1386,7 +1582,7 @@ export default function Onboarding() {
                                   onChange={(e) =>
                                     handleFieldChange(e, field.id)
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1398,27 +1594,32 @@ export default function Onboarding() {
                                   onChange={(e) =>
                                     handleFieldChange(e, field.id)
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
 
-                              {(field.type === "checkbox" || field.type === "decision") && (!fieldOptions[field.id] || fieldOptions[field.id].length === 0) && (
-                                <div className="mt-1">
-                                  <label className="inline-flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={(e) => handleFieldChange(e, field.id)}
-                                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                      disabled
-                                    />
-                                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                      {field.label}
-                                    </span>
-                                  </label>
-                                </div>
-                              )}
+                              {(field.type === "checkbox" ||
+                                field.type === "decision") &&
+                                (!fieldOptions[field.id] ||
+                                  fieldOptions[field.id].length === 0) && (
+                                  <div className="mt-1">
+                                    <label className="inline-flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={(e) =>
+                                          handleFieldChange(e, field.id)
+                                        }
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        disabled
+                                      />
+                                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                        {field.label}
+                                      </span>
+                                    </label>
+                                  </div>
+                                )}
 
                               {field.type === "tel" && (
                                 <input
@@ -1429,7 +1630,7 @@ export default function Onboarding() {
                                   }
                                   placeholder="Enter contact number..."
                                   pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1440,7 +1641,7 @@ export default function Onboarding() {
                                   onChange={(e) =>
                                     handleFieldChange(e, field.id)
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 >
                                   <option value="">Select blood group</option>
@@ -1464,7 +1665,7 @@ export default function Onboarding() {
                                             setOptionDraft(e.target.value)
                                           }
                                           placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
                                           type="button"
@@ -1520,10 +1721,12 @@ export default function Onboarding() {
                                           e.preventDefault();
                                           return false;
                                         }}
-                                        className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 cursor-not-allowed opacity-60"
+                                        className="block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3 cursor-not-allowed opacity-60"
                                         style={{ pointerEvents: "auto" }}
                                       >
-                                        <option value="">Select an option</option>
+                                        <option value="">
+                                          Select an option
+                                        </option>
                                         {(fieldOptions[field.id] || []).map(
                                           (option, idx) => (
                                             <option key={idx} value={option}>
@@ -1554,7 +1757,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter text here..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white  focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1568,7 +1771,7 @@ export default function Onboarding() {
                                   }
                                   placeholder="Enter phone number..."
                                   pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1581,7 +1784,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter formula..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white  focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1592,7 +1795,7 @@ export default function Onboarding() {
                                   onChange={(e) =>
                                     handleFieldChange(e, field.id)
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 >
                                   <option value="">Select gender</option>
@@ -1613,7 +1816,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter decimal number..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1624,7 +1827,7 @@ export default function Onboarding() {
                                   onChange={(e) =>
                                     handleFieldChange(e, field.id)
                                   }
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 >
                                   <option value="">Select country</option>
@@ -1648,7 +1851,7 @@ export default function Onboarding() {
                                             setOptionDraft(e.target.value)
                                           }
                                           placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                           onKeyDown={(e) => {
                                             if (
                                               e.key === "Enter" &&
@@ -1770,7 +1973,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter lookup value..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1783,7 +1986,7 @@ export default function Onboarding() {
                                   }
                                   placeholder="Add notes..."
                                   rows={4}
-                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1796,7 +1999,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter URL..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -1813,7 +2016,7 @@ export default function Onboarding() {
                                             setOptionDraft(e.target.value)
                                           }
                                           placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
                                           type="button"
@@ -1909,7 +2112,7 @@ export default function Onboarding() {
                                             setOptionDraft(e.target.value)
                                           }
                                           placeholder="Add new option..."
-                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                          className="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                         />
                                         <button
                                           type="button"
@@ -1999,7 +2202,7 @@ export default function Onboarding() {
                                   }
                                   placeholder="Enter text here..."
                                   rows={4}
-                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -2012,7 +2215,7 @@ export default function Onboarding() {
                                     handleFieldChange(e, field.id)
                                   }
                                   placeholder="Enter number..."
-                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3"
+                                  className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 pl-3"
                                   disabled
                                 />
                               )}
@@ -2033,7 +2236,7 @@ export default function Onboarding() {
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
-                                    className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-7"
+                                    className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-b lue-500 focus:ring-blue-500 pl-7"
                                     disabled
                                   />
                                 </div>
