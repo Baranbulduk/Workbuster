@@ -46,7 +46,7 @@ const Login = () => {
       }
 
       console.log("Navigating to dashboard");
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       console.log("Login error:", error);
       setError(
@@ -62,32 +62,14 @@ const Login = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
             Admin Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              create a new admin account
-            </Link>
-          </p>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link
-              to="/employee/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              login as employee
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div>
               <div className="text-sm text-red-700">{error}</div>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="flex flex-col gap-2">
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -97,7 +79,7 @@ const Login = () => {
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-3  placeholder-gray-500 border border-gray-100 text-gray-900 rounded-md sm:text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 dark:bg-gray-800"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -112,23 +94,41 @@ const Login = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-3 placeholder-gray-500 border border-gray-100 text-gray-900 rounded-md sm:text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 dark:bg-gray-800"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
           </div>
-          <div>
+          <div className="flex justify-center">
             <button
               type="submit"
               onClick={() => console.log("Button clicked")}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
+              className="flex justify-center items-center py-2 px-8 border border-transparent font-semibold text-lg rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
-              Sign in as Admin
+              Login
             </button>
           </div>
         </form>
+        <div className="flex flex-col gap-2">
+          <p className="text-center text-sm text-gray-600">
+            <Link
+              to="/employee/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Login as Employee
+            </Link>
+          </p>{" "}
+          <p className="text-center text-sm text-gray-600">
+            <Link
+              to="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Create New Account
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -128,7 +128,6 @@ router.get('/colleagues', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const candidates = await Candidate.find();
-    console.log('Returning candidates:', candidates.map(c => ({ id: c._id, firstName: c.firstName, lastName: c.lastName, currentRole: c.currentRole, position: c.position })));
     res.json(candidates);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -37,13 +37,17 @@ const EmployeeLogin = () => {
         );
 
         // Navigate to onboarding form with any existing token/email params
-        navigate(
-          `/employee/onboarding${
-            token
-              ? `?token=${token}${emailParam ? `&email=${emailParam}` : ""}`
-              : ""
-          }`
-        );
+        const queryParams = [];
+        if (token && token !== "null") {
+          queryParams.push(`token=${token}`);
+        }
+        if (emailParam && emailParam !== "null") {
+          queryParams.push(`email=${emailParam}`);
+        }
+
+        const queryString =
+          queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+        navigate(`/employee/onboarding${queryString}`);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -62,18 +66,9 @@ const EmployeeLogin = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
             Employee Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link
-              to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              login as admin
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="flex flex-col gap-2">
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -85,7 +80,7 @@ const EmployeeLogin = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
+                className="appearance-none relative block w-full px-3 py-3  placeholder-gray-500 border border-gray-100 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
                 placeholder="Email address"
               />
             </div>
@@ -100,7 +95,7 @@ const EmployeeLogin = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300  placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
+                className="appearance-none relative block w-full px-3 py-3  placeholder-gray-500 border border-gray-100 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
                 placeholder="Password"
               />
             </div>
@@ -110,16 +105,26 @@ const EmployeeLogin = () => {
             <div className="text-red-500 text-sm text-center">{error}</div>
           )}
 
-          <div>
+          <div className="flex justify-center">
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center px-4 py-2 text-white rounded-3xl w-full font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
+              className="flex justify-center items-center py-2 px-8 border border-transparent font-semibold text-lg rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Logging in..." : "Login"}
             </button>
           </div>
         </form>
+        <div>
+        <p className="text-center text-sm text-gray-600">
+          <Link
+            to="/login"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
+            Login as Admin
+          </Link>
+        </p>
+        </div>
       </div>
     </div>
   );

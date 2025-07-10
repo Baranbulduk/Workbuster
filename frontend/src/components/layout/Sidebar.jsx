@@ -36,6 +36,7 @@ import {
   FiSettings,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import LogoutPopup from "./LogoutPopup";
 
 const searchParams = new URLSearchParams(location.search);
 const token = searchParams.get("token");
@@ -94,6 +95,7 @@ const navigation = [
 export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,12 +117,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
-    // Clear any stored authentication data if needed
-    // localStorage.removeItem('token');
-    // localStorage.removeItem('user');
-
-    // Navigate to login page
-    navigate("/login");
+    setShowLogoutPopup(true);
   };
 
   const handleNavigation = (href) => {
@@ -267,6 +264,13 @@ export default function Sidebar() {
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
+
+      {/* Logout Popup */}
+      <LogoutPopup 
+        isOpen={showLogoutPopup}
+        onClose={() => setShowLogoutPopup(false)}
+        userType="admin"
+      />
     </>
   );
 }

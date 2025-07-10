@@ -19,6 +19,7 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import LogoutPopup from "./components/layout/LogoutPopup";
 
 // Import all components
 import Dashboard from "./components/Admin/dashboard/Dashboard";
@@ -51,6 +52,7 @@ const LayoutWrapper = () => {
 // Simple employee layout with limited navigation
 const EmployeeLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,7 +85,7 @@ const EmployeeLayout = () => {
   ];
 
   const handleLogout = () => {
-    navigate("/login");
+    setShowLogoutPopup(true);
   };
 
   return (
@@ -201,6 +203,13 @@ const EmployeeLayout = () => {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+
+      {/* Logout Popup */}
+      <LogoutPopup 
+        isOpen={showLogoutPopup}
+        onClose={() => setShowLogoutPopup(false)}
+        userType="employee"
+      />
     </div>
   );
 };

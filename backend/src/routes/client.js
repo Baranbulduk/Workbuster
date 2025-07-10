@@ -11,7 +11,6 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const clients = await Client.find();
-    console.log('Returning clients:', clients.map(c => ({ id: c._id, companyName: c.companyName, address: c.address })));
     res.json(clients);
   } catch (error) {
     res.status(500).json({ message: error.message });
