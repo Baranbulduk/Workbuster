@@ -509,38 +509,6 @@ export default function OnboardingDetails({ item, type }) {
           </div>
         )}
       </div>
-
-      {/* Administrative Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold text-gray-800 dark:text-white">
-            Administrative Data Form
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            Completed on:
-            <span className="text-gray-700 dark:text-white font-medium">
-              {formatDate(item.formCompleted)}
-            </span>
-            <CheckCircleIcon className="h-4 w-4 text-green-500 ml-1" />
-          </div>
-        </div>
-        <a
-          href="#"
-          className="text-blue-600 dark:text-blue-400 underline text-sm"
-        >
-          view the form
-        </a>
-      </div>
-
-      {/* Tasks */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-        <div className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
-          Tasks
-          <span className="bg-orange-400 text-white text-xs px-2 py-0.5 rounded-full">
-            {item.tasks || 0}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

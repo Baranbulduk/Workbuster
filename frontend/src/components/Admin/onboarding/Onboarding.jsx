@@ -1441,7 +1441,7 @@ export default function Onboarding() {
                                     <LockOpenIcon className="h-5 w-5" />
                                   )}
                                 </button>
-                                {!msg.isDefault && welcomeMessages.length > 1 && (
+                                {!msg.isDefault && welcomeMessages.length > 1 && !msg.locked && (
                                   <button
                                     type="button"
                                     className="ml-2 bg-red-100 text-red-700 hover:text-red-700 rounded-md p-1 hover:bg-red-200"
