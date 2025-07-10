@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { transporter } from '../config/email.js';
 import crypto from 'crypto';
 import OnboardingForm from '../models/OnboardingForm.js';
+import WelcomeMessage from '../models/WelcomeMessage.js';
 import nodemailer from 'nodemailer';
 import { getOnboardingProgress } from '../controllers/onboardingController.js';
 import Employee from '../models/Employee.js';
@@ -353,6 +354,203 @@ router.post('/send-form', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error sending form',
+      error: error.message
+    });
+  }
+});
+
+// Send welcome messages via email
+router.post('/send-welcome-message', async (req, res) => {
+  try {
+    const { type, messages, recipients } = req.body;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No welcome messages provided'
+      });
+    }
+
+    if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No recipients provided'
+      });
+    }
+
+    // Send email to each recipient and collect results
+    const results = [];
+    for (const recipient of recipients) {
+      console.log('Processing welcome message recipient:', recipient);
+
+      // Generate a unique token for this welcome message
+      const welcomeToken = crypto.randomBytes(16).toString('hex');
+      
+      // Store welcome messages in database with token
+      for (const message of messages) {
+        await WelcomeMessage.create({
+          recipientEmail: recipient.email,
+          title: message.title,
+          content: message.content,
+          sentAt: new Date(),
+          token: welcomeToken
+        });
+      }
+
+      // Create HTML content for welcome message email
+      let emailContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #333; margin-bottom: 10px;">Welcome to Rexett!</h1>
+            <p style="color: #666; font-size: 16px;">We're excited to have you on board!</p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #555; font-size: 16px; margin-bottom: 20px;">
+              You have new welcome messages waiting for you in your dashboard.
+            </p>
+            <div style="margin: 20px 0;">
+              <a href="http://localhost:5173/employee/onboarding?welcome=${welcomeToken}&email=${encodeURIComponent(recipient.email)}" 
+                 style="background: linear-gradient(to right, #FFD08E, #FF6868, #926FF3); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                View Welcome Messages
+              </a>
+            </div>
+            <p style="color: #999; font-size: 14px; margin-top: 10px;">
+              Click the button above to access your welcome messages in your employee dashboard.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 14px;">
+              If you have any questions, please don't hesitate to reach out to our team.
+            </p>
+            <p style="color: #999; font-size: 14px;">
+              Best regards,<br>The Rexett Team
+            </p>
+          </div>
+        </div>
+      `;
+
+      const mailOptions = {
+        from: 'rexettit@gmail.com',
+        to: recipient.email,
+        subject: 'Welcome to Rexett - Your Onboarding Journey Begins!',
+        html: emailContent
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        
+        // Save each welcome message to the database
+        for (const message of messages) {
+          await WelcomeMessage.create({
+            recipientEmail: recipient.email,
+            title: message.title,
+            content: message.content,
+            sentAt: new Date()
+          });
+        }
+        
+        results.push({
+          email: recipient.email,
+          success: true
+        });
+        console.log(`Welcome message sent successfully to ${recipient.email}`);
+      } catch (error) {
+        console.error(`Error sending welcome message to ${recipient.email}:`, error);
+        results.push({
+          email: recipient.email,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Welcome messages sent successfully',
+      results
+    });
+  } catch (error) {
+    console.error('Error sending welcome messages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending welcome messages',
+      error: error.message
+    });
+  }
+});
+
+// Get welcome messages by recipient email
+router.get('/welcome-messages-by-recipient/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email parameter is required'
+      });
+    }
+
+    const messages = await WelcomeMessage.find({ 
+      recipientEmail: email 
+    }).sort({ sentAt: -1 });
+
+    res.json({
+      success: true,
+      messages: messages.map(msg => ({
+        title: msg.title,
+        content: msg.content,
+        sentAt: msg.sentAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching welcome messages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching welcome messages',
+      error: error.message
+    });
+  }
+});
+
+// Get welcome messages by token
+router.get('/welcome-messages-by-token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token parameter is required'
+      });
+    }
+
+    const messages = await WelcomeMessage.find({ 
+      token: token 
+    }).sort({ sentAt: -1 });
+
+    if (messages.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No welcome messages found for this token'
+      });
+    }
+
+    res.json({
+      success: true,
+      messages: messages.map(msg => ({
+        title: msg.title,
+        content: msg.content,
+        sentAt: msg.sentAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching welcome messages by token:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching welcome messages',
       error: error.message
     });
   }

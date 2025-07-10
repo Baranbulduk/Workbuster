@@ -79,6 +79,8 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(true);
   const [availableForms, setAvailableForms] = useState([]);
   const [formsLoading, setFormsLoading] = useState(false);
+  const [welcomeMessages, setWelcomeMessages] = useState([]);
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     candidateName: "",
@@ -390,7 +392,8 @@ export default function Onboarding() {
     if (token) {
       fetchFormData(token);
     } else {
-      setError("No form token provided. Please use the link from your email.");
+      // Fetch welcome messages for the logged-in employee
+      fetchEmployeeWelcomeMessages();
       setLoading(false);
     }
   }, [token]);
@@ -550,6 +553,31 @@ export default function Onboarding() {
         );
       }
       setLoading(false);
+    }
+  };
+
+  const fetchEmployeeWelcomeMessages = async () => {
+    try {
+      setWelcomeLoading(true);
+      const employeeStr = localStorage.getItem("employee");
+      let employeeEmail = null;
+      if (employeeStr) {
+        try {
+          const employeeObj = JSON.parse(employeeStr);
+          employeeEmail = employeeObj.email;
+        } catch (e) {}
+      }
+      
+      if (employeeEmail) {
+        const response = await apiCall("get", `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(employeeEmail)}`);
+        if (response.success) {
+          setWelcomeMessages(response.messages);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching welcome messages:", error);
+    } finally {
+      setWelcomeLoading(false);
     }
   };
 
@@ -793,111 +821,159 @@ export default function Onboarding() {
     return (
       <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
         <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
-          Your Onboarding Forms
+          Onboarding
         </h1>
-        <ul className="space-y-4">
-          {availableForms.map((form) => {
-            const employeeStr = localStorage.getItem("employee");
-            let employeeEmail = null;
-            if (employeeStr) {
-              try {
-                const employeeObj = JSON.parse(employeeStr);
-                employeeEmail = employeeObj.email;
-              } catch (e) {}
-            }
-            const recipient = form.recipients.find(
-              (r) => r.email === employeeEmail
-            );
-            let status = "Not Started";
-            if (
-              recipient?.completedFields &&
-              Array.isArray(recipient.completedFields)
-            ) {
-              const totalFields = form.fields.length;
-              // Use the same logic as the form progress calculation
-              const filledFields = recipient.completedFields.filter((field) => {
-                if (field.type === "checkbox") {
-                  return field.value === true;
-                }
-                if (field.type === "file" || field.type === "image") {
-                  return (
-                    (field.value && typeof field.value !== "string") ||
-                    (typeof field.value === "string" &&
-                      field.value.trim() !== "")
-                  );
-                }
-                if (field.type === "multiselect") {
-                  return field.value && field.value.length > 0;
-                }
-                if (
-                  field.type === "number" ||
-                  field.type === "currency" ||
-                  field.type === "decimal"
-                ) {
+        
+        {/* Welcome Messages Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Welcome Messages
+          </h2>
+          {welcomeLoading ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading welcome messages...</span>
+              </div>
+            </div>
+          ) : welcomeMessages.length > 0 ? (
+            <div className="space-y-4">
+              {welcomeMessages.map((message, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    {message.title}
+                  </h3>
+                  <div 
+                    className="prose prose-sm max-w-none dark:prose-invert mb-3"
+                    dangerouslySetInnerHTML={{ __html: message.content }}
+                  />
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Sent on: {formatDate(message.sentAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Check your email for welcome messages from your administrator. Click the "View Welcome Messages" button in the email to access them here.
+              </p>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Welcome messages will appear here once you click the link from your email.
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Forms Section */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Onboarding Forms
+          </h2>
+          <ul className="space-y-4">
+            {availableForms.map((form) => {
+              const employeeStr = localStorage.getItem("employee");
+              let employeeEmail = null;
+              if (employeeStr) {
+                try {
+                  const employeeObj = JSON.parse(employeeStr);
+                  employeeEmail = employeeObj.email;
+                } catch (e) {}
+              }
+              const recipient = form.recipients.find(
+                (r) => r.email === employeeEmail
+              );
+              let status = "Not Started";
+              if (
+                recipient?.completedFields &&
+                Array.isArray(recipient.completedFields)
+              ) {
+                const totalFields = form.fields.length;
+                // Use the same logic as the form progress calculation
+                const filledFields = recipient.completedFields.filter((field) => {
+                  if (field.type === "checkbox") {
+                    return field.value === true;
+                  }
+                  if (field.type === "file" || field.type === "image") {
+                    return (
+                      (field.value && typeof field.value !== "string") ||
+                      (typeof field.value === "string" &&
+                        field.value.trim() !== "")
+                    );
+                  }
+                  if (field.type === "multiselect") {
+                    return field.value && field.value.length > 0;
+                  }
+                  if (
+                    field.type === "number" ||
+                    field.type === "currency" ||
+                    field.type === "decimal"
+                  ) {
+                    return (
+                      field.value !== "" &&
+                      field.value !== null &&
+                      field.value !== undefined &&
+                      field.value !== 0 &&
+                      field.value !== "0"
+                    );
+                  }
                   return (
                     field.value !== "" &&
                     field.value !== null &&
-                    field.value !== undefined &&
-                    field.value !== 0 &&
-                    field.value !== "0"
+                    field.value !== undefined
                   );
-                }
-                return (
-                  field.value !== "" &&
-                  field.value !== null &&
-                  field.value !== undefined
-                );
-              }).length;
+                }).length;
 
-              if (filledFields === totalFields) {
+                if (filledFields === totalFields) {
+                  status = "Completed";
+                } else if (filledFields > 0) {
+                  status = "In Progress";
+                }
+              } else if (recipient?.completedAt) {
+                // fallback for legacy data
                 status = "Completed";
-              } else if (filledFields > 0) {
-                status = "In Progress";
               }
-            } else if (recipient?.completedAt) {
-              // fallback for legacy data
-              status = "Completed";
-            }
-            return (
-              <li
-                key={form.token}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {form.title}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Status:{" "}
-                    <span
-                      className={
-                        status === "Completed"
-                          ? "text-green-600"
-                          : status === "In Progress"
-                          ? "text-yellow-600"
-                          : "text-red-600"
-                      }
-                    >
-                      {status}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
-                  onClick={() =>
-                    navigate(
-                      `/employee/onboarding?token=${
-                        form.token
-                      }&email=${encodeURIComponent(employeeEmail)}`
-                    )
-                  }
+              return (
+                <li
+                  key={form.token}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between"
                 >
-                  Open Form
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {form.title}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                      Status:{" "}
+                      <span
+                        className={
+                          status === "Completed"
+                            ? "text-green-600"
+                            : status === "In Progress"
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {status}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
+                    onClick={() =>
+                      navigate(
+                        `/employee/onboarding?token=${
+                          form.token
+                        }&email=${encodeURIComponent(employeeEmail)}`
+                      )
+                    }
+                  >
+                    Open Form
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     );
   }

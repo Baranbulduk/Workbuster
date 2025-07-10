@@ -36,6 +36,9 @@ export default function OnboardingDetails({ item, type }) {
   const [formsData, setFormsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedFormId, setExpandedFormId] = useState(null);
+  // --- Welcome messages state ---
+  const [welcomeMessages, setWelcomeMessages] = useState([]);
+  const [loadingWelcome, setLoadingWelcome] = useState(true);
 
   useEffect(() => {
     const fetchFormData = async () => {
@@ -56,8 +59,26 @@ export default function OnboardingDetails({ item, type }) {
       }
     };
 
+    // Fetch welcome messages
+    const fetchWelcomeMessages = async () => {
+      try {
+        setLoadingWelcome(true);
+        const response = await axios.get(
+          `http://localhost:5000/api/onboarding/welcome-messages-by-recipient/${item.email}`
+        );
+        if (response.data.success) {
+          setWelcomeMessages(response.data.messages);
+        }
+      } catch (error) {
+        console.error("Error fetching welcome messages:", error);
+      } finally {
+        setLoadingWelcome(false);
+      }
+    };
+
     if (item && item.email) {
       fetchFormData();
+      fetchWelcomeMessages();
     }
   }, [item]);
 
@@ -456,18 +477,37 @@ export default function OnboardingDetails({ item, type }) {
 
       {/* Welcome Email */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div className="font-semibold text-gray-800 dark:text-white">
             Welcome Email
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            Sent on:
-            <span className="text-gray-700 dark:text-white font-medium">
-              {formatDate(item.welcomeSent)}
-            </span>
-            <CheckCircleIcon className="h-4 w-4 text-green-500 ml-1" />
-          </div>
         </div>
+        {loadingWelcome ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              Loading welcome messages...
+            </p>
+          </div>
+        ) : welcomeMessages.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+            No welcome messages sent to this person yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {welcomeMessages.map((msg, idx) => (
+              <div key={idx} className="border dark:border-gray-700 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium text-gray-800 dark:text-white">{msg.title}</h4>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Sent on: {formatDate(msg.sentAt)}
+                  </span>
+                </div>
+                <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: msg.content }} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Administrative Form */}

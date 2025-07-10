@@ -12,23 +12,4 @@ export const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD || 'prmursgwotixwilt'
   },
   debug: true
-});
-
-export const sendEmail = async ({ to, subject, html, text }) => {
-  try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER || 'rexettit@gmail.com',
-      to,
-      subject,
-      html,
-      text
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result.messageId);
-    return result;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
-  }
-}; 
+}); 

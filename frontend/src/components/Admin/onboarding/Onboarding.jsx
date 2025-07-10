@@ -37,7 +37,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { HiBars4 } from "react-icons/hi2";
 import axios from "../../../utils/axios";
-import axiosDirect from "axios";
 import {
   adminApiCall,
   handleAdminTokenExpiration,
@@ -402,100 +401,10 @@ export default function Onboarding() {
   // Helper to generate unique IDs
   const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
-  // Welcome Messages API functions
-  const fetchWelcomeMessages = async () => {
-    try {
-      const response = await adminApiCall("GET", "/welcome-messages");
-      if (response && response.length > 0) {
-        setWelcomeMessages(response.map(msg => ({
-          ...msg,
-          editingTitle: false
-        })));
-      } else {
-        // If no messages exist, create a default one
-        const defaultMessage = {
-          title: "Welcome Message",
-          content: "",
-          isDefault: true,
-          order: 0,
-          locked: false,
-          editingTitle: false,
-          id: generateId()
-        };
-        const createdMessage = await adminApiCall("POST", "/welcome-messages", defaultMessage);
-        setWelcomeMessages([{
-          ...createdMessage,
-          editingTitle: false
-        }]);
-      }
-    } catch (error) {
-      console.error("Error fetching welcome messages:", error);
-      // Fallback to local state if API fails
-      setWelcomeMessages([
-        { title: "Welcome Message", editingTitle: false, content: "", id: generateId(), isDefault: true }
-      ]);
-    }
-  };
-
-  const createWelcomeMessage = async (messageData) => {
-    try {
-      console.log('Creating welcome message with data:', messageData);
-      console.log('Admin token:', localStorage.getItem('adminToken'));
-      const response = await adminApiCall("POST", "/welcome-messages", messageData);
-      console.log('Create response:', response);
-      return response;
-    } catch (error) {
-      console.error("Error creating welcome message:", error);
-      console.error("Error details:", error.response?.data);
-      
-      // Fallback: try direct axios call without authentication
-      try {
-        console.log('Trying direct axios call without authentication...');
-        const directResponse = await axiosDirect.post('http://localhost:5000/api/welcome-messages', messageData);
-        console.log('Direct response:', directResponse.data);
-        return directResponse.data;
-      } catch (directError) {
-        console.error("Direct call also failed:", directError);
-        throw error; // Throw original error
-      }
-    }
-  };
-
-  const updateWelcomeMessage = async (id, updateData) => {
-    try {
-      const response = await adminApiCall("PUT", `/welcome-messages/${id}`, updateData);
-      return response;
-    } catch (error) {
-      console.error("Error updating welcome message:", error);
-      throw error;
-    }
-  };
-
-  const deleteWelcomeMessage = async (id) => {
-    try {
-      await adminApiCall("DELETE", `/welcome-messages/${id}`);
-      return true;
-    } catch (error) {
-      console.error("Error deleting welcome message:", error);
-      throw error;
-    }
-  };
-
-  const reorderWelcomeMessages = async (messages) => {
-    try {
-      const orderData = messages.map((msg, index) => ({
-        id: msg._id || msg.id,
-        order: index
-      }));
-      await adminApiCall("PUT", "/welcome-messages/reorder/all", { order: orderData });
-    } catch (error) {
-      console.error("Error reordering welcome messages:", error);
-      throw error;
-    }
-  };
-
-  // Replace initial state with API call
-  const [welcomeMessages, setWelcomeMessages] = useState([]);
+  // Replace initial state with id and isDefault
+  const [welcomeMessages, setWelcomeMessages] = useState([
+    { title: "Welcome Message", editingTitle: false, content: "", id: generateId(), isDefault: true }
+  ]);
 
   // Add state for drag-and-drop
   const [draggedMsgIdx, setDraggedMsgIdx] = useState(null);
@@ -529,13 +438,6 @@ export default function Onboarding() {
     };
     fetchAll();
   }, [activeTab, activeView]);
-
-  // Separate useEffect for welcome messages to avoid unnecessary API calls
-  useEffect(() => {
-    if (activeView === "welcome") {
-      fetchWelcomeMessages();
-    }
-  }, [activeView]);
 
   const fetchData = async () => {
     try {
@@ -926,63 +828,9 @@ export default function Onboarding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Handle welcome message sending
-    if (activeView === "welcome") {
-      // Validate recipients
-      if (recipients.length === 0) {
-        alert("Please add at least one recipient to send welcome messages.");
-        return;
-      }
-
-      // Validate that we have welcome messages
-      if (welcomeMessages.length === 0) {
-        alert("Please create at least one welcome message.");
-        return;
-      }
-
-      try {
-        // Get all non-empty welcome messages
-        const validMessages = welcomeMessages.filter(msg => msg.content && msg.content.trim() !== "");
-        
-        if (validMessages.length === 0) {
-          alert("Please add content to at least one welcome message.");
-          return;
-        }
-
-        // Prepare payload for welcome messages
-        const payload = {
-          recipients: recipients.map(r => ({
-            name: r.name,
-            email: r.email,
-            type: r.type
-          })),
-          messageIds: validMessages.map(msg => msg._id || msg.id)
-        };
-
-        // Send welcome messages
-        const response = await adminApiCall(
-          "POST",
-          "/welcome-messages/send",
-          payload
-        );
-
-        if (response.success) {
-          // Reset recipients
-          setRecipients([]);
-          alert(`Welcome messages sent successfully! ${response.message}`);
-        } else {
-          throw new Error(response.message || "Failed to send welcome messages");
-        }
-      } catch (error) {
-        console.error("Error sending welcome messages:", error);
-        alert(`Error sending welcome messages: ${error.message}`);
-      }
-      return;
-    }
-
-    // Handle form submission (existing logic)
     // Validate recipients
     if (recipients.length === 0) {
+      alert("Please add at least one recipient");
       return;
     }
 
@@ -1028,6 +876,58 @@ export default function Onboarding() {
     } catch (error) {
       console.error("Error submitting form:", error);
       alert(`Error submitting form: ${error.message}`);
+    }
+  };
+
+  const handleWelcomeMessageSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate recipients
+    if (recipients.length === 0) {
+      alert("Please add at least one recipient");
+      return;
+    }
+
+    // Validate that at least one message has content
+    const hasContent = welcomeMessages.some(msg => msg.content.trim() !== '');
+    if (!hasContent) {
+      alert("Please add content to at least one welcome message");
+      return;
+    }
+
+    try {
+      // Prepare payload for welcome messages
+      const payload = {
+        type: "welcome-message",
+        messages: welcomeMessages.map(msg => ({
+          title: msg.title,
+          content: msg.content,
+          isDefault: msg.isDefault
+        })),
+        recipients,
+      };
+
+      // Send to backend
+      const response = await adminApiCall(
+        "POST",
+        "/onboarding/send-welcome-message",
+        payload
+      );
+
+      if (response.success) {
+        // Reset recipients
+        setRecipients([]);
+        setRecipientName("");
+        setRecipientEmail("");
+        setRecipientType("candidate");
+        setBulkInput("");
+        alert("Welcome messages sent successfully!");
+      } else {
+        throw new Error(response.message || "Failed to send welcome messages");
+      }
+    } catch (error) {
+      console.error("Error sending welcome messages:", error);
+      alert(`Error sending welcome messages: ${error.message}`);
     }
   };
 
@@ -1093,9 +993,6 @@ export default function Onboarding() {
   const handleSaveOptions = (fieldId) => {
     setEditingOptions(null);
   };
-
-  // Fix: Add a default content value when adding a new message
-  const DEFAULT_WELCOME_CONTENT = "Welcome to Rexett!";
 
   return (
     <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
@@ -1347,7 +1244,7 @@ export default function Onboarding() {
                       <button
                         type="button"
                         className="gap-2 px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
-                        onClick={handleSubmit}
+                        onClick={handleWelcomeMessageSubmit}
                       >
                         Submit
                       </button>
@@ -1439,7 +1336,7 @@ export default function Onboarding() {
                       )}
                     </div>
                     {welcomeMessages.map((msg, idx) => (
-                      <React.Fragment key={msg._id || msg.id}>
+                      <React.Fragment key={msg.id}>
                         {/* Drop indicator */}
                         {dropTargetIdx === idx && draggedMsgIdx !== null && draggedMsgIdx !== idx && (
                           <div style={{ height: 0, borderTop: '3px solid #2563eb', margin: '0 0 8px 0', borderRadius: 2, boxShadow: '0 2px 8px #2563eb33' }} />
@@ -1457,22 +1354,16 @@ export default function Onboarding() {
                             e.preventDefault();
                             setDropTargetIdx(null);
                           }}
-                          onDrop={async e => {
+                          onDrop={e => {
                             e.preventDefault();
                             if (draggedMsgIdx !== null && draggedMsgIdx !== idx) {
                               const newMsgs = [...welcomeMessages];
-                              const fromIdx = newMsgs.findIndex(m => (m._id || m.id) === (welcomeMessages[draggedMsgIdx]._id || welcomeMessages[draggedMsgIdx].id));
+                              const fromIdx = newMsgs.findIndex(m => m.id === welcomeMessages[draggedMsgIdx].id);
                               const [removed] = newMsgs.splice(fromIdx, 1);
                               newMsgs.splice(idx, 0, removed);
                               setWelcomeMessages(newMsgs);
                               setDraggedMsgIdx(null);
                               setDropTargetIdx(null);
-                              // Update order in backend
-                              try {
-                                await reorderWelcomeMessages(newMsgs);
-                              } catch (error) {
-                                console.error("Error updating message order:", error);
-                              }
                             }
                           }}
                           onDragEnd={() => {
@@ -1496,16 +1387,10 @@ export default function Onboarding() {
                                   <input
                                     className="block text-2xl font-semibold text-gray-900 dark:text-white bg-transparent border-b border-blue-400 focus:outline-none"
                                     value={msg.title}
-                                    onChange={async e => {
+                                    onChange={e => {
                                       const newMsgs = [...welcomeMessages];
                                       newMsgs[idx].title = e.target.value;
                                       setWelcomeMessages(newMsgs);
-                                      // Update title in backend
-                                      try {
-                                        await updateWelcomeMessage(msg._id || msg.id, { title: e.target.value });
-                                      } catch (error) {
-                                        console.error("Error updating message title:", error);
-                                      }
                                     }}
                                     onBlur={() => {
                                       const newMsgs = [...welcomeMessages];
@@ -1544,16 +1429,10 @@ export default function Onboarding() {
                                   type="button"
                                   className={`mr-1 p-1 rounded ${msg.locked ? 'bg-gray-200 dark:bg-gray-700' : 'bg-green-100 dark:bg-green-900'} text-gray-700 dark:text-gray-200`}
                                   title={msg.locked ? 'Unlock message' : 'Lock message'}
-                                  onClick={async () => {
+                                  onClick={() => {
                                     const newMsgs = [...welcomeMessages];
                                     newMsgs[idx].locked = !msg.locked;
                                     setWelcomeMessages(newMsgs);
-                                    // Update locked status in backend
-                                    try {
-                                      await updateWelcomeMessage(msg._id || msg.id, { locked: !msg.locked });
-                                    } catch (error) {
-                                      console.error("Error updating message lock status:", error);
-                                    }
                                   }}
                                 >
                                   {msg.locked ? (
@@ -1567,7 +1446,7 @@ export default function Onboarding() {
                                     type="button"
                                     className="ml-2 bg-red-100 text-red-700 hover:text-red-700 rounded-md p-1 hover:bg-red-200"
                                     title="Delete message"
-                                    onClick={() => setPendingDeleteId(msg._id || msg.id)}
+                                    onClick={() => setPendingDeleteId(msg.id)}
                                   >
                                     <TrashIcon className="h-5 w-5" />
                                   </button>
@@ -1576,16 +1455,10 @@ export default function Onboarding() {
                             </div>
                             <ReactQuill
                               value={msg.content}
-                              onChange={async val => {
+                              onChange={val => {
                                 const newMsgs = [...welcomeMessages];
                                 newMsgs[idx].content = val;
                                 setWelcomeMessages(newMsgs);
-                                // Update content in backend
-                                try {
-                                  await updateWelcomeMessage(msg._id || msg.id, { content: val });
-                                } catch (error) {
-                                  console.error("Error updating message content:", error);
-                                }
                               }}
                               placeholder="Write your message here..."
                               className="w-full h-40 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white border-gray-200 dark:border-gray-600 text-lg"
@@ -1611,23 +1484,7 @@ export default function Onboarding() {
                     <button
                       type="button"
                       className=" px-6 py-2 rounded-3xl bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition"
-                      onClick={async () => {
-                        try {
-                          const newMessage = {
-                            title: "Welcome Message",
-                            content: DEFAULT_WELCOME_CONTENT, // Always non-empty
-                            isDefault: false,
-                            locked: false
-                          };
-                          const createdMessage = await createWelcomeMessage(newMessage);
-                          setWelcomeMessages([...welcomeMessages, { 
-                            ...createdMessage, 
-                            editingTitle: false 
-                          }]);
-                        } catch (error) {
-                          console.error("Error creating welcome message:", error);
-                        }
-                      }}
+                      onClick={() => setWelcomeMessages([...welcomeMessages, { title: "Welcome Message", editingTitle: false, content: "", id: generateId(), isDefault: false }])}
                     >
                       Add More
                     </button>
@@ -2605,15 +2462,9 @@ export default function Onboarding() {
               </button>
               <button
                 className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                onClick={async () => {
-                  try {
-                    await deleteWelcomeMessage(pendingDeleteId);
-                    setWelcomeMessages(welcomeMessages.filter((m) => (m._id || m.id) !== pendingDeleteId));
-                    setPendingDeleteId(null);
-                  } catch (error) {
-                    console.error("Error deleting welcome message:", error);
-                    setPendingDeleteId(null);
-                  }
+                onClick={() => {
+                  setWelcomeMessages(welcomeMessages.filter((m) => m.id !== pendingDeleteId));
+                  setPendingDeleteId(null);
                 }}
               >
                 Delete
