@@ -567,9 +567,14 @@ export default function Onboarding() {
           employeeEmail = employeeObj.email;
         } catch (e) {}
       }
-      
+
       if (employeeEmail) {
-        const response = await apiCall("get", `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(employeeEmail)}`);
+        const response = await apiCall(
+          "get",
+          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(
+            employeeEmail
+          )}`
+        );
         if (response.success) {
           setWelcomeMessages(response.messages);
         }
@@ -823,7 +828,7 @@ export default function Onboarding() {
         <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
           Onboarding
         </h1>
-        
+
         {/* Welcome Messages Section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -833,33 +838,44 @@ export default function Onboarding() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading welcome messages...</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">
+                  Loading welcome messages...
+                </span>
               </div>
             </div>
           ) : welcomeMessages.length > 0 ? (
             <div className="space-y-4">
               {welcomeMessages.map((message, index) => (
-                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                    {message.title}
-                  </h3>
-                  <div 
-                    className="prose prose-sm max-w-none dark:prose-invert mb-3"
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {message.title}
+                    </h3>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-semibold">Sent on:</span>{" "}
+                      {formatDate(message.sentAt)}
+                    </div>
+                  </div>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert"
                     dangerouslySetInnerHTML={{ __html: message.content }}
                   />
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Sent on: {formatDate(message.sentAt)}
-                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Check your email for welcome messages from your administrator. Click the "View Welcome Messages" button in the email to access them here.
+                Check your email for welcome messages from your administrator.
+                Click the "View Welcome Messages" button in the email to access
+                them here.
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Welcome messages will appear here once you click the link from your email.
+                Welcome messages will appear here once you click the link from
+                your email.
               </div>
             </div>
           )}
@@ -890,39 +906,41 @@ export default function Onboarding() {
               ) {
                 const totalFields = form.fields.length;
                 // Use the same logic as the form progress calculation
-                const filledFields = recipient.completedFields.filter((field) => {
-                  if (field.type === "checkbox") {
-                    return field.value === true;
-                  }
-                  if (field.type === "file" || field.type === "image") {
-                    return (
-                      (field.value && typeof field.value !== "string") ||
-                      (typeof field.value === "string" &&
-                        field.value.trim() !== "")
-                    );
-                  }
-                  if (field.type === "multiselect") {
-                    return field.value && field.value.length > 0;
-                  }
-                  if (
-                    field.type === "number" ||
-                    field.type === "currency" ||
-                    field.type === "decimal"
-                  ) {
+                const filledFields = recipient.completedFields.filter(
+                  (field) => {
+                    if (field.type === "checkbox") {
+                      return field.value === true;
+                    }
+                    if (field.type === "file" || field.type === "image") {
+                      return (
+                        (field.value && typeof field.value !== "string") ||
+                        (typeof field.value === "string" &&
+                          field.value.trim() !== "")
+                      );
+                    }
+                    if (field.type === "multiselect") {
+                      return field.value && field.value.length > 0;
+                    }
+                    if (
+                      field.type === "number" ||
+                      field.type === "currency" ||
+                      field.type === "decimal"
+                    ) {
+                      return (
+                        field.value !== "" &&
+                        field.value !== null &&
+                        field.value !== undefined &&
+                        field.value !== 0 &&
+                        field.value !== "0"
+                      );
+                    }
                     return (
                       field.value !== "" &&
                       field.value !== null &&
-                      field.value !== undefined &&
-                      field.value !== 0 &&
-                      field.value !== "0"
+                      field.value !== undefined
                     );
                   }
-                  return (
-                    field.value !== "" &&
-                    field.value !== null &&
-                    field.value !== undefined
-                  );
-                }).length;
+                ).length;
 
                 if (filledFields === totalFields) {
                   status = "Completed";

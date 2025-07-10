@@ -400,12 +400,12 @@ router.post('/send-welcome-message', async (req, res) => {
       // Create HTML content for welcome message email
       let emailContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
+          <div style="text-align: left; margin-bottom: 30px;">
             <h1 style="color: #333; margin-bottom: 10px;">Welcome to Rexett!</h1>
             <p style="color: #666; font-size: 16px;">We're excited to have you on board!</p>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
+          <div style="text-align: left; margin: 30px 0;">
             <p style="color: #555; font-size: 16px; margin-bottom: 20px;">
               You have new welcome messages waiting for you in your dashboard.
             </p>
@@ -420,7 +420,7 @@ router.post('/send-welcome-message', async (req, res) => {
             </p>
           </div>
           
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+          <div style="text-align: left; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #999; font-size: 14px;">
               If you have any questions, please don't hesitate to reach out to our team.
             </p>
