@@ -48,11 +48,15 @@ const EmployeeDetails = () => {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate("/employee/employees")}
+          onClick={() =>
+            navigate(
+              location.state?.fromOnboarding ? "/onboarding" : "/employees"
+            )
+          }
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          {fromOnboarding ? "Back to Onboarding" : "Back to Employees"}
+          Back to {location.state?.fromOnboarding ? "Onboarding" : "Employees"}
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
