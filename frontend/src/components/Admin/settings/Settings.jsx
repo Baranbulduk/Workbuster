@@ -89,10 +89,10 @@ export default function Settings() {
         </h1>
 
         {/* Profile Settings */}
-                    <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
-              Profile Settings
-            </h2>
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+          Profile Settings
+        </h2>
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -256,25 +256,36 @@ export default function Settings() {
         </div>
 
         {/* Notification Settings */}
-                    <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
-              Notification Settings
-            </h2>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+          Notification Settings
+        </h2>
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="space-y-4">
             {Object.entries(settings.notifications).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+              <div key={key} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize cursor-pointer">
                   {key.replace(/([A-Z])/g, " $1").trim()}
                 </label>
                 <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={value}
-                    onChange={(e) =>
-                      handleInputChange("notifications", key, e.target.checked)
-                    }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) =>
+                        handleInputChange("notifications", key, e.target.checked)
+                      }
+                      className="sr-only"
+                    />
+                    <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                      value 
+                        ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                        : 'bg-gray-200 dark:bg-gray-600'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                        value ? 'translate-x-8' : 'translate-x-1'
+                      }`}></div>
+                    </div>
+                  </label>
                 </div>
               </div>
             ))}
@@ -290,7 +301,7 @@ export default function Settings() {
         </div>
 
         {/* Preferences Settings */}
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
           Preferences
         </h2>
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
@@ -412,12 +423,12 @@ export default function Settings() {
         </div>
 
         {/* Security Settings */}
-                    <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
-              Security Settings
-            </h2>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+          Security Settings
+        </h2>
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Two-Factor Authentication
@@ -427,21 +438,32 @@ export default function Settings() {
                 </p>
               </div>
               <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={settings.security.twoFactorAuth}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "security",
-                      "twoFactorAuth",
-                      e.target.checked
-                    )
-                  }
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.security.twoFactorAuth}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "security",
+                        "twoFactorAuth",
+                        e.target.checked
+                      )
+                    }
+                    className="sr-only"
+                  />
+                  <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                    settings.security.twoFactorAuth 
+                      ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                      : 'bg-gray-200 dark:bg-gray-600'
+                  }`}>
+                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                      settings.security.twoFactorAuth ? 'translate-x-8' : 'translate-x-1'
+                    }`}></div>
+                  </div>
+                </label>
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Password Change Required
@@ -451,18 +473,29 @@ export default function Settings() {
                 </p>
               </div>
               <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={settings.security.passwordChangeRequired}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "security",
-                      "passwordChangeRequired",
-                      e.target.checked
-                    )
-                  }
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.security.passwordChangeRequired}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "security",
+                        "passwordChangeRequired",
+                        e.target.checked
+                      )
+                    }
+                    className="sr-only"
+                  />
+                  <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                    settings.security.passwordChangeRequired 
+                      ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                      : 'bg-gray-200 dark:bg-gray-600'
+                  }`}>
+                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                      settings.security.passwordChangeRequired ? 'translate-x-8' : 'translate-x-1'
+                    }`}></div>
+                  </div>
+                </label>
               </div>
             </div>
             <div>

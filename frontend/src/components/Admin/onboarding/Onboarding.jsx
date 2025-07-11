@@ -1789,16 +1789,25 @@ export default function Onboarding() {
                                 (!fieldOptions[field.id] ||
                                   fieldOptions[field.id].length === 0) && (
                                   <div className="mt-1">
-                                    <label className="inline-flex items-center">
+                                    <label className="inline-flex items-center cursor-pointer">
                                       <input
                                         type="checkbox"
                                         checked={field.value}
                                         onChange={(e) =>
                                           handleFieldChange(e, field.id)
                                         }
-                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="sr-only"
                                         disabled
                                       />
+                                      <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                                        field.value 
+                                          ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                                          : 'bg-gray-200 dark:bg-gray-600'
+                                      }`}>
+                                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                                          field.value ? 'translate-x-8' : 'translate-x-1'
+                                        }`}></div>
+                                      </div>
                                       <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                         {field.label}
                                       </span>
@@ -2096,7 +2105,7 @@ export default function Onboarding() {
                                           (option, idx) => (
                                             <label
                                               key={idx}
-                                              className="flex items-center gap-2"
+                                              className="flex items-center gap-2 cursor-pointer"
                                             >
                                               <input
                                                 type="checkbox"
@@ -2126,9 +2135,18 @@ export default function Onboarding() {
                                                     )
                                                   );
                                                 }}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="sr-only"
                                                 disabled
                                               />
+                                              <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                                                (field.value || []).includes(option)
+                                                  ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                                                  : 'bg-gray-200 dark:bg-gray-600'
+                                              }`}>
+                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                                                  (field.value || []).includes(option) ? 'translate-x-8' : 'translate-x-1'
+                                                }`}></div>
+                                              </div>
                                               <span className="text-gray-700 dark:text-gray-300">
                                                 {option}
                                               </span>
@@ -2349,7 +2367,7 @@ export default function Onboarding() {
                                           (option, idx) => (
                                             <label
                                               key={idx}
-                                              className="flex items-center gap-2"
+                                              className="flex items-center gap-2 cursor-pointer"
                                             >
                                               <input
                                                 type="checkbox"
@@ -2357,9 +2375,18 @@ export default function Onboarding() {
                                                 onChange={(e) =>
                                                   handleFieldChange(e, field.id)
                                                 }
-                                                className="text-blue-600 focus:ring-blue-500"
+                                                className="sr-only"
                                                 disabled
                                               />
+                                              <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                                                field.value === option
+                                                  ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                                                  : 'bg-gray-200 dark:bg-gray-600'
+                                              }`}>
+                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                                                  field.value === option ? 'translate-x-8' : 'translate-x-1'
+                                                }`}></div>
+                                              </div>
                                               <span>{option}</span>
                                             </label>
                                           )

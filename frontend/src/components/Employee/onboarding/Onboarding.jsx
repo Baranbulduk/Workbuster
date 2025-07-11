@@ -431,6 +431,21 @@ export default function Onboarding() {
     }
   }, [token]);
 
+  // Auto-redirect after form completion
+  useEffect(() => {
+    if (
+      submissionStatus &&
+      submissionStatus.success &&
+      completionStatus.isComplete
+    ) {
+      const timer = setTimeout(() => {
+        window.location.href = 'http://localhost:5173/employee/onboarding';
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [submissionStatus, completionStatus.isComplete]);
+
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
@@ -783,7 +798,7 @@ export default function Onboarding() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-green-50 dark:bg-green-900 p-6 rounded-lg text-center">
           <CheckCircleIcon className="h-16 w-16 mx-auto text-green-500 dark:text-green-300" />
-                          <h2 className="text-xl font-medium text-green-800 dark:text-green-200 mt-4">
+          <h2 className="text-xl font-medium text-green-800 dark:text-green-200 mt-4">
             Form Submitted Successfully
           </h2>
           <p className="mt-2 text-green-700 dark:text-green-300">
@@ -1223,13 +1238,22 @@ export default function Onboarding() {
 
                       {field.type === "checkbox" && (
                         <div className="mt-1">
-                          <label className="inline-flex items-center">
+                          <label className="inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
                               checked={field.value}
                               onChange={(e) => handleFieldChange(e, field.id)}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              className="sr-only"
                             />
+                            <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                              field.value 
+                                ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                                : 'bg-gray-200 dark:bg-gray-600'
+                            }`}>
+                              <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                                field.value ? 'translate-x-8' : 'translate-x-1'
+                              }`}></div>
+                            </div>
                             <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                               {field.id === "offerAccepted"
                                 ? "I accept the offer"
@@ -1395,7 +1419,7 @@ export default function Onboarding() {
                           {field.options?.map((option) => (
                             <label
                               key={option}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-2 cursor-pointer"
                             >
                               <input
                                 type="checkbox"
@@ -1489,8 +1513,17 @@ export default function Onboarding() {
                                     return updated;
                                   });
                                 }}
-                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                className="sr-only"
                               />
+                              <div className={`w-14 py-1 rounded-full transition-all duration-300 ease-in-out ${
+                                (field.value || []).includes(option)
+                                  ? 'bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3]' 
+                                  : 'bg-gray-200 dark:bg-gray-600'
+                              }`}>
+                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                                  (field.value || []).includes(option) ? 'translate-x-8' : 'translate-x-1'
+                                }`}></div>
+                              </div>
                               <span className="text-gray-700 dark:text-gray-300">
                                 {option}
                               </span>
