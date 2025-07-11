@@ -88,10 +88,10 @@ export default function Settings() {
         </h1>
 
         {/* Profile Settings */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
             Profile Settings
           </h2>
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -255,10 +255,10 @@ export default function Settings() {
         </div>
 
         {/* Notification Settings */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Notification Settings
-          </h2>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          Notification Settings
+        </h2>
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="space-y-4">
             {Object.entries(settings.notifications).map(([key, value]) => (
               <div key={key} className="flex items-center justify-between">
@@ -289,10 +289,10 @@ export default function Settings() {
         </div>
 
         {/* Preferences Settings */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Preferences
-          </h2>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          Preferences
+        </h2>
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -411,10 +411,10 @@ export default function Settings() {
         </div>
 
         {/* Security Settings */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Security Settings
-          </h2>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          Security Settings
+        </h2>
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 my-6">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>

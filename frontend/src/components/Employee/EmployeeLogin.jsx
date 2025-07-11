@@ -109,7 +109,7 @@ const EmployeeLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex justify-center items-center py-2 px-8 border border-transparent font-semibold text-lg rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
+              className="flex justify-center items-center py-2 px-8 font-semibold text-lg rounded-3xl text-white bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
             >
               {loading ? "Logging in..." : "Login"}
             </button>

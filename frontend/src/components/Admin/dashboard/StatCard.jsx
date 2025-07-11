@@ -1,6 +1,6 @@
 import React from "react";
 
-const StatCard = ({ title, value, icon, type }) => {
+const StatCard = ({ title, value, type }) => {
   const getBackgroundColor = (type) => {
     switch (type) {
       case "Candidate":
@@ -15,24 +15,21 @@ const StatCard = ({ title, value, icon, type }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex items-center">
-        <div className="flex h-12 w-12">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <div className="flex flex-col items-center justify-center gap-2">
           <div
             className={`h-12 w-12 rounded-full flex items-center justify-center ${getBackgroundColor(
               type
             )}`}
           >
-            {icon}
+            <div className="text-2xl font-semibold">
+              {value}
+            </div>
           </div>
-        </div>
-        <div className="ml-4">
+        <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             {title}
           </h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {value}
-          </p>
         </div>
       </div>
     </div>

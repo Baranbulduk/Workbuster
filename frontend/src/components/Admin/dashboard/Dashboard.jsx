@@ -160,36 +160,30 @@ export default function Dashboard() {
         <StatCard
           title="Total Candidates"
           value={statistics.candidates.total}
-          icon={
-            <UserGroupIcon className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-          }
+         
           type="Candidate"
         />
         <StatCard
           title="Total Employees"
           value={statistics.employees.total}
-          icon={
-            <UserGroupIcon className="h-6 w-6 text-green-600 dark:text-green-300" />
-          }
+         
           type="Employee"
         />
         <StatCard
           title="Total Clients"
           value={statistics.clients.total}
-          icon={
-            <UserGroupIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
-          }
+         
           type="Client"
         />
       </div>
 
       {/* Recent Activity */}
       <div className="flex flex-col gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="p-4 sm:p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+         <h2 className="text-lg font-medium text-gray-900 dark:text-white">
               Recent Activity
-            </h2>
+            </h2> <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className=" sm:p-2">
+          
             <div>
               {recentActivity.map((activity, index) => (
                 <div
@@ -234,11 +228,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="p-4 sm:p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
               Quick Actions
             </h2>
+        <div>
+          <div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <button
                 onClick={() => navigate("/candidates")}

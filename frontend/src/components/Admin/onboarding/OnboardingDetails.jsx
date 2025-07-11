@@ -264,10 +264,9 @@ export default function OnboardingDetails({ item, type }) {
       </div>
 
       {/* Forms List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-4">
+        <h2 className="font-semibold text-gray-800 dark:text-white mb-4">
           Assigned Forms
-        </h3>
+        </h2>
 
         {loading ? (
           <div className="text-center py-4">
@@ -343,7 +342,7 @@ export default function OnboardingDetails({ item, type }) {
               return (
                 <div
                   key={index}
-                  className="border dark:border-gray-700 rounded-lg p-4"
+                  className="border dark:border-gray-700 shadow-sm rounded-lg p-4 bg-white dark:bg-gray-800"
                 >
                   <div
                     className="flex justify-between items-start cursor-pointer"
@@ -473,15 +472,11 @@ export default function OnboardingDetails({ item, type }) {
             })}
           </div>
         )}
-      </div>
 
       {/* Welcome Email */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col gap-2">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold text-gray-800 dark:text-white">
-            Welcome Email
-          </div>
-        </div>
+        <h2 className="font-semibold text-gray-800 dark:text-white mb-4">
+          Welcome Email
+        </h2>
         {loadingWelcome ? (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -496,7 +491,7 @@ export default function OnboardingDetails({ item, type }) {
         ) : (
           <div className="space-y-3">
             {welcomeMessages.map((msg, idx) => (
-              <div key={idx} className="border dark:border-gray-700 rounded-lg p-4">
+              <div key={idx} className="border shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-medium text-gray-800 dark:text-white">{msg.title}</h4>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -508,7 +503,6 @@ export default function OnboardingDetails({ item, type }) {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }
