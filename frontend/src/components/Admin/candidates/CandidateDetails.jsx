@@ -463,7 +463,7 @@ export default function CandidateDetails() {
             {/* Left Column - Contact & Basic Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Contact Information
                 </h2>
                 <div className="space-y-4">
@@ -499,7 +499,7 @@ export default function CandidateDetails() {
               </div>
 
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Professional Details
                 </h2>
                 <div className="space-y-4">
@@ -534,7 +534,7 @@ export default function CandidateDetails() {
             {/* Right Column - Skills, Education, etc. */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Skills
                 </h2>
                 <div className="flex flex-wrap gap-2">
@@ -559,7 +559,7 @@ export default function CandidateDetails() {
               </div>
 
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Education
                 </h2>
                 <div className="space-y-4">
@@ -623,7 +623,7 @@ export default function CandidateDetails() {
       case "notes":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Notes
             </h2>
             <div className="space-y-4">
@@ -652,7 +652,7 @@ export default function CandidateDetails() {
       case "logs":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Activity Logs
             </h2>
             <div className="space-y-4">
@@ -681,7 +681,7 @@ export default function CandidateDetails() {
       case "documents":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Documents
             </h2>
             <div className="space-y-4">
@@ -715,7 +715,7 @@ export default function CandidateDetails() {
       case "history":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Application History
             </h2>
             <div className="text-gray-600 dark:text-gray-300">
@@ -944,7 +944,7 @@ export default function CandidateDetails() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Personal Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1025,7 +1025,7 @@ export default function CandidateDetails() {
 
                   {/* Professional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Professional Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1077,7 +1077,7 @@ export default function CandidateDetails() {
 
                   {/* Education and Documents */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Education and Documents
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1134,7 +1134,7 @@ export default function CandidateDetails() {
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Additional Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1204,7 +1204,7 @@ export default function CandidateDetails() {
 
                   {/* Social Links */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Social Links
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

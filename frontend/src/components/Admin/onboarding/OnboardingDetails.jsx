@@ -264,7 +264,7 @@ export default function OnboardingDetails({ item, type }) {
       </div>
 
       {/* Forms List */}
-        <h2 className="font-semibold text-gray-800 dark:text-white mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
           Assigned Forms
         </h2>
 
@@ -474,7 +474,7 @@ export default function OnboardingDetails({ item, type }) {
         )}
 
       {/* Welcome Email */}
-        <h2 className="font-semibold text-gray-800 dark:text-white mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
           Welcome Email
         </h2>
         {loadingWelcome ? (

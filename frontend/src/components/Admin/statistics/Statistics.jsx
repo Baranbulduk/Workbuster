@@ -243,14 +243,14 @@ const Statistics = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">
         Statistics Dashboard
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2
-            className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+            className="text-xl font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
             onClick={() => navigate("/candidates")}
           >
             Candidate Overview
@@ -265,7 +265,7 @@ const Statistics = () => {
 
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2
-            className="text-lg font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+            className="text-xl font-semibold mb-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
             onClick={() => navigate("/clients")}
           >
             Client Overview
@@ -279,7 +279,7 @@ const Statistics = () => {
 
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
           <h2
-            className="text-lg font-semibold mb-4 cursor-pointer hover:text-green-600 dark:hover:text-green-400"
+            className="text-xl font-semibold mb-4 cursor-pointer hover:text-green-600 dark:hover:text-green-400"
             onClick={() => navigate("/employees")}
           >
             Employee Overview

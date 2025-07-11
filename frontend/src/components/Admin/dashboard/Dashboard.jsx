@@ -151,7 +151,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit mb-6">
         Dashboard
       </h1>
 
@@ -176,10 +176,36 @@ export default function Dashboard() {
           type="Client"
         />
       </div>
+      
+   <h2 className="text-xl font-medium text-gray-900 dark:text-white">
+              Quick Actions
+            </h2>
+        <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate("/candidates")}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base transition-colors"
+              >
+                Register New Candidate
+              </button>
+              <button
+                onClick={() => navigate("/employees")}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base transition-colors"
+              >
+                Add New Employee
+              </button>
+              <button
+                onClick={() => navigate("/clients")}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base transition-colors"
+              >
+                Register New Client
+              </button>
+            </div>
+          </div>
 
       {/* Recent Activity */}
       <div className="flex flex-col gap-6">
-         <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+         <h2 className="text-xl font-medium text-gray-900 dark:text-white">
               Recent Activity
             </h2> <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className=" sm:p-2">
@@ -228,34 +254,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-              Quick Actions
-            </h2>
-        <div>
-          <div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <button
-                onClick={() => navigate("/candidates")}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base transition-colors"
-              >
-                Register New Candidate
-              </button>
-              <button
-                onClick={() => navigate("/employees")}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base transition-colors"
-              >
-                Add New Employee
-              </button>
-              <button
-                onClick={() => navigate("/clients")}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 font-medium rounded-3xl bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base transition-colors"
-              >
-                Register New Client
-              </button>
-            </div>
-          </div>
-        </div>
+     
       </div>
     </div>
   );

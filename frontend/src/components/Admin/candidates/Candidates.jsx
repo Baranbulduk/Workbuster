@@ -548,7 +548,7 @@ export default function RegisterCandidate() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
           Candidates
         </h1>
         <div className="flex items-center space-x-4">
@@ -972,7 +972,7 @@ export default function RegisterCandidate() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Personal Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1053,7 +1053,7 @@ export default function RegisterCandidate() {
 
                   {/* Professional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Professional Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1105,7 +1105,7 @@ export default function RegisterCandidate() {
 
                   {/* Education and Documents */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Education and Documents
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1167,7 +1167,7 @@ Graduation Year"
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Additional Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1237,7 +1237,7 @@ Graduation Year"
 
                   {/* Social Links */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                       Social Links
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

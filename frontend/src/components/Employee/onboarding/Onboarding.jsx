@@ -783,7 +783,7 @@ export default function Onboarding() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-green-50 dark:bg-green-900 p-6 rounded-lg text-center">
           <CheckCircleIcon className="h-16 w-16 mx-auto text-green-500 dark:text-green-300" />
-          <h2 className="text-2xl font-medium text-green-800 dark:text-green-200 mt-4">
+                          <h2 className="text-xl font-medium text-green-800 dark:text-green-200 mt-4">
             Form Submitted Successfully
           </h2>
           <p className="mt-2 text-green-700 dark:text-green-300">
@@ -811,7 +811,7 @@ export default function Onboarding() {
       return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="bg-yellow-50 dark:bg-yellow-900 p-6 rounded-lg">
-            <h2 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+                            <h2 className="text-xl font-medium text-yellow-800 dark:text-yellow-200">
               No Onboarding Forms Found
             </h2>
             <p className="mt-2 text-yellow-700 dark:text-yellow-300">
@@ -825,64 +825,13 @@ export default function Onboarding() {
     console.log("Rendering forms list", availableForms);
     return (
       <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
-        <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
+        <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
           Onboarding
         </h1>
 
-        {/* Welcome Messages Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Welcome Messages
-          </h2>
-          {welcomeLoading ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-300">
-                  Loading welcome messages...
-                </span>
-              </div>
-            </div>
-          ) : welcomeMessages.length > 0 ? (
-            <div className="space-y-4">
-              {welcomeMessages.map((message, index) => (
-                <div
-                  key={index}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {message.title}
-                    </h3>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-semibold">Sent on:</span>{" "}
-                      {formatDate(message.sentAt)}
-                    </div>
-                  </div>
-                  <div
-                    className="prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: message.content }}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Check your email for welcome messages from your administrator.
-                Click the "View Welcome Messages" button in the email to access
-                them here.
-              </p>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Welcome messages will appear here once you click the link from
-                your email.
-              </div>
-            </div>
-          )}
-        </div>
-
+      
         {/* Forms Section */}
-        <div>
+        <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Onboarding Forms
           </h2>
@@ -991,6 +940,56 @@ export default function Onboarding() {
               );
             })}
           </ul>
+        </div>  {/* Welcome Messages Section */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Welcome Messages
+          </h2>
+          {welcomeLoading ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">
+                  Loading welcome messages...
+                </span>
+              </div>
+            </div>
+          ) : welcomeMessages.length > 0 ? (
+            <div className="space-y-4">
+              {welcomeMessages.map((message, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {message.title}
+                    </h3>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-semibold">Sent on:</span>{" "}
+                      {formatDate(message.sentAt)}
+                    </div>
+                  </div>
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: message.content }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Check your email for welcome messages from your administrator.
+                Click the "View Welcome Messages" button in the email to access
+                them here.
+              </p>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Welcome messages will appear here once you click the link from
+                your email.
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -999,7 +998,7 @@ export default function Onboarding() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent w-fit">
           Onboarding
         </h1>
       </div>

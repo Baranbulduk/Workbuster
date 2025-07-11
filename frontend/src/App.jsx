@@ -124,9 +124,9 @@ const EmployeeLayout = () => {
               </svg>
             </button>
             {isSidebarOpen && (
-              <h1 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-bold text-white">
                 Employee Dashboard
-              </h1>
+              </h2>
             )}
           </div>
         </div>

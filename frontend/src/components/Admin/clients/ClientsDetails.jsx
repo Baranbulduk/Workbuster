@@ -145,7 +145,7 @@ export default function ClientsDetails() {
             {/* Left Column - Contact & Basic Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Contact Information
                 </h2>
                 <div className="space-y-4">
@@ -190,7 +190,7 @@ export default function ClientsDetails() {
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Company Information
                 </h2>
                 <div className="space-y-4">
@@ -224,7 +224,7 @@ export default function ClientsDetails() {
             {/* Right Column - Additional Info */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Description
                 </h2>
                 <div className="text-gray-600 dark:text-gray-300">
@@ -237,7 +237,7 @@ export default function ClientsDetails() {
       case "projects":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Projects
             </h2>
             <div className="text-gray-600 dark:text-gray-300">
@@ -248,7 +248,7 @@ export default function ClientsDetails() {
       case "contacts":
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Key Contacts
             </h2>
             <div className="text-gray-600 dark:text-gray-300">

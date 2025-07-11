@@ -997,7 +997,7 @@ export default function Onboarding() {
   return (
     <div className="w-full px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
           Onboarding
         </h1>
         <div className="flex gap-2">
@@ -1161,7 +1161,7 @@ export default function Onboarding() {
                   <div className="p-6 space-y-6">
                     {/* Recent Activity */}
                     <div>
-                      <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                      <h2 className="text-xl font-medium text-gray-900 dark:text-white">
                         Recent Logs
                       </h2>
                       <div className="mt-4">
@@ -1238,7 +1238,7 @@ export default function Onboarding() {
                   <div className="flex-1 p-8 overflow-y-auto">
                     {/* Static Welcome Message Title */}
                     <div className="flex justify-between items-center mb-8">
-                      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                         Welcome Message
                       </h2>
                       <button
@@ -1493,7 +1493,7 @@ export default function Onboarding() {
                   <div className="flex h-full">
                     {/* Add Field Section */}
                     <aside className="w-1/3 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 flex flex-col h-full] rounded-bl-[5px]">
-                      <h2 className="text-2xl font-semibold mt-2 mb-10 text-gray-900 dark:text-white">
+                      <h2 className="text-xl font-semibold mt-2 mb-10 text-gray-900 dark:text-white">
                         Add Field
                       </h2>
                       <div className="grid grid-cols-2 gap-4">
