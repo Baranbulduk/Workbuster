@@ -1542,7 +1542,7 @@ export default function Onboarding() {
                           />
                         ) : (
                           <h2
-                            className="text-2xl font-semibold text-gray-900 dark:text-white cursor-pointer"
+                            className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer"
                             onClick={handleTitleClick}
                           >
                             {formTitle}
