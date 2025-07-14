@@ -84,7 +84,6 @@ const Register = () => {
           <h1 className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
             Create New Account
           </h1>
-
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
@@ -141,22 +140,6 @@ const Register = () => {
               />
             </div>
             <div>
-              <label htmlFor="role" className="sr-only">
-                Account Type
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border rounded-md  border-gray-100 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="admin">Admin</option>
-                <option value="employee">Employee</option>
-              </select>
-            </div>
-            <div>
               <label htmlFor="password" className="sr-only">
                 Password
               </label>
@@ -186,8 +169,23 @@ const Register = () => {
                 onChange={handleChange}
               />
             </div>
+            <div>
+              <label htmlFor="role" className="sr-only">
+                Account Type
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border rounded-md  border-gray-100 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="admin">Admin</option>
+                <option value="employee">Employee</option>
+              </select>
+            </div>
           </div>
-
           <div className="flex justify-center">
             <button
               type="submit"

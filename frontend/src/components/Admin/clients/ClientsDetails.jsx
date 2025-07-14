@@ -285,20 +285,26 @@ export default function ClientsDetails() {
     );
   }
 
+  const handleBack = () => {
+    if (location.state?.fromDashboard) {
+      navigate("/dashboard");
+    } else if (location.state?.fromOnboarding) {
+      navigate("/onboarding");
+    } else {
+      navigate("/clients");
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() =>
-            navigate(
-              location.state?.fromOnboarding ? "/onboarding" : "/clients"
-            )
-          }
+          onClick={handleBack}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Back to {location.state?.fromOnboarding ? "Onboarding" : "Clients"}
+          Back to {location.state?.fromDashboard ? "Dashboard" : location.state?.fromOnboarding ? "Onboarding" : "Clients"}
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center">

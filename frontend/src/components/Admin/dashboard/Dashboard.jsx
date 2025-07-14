@@ -218,13 +218,13 @@ export default function Dashboard() {
                   onClick={() => {
                     switch (activity.type) {
                       case "Candidate":
-                        navigate(`/candidates/${activity._id}`);
+                        navigate(`/candidates/${activity._id}`, { state: { fromDashboard: true } });
                         break;
                       case "Employee":
-                        navigate(`/employees/${activity._id}`);
+                        navigate(`/employees/${activity._id}`, { state: { fromDashboard: true } });
                         break;
                       case "Client":
-                        navigate(`/clients/${activity._id}`);
+                        navigate(`/clients/${activity._id}`, { state: { fromDashboard: true } });
                         break;
                     }
                   }}

@@ -93,7 +93,9 @@ export default function CandidateDetails() {
   }, [id]);
 
   const handleBack = () => {
-    if (location.state?.fromOnboarding) {
+    if (location.state?.fromDashboard) {
+      navigate("/dashboard");
+    } else if (location.state?.fromOnboarding) {
       navigate("/onboarding");
     } else {
       navigate("/candidates");
