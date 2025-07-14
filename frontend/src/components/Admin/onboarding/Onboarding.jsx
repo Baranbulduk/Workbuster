@@ -46,6 +46,10 @@ import OnboardingDetails from "./OnboardingDetails";
 import ReactQuill, { Quill } from 'react-quill';
 import ImageResize from 'quill-image-resize-module-react';
 Quill.register('modules/imageResize', ImageResize);
+// Ensure window.Quill is set for image-resize and custom logic
+if (typeof window !== 'undefined' && !window.Quill) {
+  window.Quill = Quill;
+}
 import 'react-quill/dist/quill.snow.css';
 import '../../../quill-overrides.css'; // Add this import for custom overrides
 
@@ -416,7 +420,6 @@ export default function Onboarding() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const quillRefs = useRef([]); // For multiple welcome messages
-  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -445,48 +448,9 @@ export default function Onboarding() {
   }, [activeTab, activeView]);
 
   useEffect(() => {
-    // Attach click and keydown listeners for all welcome message editors
-    welcomeMessages.forEach((msg, idx) => {
-      const quill = quillRefs.current[idx]?.getEditor?.();
-      if (!quill) return;
-      const editor = quill.root;
-      // Remove previous listeners to avoid duplicates
-      editor.removeEventListener('click', handleImageClick);
-      editor.removeEventListener('keydown', handleKeyDown);
-      editor.addEventListener('click', handleImageClick);
-      editor.addEventListener('keydown', handleKeyDown);
-    });
-    // Cleanup
-    return () => {
-      welcomeMessages.forEach((msg, idx) => {
-        const quill = quillRefs.current[idx]?.getEditor?.();
-        if (!quill) return;
-        const editor = quill.root;
-        editor.removeEventListener('click', handleImageClick);
-        editor.removeEventListener('keydown', handleKeyDown);
-      });
-    };
+    // No longer needed: image click/key listeners for deletion
     // eslint-disable-next-line
   }, [welcomeMessages]);
-
-  function handleImageClick(e) {
-    if (e.target.tagName === 'IMG') {
-      setSelectedImage(e.target);  
-    } else if (selectedImage) {
-      selectedImage.style.outline = '';
-      setSelectedImage(null);
-    }
-  }
-
-  function handleKeyDown(e) {
-    if (selectedImage && (e.key === 'Backspace' || e.key === 'Delete')) {
-      e.preventDefault();
-      const img = selectedImage;
-      const parent = img.parentNode;
-      parent.removeChild(img);
-      setSelectedImage(null);
-    }
-  }
 
   const fetchData = async () => {
     try {

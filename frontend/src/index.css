@@ -5,3 +5,12 @@
 .max-w-7xl {
   max-width: 100%;
 }
+
+.prose img {
+  max-width: 200px;
+  min-width: 50px;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  cursor: pointer;
+}
