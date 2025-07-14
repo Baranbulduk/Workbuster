@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { FiSearch, FiFilter } from "react-icons/fi";
 
 export default function RegisterClients() {
   const { isDarkMode } = useTheme();
@@ -66,6 +67,13 @@ export default function RegisterClients() {
     companySize: "",
     website: "",
     description: "",
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    industry: "",
+    companySize: "",
+    country: "",
   });
 
   // Fetch clients on component mount
@@ -197,6 +205,42 @@ export default function RegisterClients() {
     navigate(`/clients/${clientId}`);
   };
 
+  // Helper to extract country from address
+  const getCountry = (address) => {
+    if (!address) return "";
+    if (typeof address === "object") {
+      return address.country || "";
+    }
+    // Try to extract last part after last comma
+    const parts = address.split(",");
+    return parts.length > 0 ? parts[parts.length - 1].trim() : "";
+  };
+
+  // Get unique industries, company sizes, and countries for dropdowns
+  const industryOptions = Array.from(new Set(clients.map(c => c.industry).filter(Boolean)));
+  const companySizeOptions = Array.from(new Set(clients.map(c => c.companySize).filter(Boolean)));
+  const countryOptions = Array.from(new Set(clients.map(c => getCountry(c.address)).filter(Boolean)));
+
+  // Filtered clients based on search term and filters
+  const filteredClients = clients.filter((client) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      client.companyName?.toLowerCase().includes(term) ||
+      client.contactPerson?.toLowerCase().includes(term) ||
+      client.email?.toLowerCase().includes(term) ||
+      client.phone?.toLowerCase().includes(term) ||
+      client.website?.toLowerCase().includes(term);
+    const matchesIndustry = !filters.industry || client.industry === filters.industry;
+    const matchesCompanySize = !filters.companySize || client.companySize === filters.companySize;
+    const matchesCountry = !filters.country || getCountry(client.address) === filters.country;
+    return matchesSearch && matchesIndustry && matchesCompanySize && matchesCountry;
+  });
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8 space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -214,8 +258,68 @@ export default function RegisterClients() {
         </button>
       </div>
 
+      {/* Search and Filter Bar */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          />
+          <FiSearch className="absolute left-3 top-3 text-gray-400" />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 dark:border-gray-700 dark:text-white"
+        >
+          <FiFilter /> Filters
+        </button>
+      </div>
+
+      {showFilters && (
+        <div className="mb-6 p-4 border rounded-lg dark:border-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <select
+              name="industry"
+              value={filters.industry}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Industries</option>
+              {industryOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <select
+              name="companySize"
+              value={filters.companySize}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Company Sizes</option>
+              {companySizeOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <select
+              name="country"
+              value={filters.country}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Countries</option>
+              {countryOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
-        {clients.length === 0 ? (
+        {filteredClients.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">
             No clients registered yet.
           </p>
@@ -263,7 +367,7 @@ export default function RegisterClients() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {clients.map((client) => (
+                {filteredClients.map((client) => (
                   <tr
                     key={client._id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"

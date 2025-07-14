@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import path from "path";
 import { useNavigate } from "react-router-dom";
+import { FiSearch, FiFilter } from "react-icons/fi";
 
 export default function RegisterCandidate() {
   const { isDarkMode } = useTheme();
@@ -23,6 +24,8 @@ export default function RegisterCandidate() {
     availability: "",
     workPreference: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -69,7 +72,13 @@ export default function RegisterCandidate() {
   };
 
   const filteredCandidates = candidates.filter((candidate) => {
+    const matchesSearch =
+      (candidate.firstName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (candidate.lastName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (candidate.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (candidate.position?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     return (
+      matchesSearch &&
       (!filters.position ||
         (candidate.currentRole &&
           candidate.currentRole
@@ -552,62 +561,6 @@ export default function RegisterCandidate() {
           Candidates
         </h1>
         <div className="flex items-center space-x-4">
-          {/* Filters */}
-          <div className="flex items-center space-x-2">
-            <select
-              name="position"
-              value={filters.position}
-              onChange={handleFilterChange}
-              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Positions</option>
-              <option value="developer">Developer</option>
-              <option value="designer">Designer</option>
-              <option value="manager">Manager</option>
-              <option value="analyst">Analyst</option>
-            </select>
-
-            <select
-              name="experience"
-              value={filters.experience}
-              onChange={handleFilterChange}
-              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Experience</option>
-              <option value="0">0+ years</option>
-              <option value="2">2+ years</option>
-              <option value="5">5+ years</option>
-              <option value="10">10+ years</option>
-            </select>
-
-            <select
-              name="availability"
-              value={filters.availability}
-              onChange={handleFilterChange}
-              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Availability</option>
-              <option value="immediate">Immediate</option>
-              <option value="1-week">1 Week</option>
-              <option value="2-weeks">2 Weeks</option>
-              <option value="1-month">1 Month</option>
-              <option value="more-than-1-month">More than 1 Month</option>
-            </select>
-
-            <select
-              name="workPreference"
-              value={filters.workPreference}
-              onChange={handleFilterChange}
-              className="h-10 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Work Types</option>
-              <option value="full-time">Full Time</option>
-              <option value="part-time">Part Time</option>
-              <option value="contract">Contract</option>
-              <option value="freelance">Freelance</option>
-            </select>
-          </div>
-
           <button
             onClick={handleExportCSV}
             className="inline-flex items-center gap-2 pl-1 pr-4 py-1 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
@@ -617,7 +570,6 @@ export default function RegisterCandidate() {
             </div>
             Export CSV
           </button>
-
           <button
             onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-2 pl-1 pr-4 py-1 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors duration-300"
@@ -629,6 +581,82 @@ export default function RegisterCandidate() {
           </button>
         </div>
       </div>
+
+      {/* Search and Filter Bar */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search candidates..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          />
+          <FiSearch className="absolute left-3 top-3 text-gray-400" />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 dark:border-gray-700 dark:text-white"
+        >
+          <FiFilter /> Filters
+        </button>
+      </div>
+
+      {showFilters && (
+        <div className="mb-6 p-4 border rounded-lg dark:border-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <select
+              name="position"
+              value={filters.position}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Positions</option>
+              <option value="developer">Developer</option>
+              <option value="designer">Designer</option>
+              <option value="manager">Manager</option>
+              <option value="analyst">Analyst</option>
+            </select>
+            <select
+              name="experience"
+              value={filters.experience}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Experience</option>
+              <option value="0">0+ years</option>
+              <option value="2">2+ years</option>
+              <option value="5">5+ years</option>
+              <option value="10">10+ years</option>
+            </select>
+            <select
+              name="availability"
+              value={filters.availability}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Availability</option>
+              <option value="immediate">Immediate</option>
+              <option value="1-week">1 Week</option>
+              <option value="2-weeks">2 Weeks</option>
+              <option value="1-month">1 Month</option>
+              <option value="more-than-1-month">More than 1 Month</option>
+            </select>
+            <select
+              name="workPreference"
+              value={filters.workPreference}
+              onChange={handleFilterChange}
+              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Work Types</option>
+              <option value="full-time">Full Time</option>
+              <option value="part-time">Part Time</option>
+              <option value="contract">Contract</option>
+              <option value="freelance">Freelance</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {filteredCandidates.length === 0 ? (
