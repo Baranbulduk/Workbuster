@@ -1129,13 +1129,48 @@ Graduation Year"
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Resume <span className="text-red-500">*</span>
+                          Resume {isUpdating ? '' : <span className="text-red-500">*</span>}
                         </label>
+                        {isUpdating && selectedCandidate && selectedCandidate.resume && (
+                          <div className="mb-2 flex gap-2 items-center">
+                            {(() => {
+                              const fileName = selectedCandidate.resume.split('/').pop();
+                              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+                              if (isImage) {
+                                return (
+                                  <img
+                                    src={`http://localhost:5000/${selectedCandidate.resume}`}
+                                    alt="Resume Preview"
+                                    className="w-14 h-14 object-cover rounded border"
+                                  />
+                                );
+                              } else {
+                                return (
+                                  <span className="inline-flex items-center justify-center w-5 h-5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h8m-8 0v12a1 1 0 001 1h6a1 1 0 001-1V7m-8 0h8" />
+                                    </svg>
+                                  </span>
+                                );
+                              }
+                            })()}
+                            <button
+                              type="button"
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                const url = `http://localhost:5000/api/candidates/${selectedCandidate._id}/resume`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              View Resume
+                            </button>
+                      
+                          </div>
+                        )}
                         <input
                           type="file"
                           name="resume"
                           onChange={handleInputChange}
-                          required
                           className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
                           file:mr-4 file:py-2 file:px-4
                           file:rounded-md file:border-0
@@ -1143,12 +1178,48 @@ Graduation Year"
                           file:bg-blue-50 file:text-blue-700
                           dark:file:bg-blue-900 dark:file:text-blue-400
                           hover:file:bg-blue-100 dark:hover:file:bg-blue-800"
+                          required={!isUpdating}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Cover Letter
                         </label>
+                        {isUpdating && selectedCandidate && selectedCandidate.coverLetter && (
+                          <div className="mb-2 flex gap-2 items-center">
+                            {(() => {
+                              const fileName = selectedCandidate.coverLetter.split('/').pop();
+                              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+                              if (isImage) {
+                                return (
+                                  <img
+                                    src={`http://localhost:5000/${selectedCandidate.coverLetter}`}
+                                    alt="Cover Letter Preview"
+                                    className="w-14 h-14 object-cover rounded border"
+                                  />
+                                );
+                              } else {
+                                return (
+                                  <span className="inline-flex items-center justify-center w-5 h-5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h8m-8 0v12a1 1 0 001 1h6a1 1 0 001-1V7m-8 0h8" />
+                                    </svg>
+                                  </span>
+                                );
+                              }
+                            })()}
+                            <button
+                              type="button"
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                const url = `http://localhost:5000/uploads/${selectedCandidate.coverLetter}`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              View Cover Letter
+                            </button>
+                          </div>
+                        )}
                         <input
                           type="file"
                           name="coverLetter"
@@ -1296,7 +1367,7 @@ Graduation Year"
                       type="submit"
                       className="px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors-"
                     >
-                      Register Candidate
+                      Update Candidate
                     </button>
                   </div>
                 </form>

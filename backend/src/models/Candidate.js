@@ -55,6 +55,7 @@ const candidateSchema = new mongoose.Schema({
   },
   notes: String,
   resume: String, // URL or path to resume file
+  coverLetter: String, // URL or path to cover letter file
   linkedIn: String,
   portfolio: String,
   linkedin: String,

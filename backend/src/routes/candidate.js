@@ -166,7 +166,10 @@ router.get('/:id/resume', async (req, res) => {
 });
 
 // Create a new candidate
-router.post('/', upload.single('resume'), async (req, res) => {
+router.post('/', upload.fields([
+  { name: 'resume', maxCount: 1 },
+  { name: 'coverLetter', maxCount: 1 }
+]), async (req, res) => {
   try {
     // Parse form data
     const formData = req.body;
@@ -200,8 +203,12 @@ router.post('/', upload.single('resume'), async (req, res) => {
     }
 
     // Handle resume file
-    if (req.file) {
-      formData.resume = path.relative(path.join(__dirname, '../../'), req.file.path);
+    if (req.files && req.files['resume']) {
+      formData.resume = path.relative(path.join(__dirname, '../../'), req.files['resume'][0].path);
+    }
+    // Handle coverLetter file
+    if (req.files && req.files['coverLetter']) {
+      formData.coverLetter = path.relative(path.join(__dirname, '../../'), req.files['coverLetter'][0].path);
     }
 
     // Add hashed password to form data
@@ -228,7 +235,10 @@ router.post('/', upload.single('resume'), async (req, res) => {
 });
 
 // Update a candidate
-router.put('/:id', upload.single('resume'), async (req, res) => {
+router.put('/:id', upload.fields([
+  { name: 'resume', maxCount: 1 },
+  { name: 'coverLetter', maxCount: 1 }
+]), async (req, res) => {
   try {
     const candidate = await Candidate.findById(req.params.id);
     if (!candidate) {
@@ -289,8 +299,12 @@ router.put('/:id', upload.single('resume'), async (req, res) => {
     }
 
     // Handle resume file
-    if (req.file) {
-      formData.resume = path.relative(path.join(__dirname, '../../'), req.file.path);
+    if (req.files && req.files['resume']) {
+      formData.resume = path.relative(path.join(__dirname, '../../'), req.files['resume'][0].path);
+    }
+    // Handle coverLetter file
+    if (req.files && req.files['coverLetter']) {
+      formData.coverLetter = path.relative(path.join(__dirname, '../../'), req.files['coverLetter'][0].path);
     }
 
     Object.assign(candidate, formData);

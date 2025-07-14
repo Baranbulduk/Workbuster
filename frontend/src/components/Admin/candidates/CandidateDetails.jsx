@@ -1099,6 +1099,21 @@ export default function CandidateDetails() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Resume
                         </label>
+                        {candidate && candidate.resume && (
+                          <div className="mb-2 flex gap-2 items-center">
+                            <button
+                              type="button"
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                const url = `http://localhost:5000/api/candidates/${candidate._id}/resume`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              View Resume
+                            </button>
+                            <span className="text-gray-500 text-xs">{candidate.resume.split('/').pop()}</span>
+                          </div>
+                        )}
                         <input
                           type="file"
                           name="resume"
@@ -1116,6 +1131,21 @@ export default function CandidateDetails() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Cover Letter
                         </label>
+                        {candidate && candidate.coverLetter && (
+                          <div className="mb-2 flex gap-2 items-center">
+                            <button
+                              type="button"
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                const url = `http://localhost:5000/uploads/${candidate.coverLetter}`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              View Cover Letter
+                            </button>
+                            <span className="text-gray-500 text-xs">{candidate.coverLetter.split('/').pop()}</span>
+                          </div>
+                        )}
                         <input
                           type="file"
                           name="coverLetter"

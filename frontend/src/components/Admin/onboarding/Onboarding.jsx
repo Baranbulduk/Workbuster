@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   UserGroupIcon,
   MagnifyingGlassIcon,
@@ -43,7 +43,9 @@ import {
 } from "../../../utils/tokenManager";
 import { useNavigate } from "react-router-dom";
 import OnboardingDetails from "./OnboardingDetails";
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
+import ImageResize from 'quill-image-resize-module-react';
+Quill.register('modules/imageResize', ImageResize);
 import 'react-quill/dist/quill.snow.css';
 import '../../../quill-overrides.css'; // Add this import for custom overrides
 
@@ -413,6 +415,9 @@ export default function Onboarding() {
   // State for delete confirmation modal
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
+  const quillRefs = useRef([]); // For multiple welcome messages
+  const [selectedImage, setSelectedImage] = useState(null);
+
   useEffect(() => {
     fetchData();
     if (activeView === "overview") {
@@ -438,6 +443,50 @@ export default function Onboarding() {
     };
     fetchAll();
   }, [activeTab, activeView]);
+
+  useEffect(() => {
+    // Attach click and keydown listeners for all welcome message editors
+    welcomeMessages.forEach((msg, idx) => {
+      const quill = quillRefs.current[idx]?.getEditor?.();
+      if (!quill) return;
+      const editor = quill.root;
+      // Remove previous listeners to avoid duplicates
+      editor.removeEventListener('click', handleImageClick);
+      editor.removeEventListener('keydown', handleKeyDown);
+      editor.addEventListener('click', handleImageClick);
+      editor.addEventListener('keydown', handleKeyDown);
+    });
+    // Cleanup
+    return () => {
+      welcomeMessages.forEach((msg, idx) => {
+        const quill = quillRefs.current[idx]?.getEditor?.();
+        if (!quill) return;
+        const editor = quill.root;
+        editor.removeEventListener('click', handleImageClick);
+        editor.removeEventListener('keydown', handleKeyDown);
+      });
+    };
+    // eslint-disable-next-line
+  }, [welcomeMessages]);
+
+  function handleImageClick(e) {
+    if (e.target.tagName === 'IMG') {
+      setSelectedImage(e.target);  
+    } else if (selectedImage) {
+      selectedImage.style.outline = '';
+      setSelectedImage(null);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (selectedImage && (e.key === 'Backspace' || e.key === 'Delete')) {
+      e.preventDefault();
+      const img = selectedImage;
+      const parent = img.parentNode;
+      parent.removeChild(img);
+      setSelectedImage(null);
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -499,6 +548,7 @@ export default function Onboarding() {
       candidatesRes.forEach((c) =>
         activities.push({
           type: "Candidate",
+          _id: c._id, // Added _id for navigation
           name: `${c.firstName} ${c.lastName}`,
           email: c.email,
           action: "Added/Updated Candidate",
@@ -509,6 +559,7 @@ export default function Onboarding() {
       employeesRes.forEach((e) =>
         activities.push({
           type: "Employee",
+          _id: e._id, // Added _id for navigation
           name: `${e.firstName} ${e.lastName}`,
           email: e.email,
           action: "Added/Updated Employee",
@@ -519,6 +570,7 @@ export default function Onboarding() {
       clientsRes.forEach((cl) =>
         activities.push({
           type: "Client",
+          _id: cl._id, // Added _id for navigation
           name: cl.companyName,
           email: cl.email,
           action: "Added/Updated Client",
@@ -1454,6 +1506,7 @@ export default function Onboarding() {
                               </div>
                             </div>
                             <ReactQuill
+                              ref={el => quillRefs.current[idx] = el}
                               value={msg.content}
                               onChange={val => {
                                 const newMsgs = [...welcomeMessages];
@@ -1461,14 +1514,17 @@ export default function Onboarding() {
                                 setWelcomeMessages(newMsgs);
                               }}
                               placeholder="Write your message here..."
-                              className="w-full h-40 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white border-gray-200 dark:border-gray-600 text-lg"
+                              className="w-full min-h-[100px] rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white border-gray-200 dark:border-gray-600 text-lg"
                               readOnly={msg.locked}
                               modules={{
                                 toolbar: [
                                   ['bold', 'italic', 'underline', 'strike', { 'color': [] }, { 'background': [] }],
                                   [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'align': [] }],
                                   ['link', 'image']
-                                ]
+                                ],
+                                imageResize: {
+                                  parchment: Quill.import('parchment')
+                                }
                               }}
                               formats={[
                                 'bold', 'italic', 'underline', 'strike',

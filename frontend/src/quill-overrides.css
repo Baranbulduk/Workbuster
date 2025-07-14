@@ -17,5 +17,14 @@
 
 .ql-editor.ql-blank::before {
   left: 16px !important; /* align placeholder with padding */
+}
+
+.ql-snow .ql-editor img {
+  max-width: 200px;
+  min-width: 50px;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  cursor: pointer;
 } 
 
