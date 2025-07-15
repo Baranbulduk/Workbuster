@@ -169,7 +169,6 @@ export default function Candidates() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Experience</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Documents</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -177,6 +176,7 @@ export default function Candidates() {
                 <tr
                     key={candidate._id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => navigate(`/candidate/candidates/${candidate._id}`)}
                 >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -246,14 +246,6 @@ export default function Candidates() {
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500 text-xs">No CV available</span>
                       )}
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => navigate(`/candidate/candidate/${candidate._id}`)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        View Details
-                      </button>
                     </td>
                 </tr>
               ))}
