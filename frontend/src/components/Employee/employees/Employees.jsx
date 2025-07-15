@@ -7,9 +7,9 @@ import {
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import {
-  verifyAndRefreshToken,
-  apiCall,
-  handleTokenExpiration,
+  verifyAndRefreshEmployeeToken,
+  employeeApiCall,
+  handleEmployeeTokenExpiration,
 } from "../../../utils/tokenManager";
 
 const Employees = () => {
@@ -50,25 +50,25 @@ const Employees = () => {
       try {
         const employeeToken = localStorage.getItem("employeeToken");
         if (!employeeToken) {
-          handleTokenExpiration(navigate, token, email);
+          handleEmployeeTokenExpiration(navigate, token, email);
           return;
         }
         const {
           valid,
           expired,
           token: refreshedToken,
-        } = await verifyAndRefreshToken();
+        } = await verifyAndRefreshEmployeeToken();
         if (valid) {
           if (refreshedToken && refreshedToken !== employeeToken) {
             localStorage.setItem("employeeToken", refreshedToken);
           }
           fetchEmployees();
         } else {
-          handleTokenExpiration(navigate, token, email);
+          handleEmployeeTokenExpiration(navigate, token, email);
         }
       } catch (error) {
         console.error("Token verification error:", error);
-        handleTokenExpiration(navigate, token, email);
+        handleEmployeeTokenExpiration(navigate, token, email);
       }
     };
 
@@ -81,11 +81,11 @@ const Employees = () => {
       const employeeToken = localStorage.getItem("employeeToken");
       if (!employeeToken) {
         console.log("No employee token found in localStorage");
-        handleTokenExpiration(navigate, token, email);
+        handleEmployeeTokenExpiration(navigate, token, email);
         return;
       }
 
-      const response = await apiCall("GET", "/employees/colleagues");
+      const response = await employeeApiCall("GET", "/employees/colleagues");
 
       console.log("Response from server:", response);
 
@@ -114,7 +114,7 @@ const Employees = () => {
       }
       if (error.response?.status === 401 || error.response?.status === 403) {
         console.log("Token expired or invalid, redirecting to login");
-        handleTokenExpiration(navigate, token, email);
+        handleEmployeeTokenExpiration(navigate, token, email);
       } else {
         setError("Failed to fetch employees");
       }
@@ -134,7 +134,7 @@ const Employees = () => {
       // Get progress for each employee
       const progressPromises = employees.map(async (employee) => {
         try {
-          const response = await apiCall(
+          const response = await employeeApiCall(
             "GET",
             `/onboarding/forms-by-recipient/${employee.email}`
           );

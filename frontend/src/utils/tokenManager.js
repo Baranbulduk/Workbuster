@@ -27,7 +27,7 @@ export const verifyAndRefreshAdminToken = async () => {
 };
 
 // Function to verify and refresh token if needed (for employees)
-export const verifyAndRefreshToken = async () => {
+export const verifyAndRefreshEmployeeToken = async () => {
   const token = localStorage.getItem('employeeToken');
   if (!token) return { valid: false, expired: true };
 
@@ -50,38 +50,27 @@ export const verifyAndRefreshToken = async () => {
   }
 };
 
-// Function to handle API calls with automatic token refresh (for employees)
-export const apiCall = async (method, endpoint, data = null, config = {}) => {
+// Function to verify and refresh token if needed (for candidates)
+export const verifyAndRefreshCandidateToken = async () => {
+  const token = localStorage.getItem('candidateToken');
+  if (!token) return { valid: false, expired: true };
+
   try {
-    // Verify token before making the request
-    const { valid, expired, token } = await verifyAndRefreshToken();
+    const response = await axios.post(`${API_URL}/candidates/verify-token`, { token });
 
-    if (!valid) {
-      if (expired) {
-        throw new Error('TOKEN_EXPIRED');
-      }
-      throw new Error('INVALID_TOKEN');
+    if (response.data.tokenRefreshed) {
+      // Update token in localStorage if it was refreshed
+      localStorage.setItem('candidateToken', response.data.token);
     }
 
-    // Add token to request headers
-    const headers = {
-      ...config.headers,
-      'Authorization': `Bearer ${token || localStorage.getItem('employeeToken')}`
-    };
-
-    const response = await axios({
-      method,
-      url: `${API_URL}${endpoint}`,
-      data,
-      headers
-    });
-
-    return response.data;
+    return { valid: true, token: response.data.token };
   } catch (error) {
-    if (error.message === 'TOKEN_EXPIRED') {
-      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
+    if (error.response?.data?.expired) {
+      // Clear token if it's expired
+      localStorage.removeItem('candidateToken');
+      return { valid: false, expired: true };
     }
-    throw error;
+    return { valid: false, expired: false };
   }
 };
 
@@ -120,14 +109,90 @@ export const adminApiCall = async (method, endpoint, data = null, config = {}) =
   }
 };
 
-// Function to handle token expiration (for employees)
-export const handleTokenExpiration = (navigate, token, email) => {
-  localStorage.removeItem('employeeToken');
-  navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
+// Function to handle API calls with automatic token refresh (for employees)
+export const employeeApiCall = async (method, endpoint, data = null, config = {}) => {
+  try {
+    // Verify token before making the request
+    const { valid, expired, token } = await verifyAndRefreshEmployeeToken();
+
+    if (!valid) {
+      if (expired) {
+        throw new Error('TOKEN_EXPIRED');
+      }
+      throw new Error('INVALID_TOKEN');
+    }
+
+    // Add token to request headers
+    const headers = {
+      ...config.headers,
+      'Authorization': `Bearer ${token || localStorage.getItem('employeeToken')}`
+    };
+
+    const response = await axios({
+      method,
+      url: `${API_URL}${endpoint}`,
+      data,
+      headers
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.message === 'TOKEN_EXPIRED') {
+      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
+    }
+    throw error;
+  }
+};
+
+// Function to handle API calls with automatic token refresh (for candidates)
+export const candidateApiCall = async (method, endpoint, data = null, config = {}) => {
+  try {
+    // Verify token before making the request
+    const { valid, expired, token } = await verifyAndRefreshCandidateToken();
+
+    if (!valid) {
+      if (expired) {
+        throw new Error('TOKEN_EXPIRED');
+      }
+      throw new Error('INVALID_TOKEN');
+    }
+
+    // Add token to request headers
+    const headers = {
+      ...config.headers,
+      'Authorization': `Bearer ${token || localStorage.getItem('candidateToken')}`
+    };
+
+    const response = await axios({
+      method,
+      url: `${API_URL}${endpoint}`,
+      data,
+      headers
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.message === 'TOKEN_EXPIRED') {
+      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
+    }
+    throw error;
+  }
 };
 
 // Function to handle admin token expiration
 export const handleAdminTokenExpiration = (navigate) => {
   localStorage.removeItem('adminToken');
   navigate('/login');
+};
+
+// Function to handle token expiration (for employees)
+export const handleEmployeeTokenExpiration = (navigate, token, email) => {
+  localStorage.removeItem('employeeToken');
+  navigate(`/employee/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
+};
+
+// Function to handle token expiration (for candidates)
+export const handleCandidateTokenExpiration = (navigate, token, email) => {
+  localStorage.removeItem('candidateToken');
+  navigate(`/candidate/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
 }; 

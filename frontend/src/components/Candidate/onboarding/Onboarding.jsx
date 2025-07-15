@@ -27,9 +27,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  verifyAndRefreshEmployeeToken,
-  employeeApiCall,
-  handleEmployeeTokenExpiration,
+  verifyAndRefreshCandidateToken,
+  candidateApiCall,
+  handleCandidateTokenExpiration,
 } from "../../../utils/tokenManager";
 
 function formatDate(dateStr) {
@@ -370,18 +370,18 @@ export default function Onboarding() {
     0;
 
   useEffect(() => {
-    const employeeToken = localStorage.getItem("employeeToken");
-    if (!employeeToken) {
+    const candidateToken = localStorage.getItem("candidateToken");
+    if (!candidateToken) {
       navigate(
-        `/employee/login?token=${token}${email ? `&email=${email}` : ""}`
+        `/candidate/login?token=${token}${email ? `&email=${email}` : ""}`
       );
       return;
     }
 
     const verifyToken = async () => {
-      const { valid, expired } = await verifyAndRefreshEmployeeToken();
+      const { valid, expired } = await verifyAndRefreshCandidateToken();
       if (!valid) {
-        handleEmployeeTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       }
     };
 
@@ -392,27 +392,27 @@ export default function Onboarding() {
     if (token) {
       fetchFormData(token);
     } else {
-      // Fetch welcome messages for the logged-in employee
-      fetchEmployeeWelcomeMessages();
+      // Fetch welcome messages for the logged-in candidate
+      fetchCandidateWelcomeMessages();
       setLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
     if (!token) {
-      const employeeStr = localStorage.getItem("employee");
-      let employeeEmail = null;
-      if (employeeStr) {
+      const candidateStr = localStorage.getItem("candidate");
+      let candidateEmail = null;
+      if (candidateStr) {
         try {
-          const employeeObj = JSON.parse(employeeStr);
-          employeeEmail = employeeObj.email;
+          const candidateObj = JSON.parse(candidateStr);
+          candidateEmail = candidateObj.email;
         } catch (e) {}
       }
-      if (employeeEmail) {
+      if (candidateEmail) {
         setFormsLoading(true);
-        employeeApiCall(
+        candidateApiCall(
           "get",
-          `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`
+          `/onboarding/my-forms/${encodeURIComponent(candidateEmail)}`
         )
           .then((res) => {
             console.log("FORMS RESPONSE:", res);
@@ -439,7 +439,7 @@ export default function Onboarding() {
       completionStatus.isComplete
     ) {
       const timer = setTimeout(() => {
-        window.location.href = 'http://localhost:5173/employee/onboarding';
+        window.location.href = 'http://localhost:5173/candidate/onboarding';
       }, 4000);
 
       return () => clearTimeout(timer);
@@ -449,7 +449,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await employeeApiCall("get", `/onboarding/form/${token}`);
+      const response = await candidateApiCall("get", `/onboarding/form/${token}`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -561,7 +561,7 @@ export default function Onboarding() {
         error.response?.data?.message ===
         "Session expired. Please log in again."
       ) {
-        handleEmployeeTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       } else {
         setError(
           "Error loading the form. Please try again or contact support."
@@ -571,23 +571,23 @@ export default function Onboarding() {
     }
   };
 
-  const fetchEmployeeWelcomeMessages = async () => {
+  const fetchCandidateWelcomeMessages = async () => {
     try {
       setWelcomeLoading(true);
-      const employeeStr = localStorage.getItem("employee");
-      let employeeEmail = null;
-      if (employeeStr) {
+      const candidateStr = localStorage.getItem("candidate");
+      let candidateEmail = null;
+      if (candidateStr) {
         try {
-          const employeeObj = JSON.parse(employeeStr);
-          employeeEmail = employeeObj.email;
+          const candidateObj = JSON.parse(candidateStr);
+          candidateEmail = candidateObj.email;
         } catch (e) {}
       }
 
-      if (employeeEmail) {
-        const response = await employeeApiCall(
+      if (candidateEmail) {
+        const response = await candidateApiCall(
           "get",
           `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(
-            employeeEmail
+            candidateEmail
           )}`
         );
         if (response.success) {
@@ -717,7 +717,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await employeeApiCall("post", `/onboarding/submit/${token}`, {
+      const response = await candidateApiCall("post", `/onboarding/submit/${token}`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });
@@ -735,7 +735,7 @@ export default function Onboarding() {
           localStorage.removeItem(`formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
-          navigate("/employee/onboarding", { replace: true });
+          navigate("/candidate/onboarding", { replace: true });
 
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
@@ -763,7 +763,7 @@ export default function Onboarding() {
         error.response?.data?.message ===
         "Session expired. Please log in again."
       ) {
-        handleEmployeeTokenExpiration(navigate, token, email);
+        handleCandidateTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
           success: false,
@@ -852,16 +852,16 @@ export default function Onboarding() {
           </h2>
           <ul className="space-y-4">
             {availableForms.map((form) => {
-              const employeeStr = localStorage.getItem("employee");
-              let employeeEmail = null;
-              if (employeeStr) {
+              const candidateStr = localStorage.getItem("candidate");
+              let candidateEmail = null;
+              if (candidateStr) {
                 try {
-                  const employeeObj = JSON.parse(employeeStr);
-                  employeeEmail = employeeObj.email;
+                  const candidateObj = JSON.parse(candidateStr);
+                  candidateEmail = candidateObj.email;
                 } catch (e) {}
               }
               const recipient = form.recipients.find(
-                (r) => r.email === employeeEmail
+                (r) => r.email === candidateEmail
               );
               let status = "Not Started";
               if (
@@ -943,9 +943,9 @@ export default function Onboarding() {
                     className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
                     onClick={() =>
                       navigate(
-                        `/employee/onboarding?token=${
+                        `/candidate/onboarding?token=${
                           form.token
-                        }&email=${encodeURIComponent(employeeEmail)}`
+                        }&email=${encodeURIComponent(candidateEmail)}`
                       )
                     }
                   >
@@ -1029,7 +1029,7 @@ export default function Onboarding() {
                   {token && (
                     <button
                       type="button"
-                      onClick={() => navigate("/employee/onboarding")}
+                      onClick={() => navigate("/candidate/onboarding")}
                       className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       title="Back to forms list"
                     >

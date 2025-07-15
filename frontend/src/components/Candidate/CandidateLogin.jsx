@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { verifyAndRefreshEmployeeToken } from "../../utils/tokenManager";
+import { verifyAndRefreshCandidateToken } from "../../utils/tokenManager";
 
-const EmployeeLogin = () => {
+const CandidateLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +21,7 @@ const EmployeeLogin = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/employees/login",
+        "http://localhost:5000/api/candidates/login",
         {
           email,
           password,
@@ -29,11 +29,11 @@ const EmployeeLogin = () => {
       );
 
       if (response.data.success) {
-        // Store token and employee data in localStorage
-        localStorage.setItem("employeeToken", response.data.token);
+        // Store token and candidate data in localStorage
+        localStorage.setItem("candidateToken", response.data.token);
         localStorage.setItem(
-          "employee",
-          JSON.stringify(response.data.employee)
+          "candidate",
+          JSON.stringify(response.data.candidate)
         );
 
         // Navigate to onboarding form with any existing token/email params
@@ -47,7 +47,7 @@ const EmployeeLogin = () => {
 
         const queryString =
           queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
-        navigate(`/employee/onboarding${queryString}`);
+        navigate(`/candidate/onboarding${queryString}`);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -64,7 +64,7 @@ const EmployeeLogin = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
-            Employee Login
+            Candidate Login
           </h1>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -130,4 +130,4 @@ const EmployeeLogin = () => {
   );
 };
 
-export default EmployeeLogin;
+export default CandidateLogin;
