@@ -412,7 +412,7 @@ export default function Onboarding() {
         setFormsLoading(true);
         employeeApiCall(
           "get",
-          `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}`
+          `/onboarding/my-forms/${encodeURIComponent(employeeEmail)}?role=employee`
         )
           .then((res) => {
             console.log("FORMS RESPONSE:", res);
@@ -449,7 +449,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await employeeApiCall("get", `/onboarding/form/${token}`);
+      const response = await employeeApiCall("get", `/onboarding/form/${token}?role=employee`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -586,9 +586,7 @@ export default function Onboarding() {
       if (employeeEmail) {
         const response = await employeeApiCall(
           "get",
-          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(
-            employeeEmail
-          )}`
+          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(employeeEmail)}?role=employee`
         );
         if (response.success) {
           setWelcomeMessages(response.messages);

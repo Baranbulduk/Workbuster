@@ -423,7 +423,7 @@ function App() {
           </Route>
 
           {/* Candidate dashboard routes */}
-          <Route path="/candidate">
+          <Route path="/candidate" element={<CandidateLayout />}>
             <Route path="candidates" element={<CandidateCandidates />} />
             <Route path="candidates/:id" element={<CandidateCandidateDetails />} />
             <Route path="onboarding" element={<CandidateOnboarding />} />

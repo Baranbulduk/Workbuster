@@ -412,7 +412,7 @@ export default function Onboarding() {
         setFormsLoading(true);
         candidateApiCall(
           "get",
-          `/onboarding/my-forms/${encodeURIComponent(candidateEmail)}`
+          `/onboarding/my-forms/${encodeURIComponent(candidateEmail)}?role=candidate`
         )
           .then((res) => {
             console.log("FORMS RESPONSE:", res);
@@ -449,7 +449,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await candidateApiCall("get", `/onboarding/form/${token}`);
+      const response = await candidateApiCall("get", `/onboarding/form/${token}?role=candidate`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -586,9 +586,7 @@ export default function Onboarding() {
       if (candidateEmail) {
         const response = await candidateApiCall(
           "get",
-          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(
-            candidateEmail
-          )}`
+          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(candidateEmail)}?role=candidate`
         );
         if (response.success) {
           setWelcomeMessages(response.messages);
@@ -717,7 +715,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await candidateApiCall("post", `/onboarding/submit/${token}`, {
+      const response = await candidateApiCall("post", `/onboarding/submit/${token}?role=candidate`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });

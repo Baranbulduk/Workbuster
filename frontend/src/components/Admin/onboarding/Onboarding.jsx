@@ -92,6 +92,11 @@ const FIELD_TYPES = [
   { type: "multiselect", label: "Multi-select", icon: SquaresPlusIcon },
 ];
 
+// Add this helper at the top (after imports)
+function generateToken() {
+  return Math.random().toString(36).substr(2, 16);
+}
+
 export default function Onboarding() {
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -858,7 +863,11 @@ export default function Onboarding() {
           ...field,
           options: fieldOptions[field.id] || field.options,
         })),
-        recipients,
+        recipients: recipients.map(r => ({
+          ...r,
+          role: r.type,
+          token: generateToken(),
+        })),
       };
 
       // Send to backend
@@ -920,7 +929,11 @@ export default function Onboarding() {
           content: msg.content,
           isDefault: msg.isDefault
         })),
-        recipients,
+        recipients: recipients.map(r => ({
+          ...r,
+          role: r.type,
+          token: generateToken(),
+        })),
       };
 
       // Send to backend

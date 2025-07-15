@@ -281,6 +281,14 @@ router.post('/send-form', async (req, res) => {
   try {
     const { formTitle, fields, recipients } = req.body;
 
+    // Make sure each recipient has a role
+    const recipientsWithRole = recipients.map(r => ({
+      name: r.name,
+      email: r.email,
+      // If you already know the role, use it; otherwise, default to 'candidate'
+      role: r.role
+    }));
+
     // Generate a unique token for this form submission
     const formToken = crypto.randomBytes(16).toString('hex');
 
@@ -289,7 +297,7 @@ router.post('/send-form', async (req, res) => {
       token: formToken,
       title: formTitle,
       fields: fields,
-      recipients: recipients.map(r => ({ name: r.name, email: r.email })),
+      recipients: recipientsWithRole,
       createdAt: new Date()
     });
 
@@ -298,14 +306,14 @@ router.post('/send-form', async (req, res) => {
 
     // Send email to each recipient and collect results
     const results = [];
-    for (const recipient of recipients) {
+    for (const recipient of recipientsWithRole) {
       console.log('Processing recipient:', recipient);
       // Create the correct onboarding URL based on recipient type
       let onboardingUrl;
-      if (recipient.type === 'candidate') {
+      if (recipient.role === 'candidate') {
         onboardingUrl = `http://localhost:5173/candidate/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
-      } else if (recipient.type === 'client') {
-        onboardingUrl = `http://localhost:5173/client/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
+      } else if (recipient.role === 'employee') {
+        onboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
       } else {
         onboardingUrl = `http://localhost:5173/employee/onboarding?token=${formToken}&email=${encodeURIComponent(recipient.email)}`;
       }
@@ -386,14 +394,15 @@ router.post('/send-welcome-message', async (req, res) => {
       // Generate a unique token for this welcome message
       const welcomeToken = crypto.randomBytes(16).toString('hex');
       
-      // Store welcome messages in database with token
+      // Store welcome messages in database with role
       for (const message of messages) {
         await WelcomeMessage.create({
           recipientEmail: recipient.email,
           title: message.title,
           content: message.content,
           sentAt: new Date(),
-          token: welcomeToken
+          token: welcomeToken,
+          role: recipient.role || 'candidate'
         });
       }
 
@@ -485,6 +494,7 @@ router.post('/send-welcome-message', async (req, res) => {
 router.get('/welcome-messages-by-recipient/:email', async (req, res) => {
   try {
     const { email } = req.params;
+    const { role } = req.query;
     
     if (!email) {
       return res.status(400).json({
@@ -493,9 +503,10 @@ router.get('/welcome-messages-by-recipient/:email', async (req, res) => {
       });
     }
 
-    const messages = await WelcomeMessage.find({ 
-      recipientEmail: email 
-    }).sort({ sentAt: -1 });
+    const query = { recipientEmail: email };
+    if (role) query.role = role;
+
+    const messages = await WelcomeMessage.find(query).sort({ sentAt: -1 });
 
     res.json({
       success: true,
@@ -662,23 +673,22 @@ router.get('/forms-by-recipient/:email', async (req, res) => {
 router.get('/my-forms/:email', async (req, res) => {
   try {
     const { email } = req.params;
+    const { role } = req.query;
 
-    // Find all forms where this email is a recipient
+    // Find all forms where this email and role is a recipient
     const forms = await OnboardingForm.find({
-      'recipients.email': email
+      recipients: {
+        $elemMatch: {
+          email,
+          ...(role ? { role } : {})
+        }
+      }
     });
 
-    if (!forms || forms.length === 0) {
-      return res.json({ success: true, forms: [] });
-    }
-
-    res.json({
-      success: true,
-      forms
-    });
+    res.json({ success: true, forms });
   } catch (error) {
-    console.error('Error fetching employee forms:', error);
-    res.status(500).json({ success: false, message: 'Error fetching employee forms', error: error.message });
+    console.error('Error fetching forms:', error);
+    res.status(500).json({ success: false, message: 'Error fetching forms', error: error.message });
   }
 });
 
@@ -727,7 +737,8 @@ router.post('/send-form/:employeeId', async (req, res) => {
     if (recipientIndex === -1) {
       form.recipients.push({
         name: `${employee.firstName} ${employee.lastName}`,
-        email: employee.email
+        email: employee.email,
+        role: 'employee' // or 'candidate'
       });
     }
 

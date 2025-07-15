@@ -23,6 +23,10 @@ const WelcomeMessageSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  role: {
+    type: String,
+    required: true
+  },
   messageType: {
     type: String,
     default: 'welcome-message'

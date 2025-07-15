@@ -119,7 +119,15 @@ const Login = () => {
             >
               Login as Employee
             </Link>
-          </p>{" "}
+          </p>
+          <p className="text-center text-sm text-gray-600">
+            <Link
+              to="/candidate/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Login as Candidate
+            </Link>
+          </p>
           <p className="text-center text-sm text-gray-600">
             <Link
               to="/register"
