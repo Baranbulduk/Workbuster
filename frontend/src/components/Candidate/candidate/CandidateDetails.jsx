@@ -76,7 +76,7 @@ export default function CandidateDetails() {
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Back
+          Back to Candidates
         </button>
           <div className="flex items-center">
             <div className="h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">

@@ -43,24 +43,18 @@ const EmployeeDetails = () => {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!employee) return <div className="p-6">Employee not found.</div>;
 
-  const handleBack = () => {
-    if (location.state?.fromOnboarding) {
-      navigate("/onboarding");
-    } else {
-      navigate("/employees");
-    }
-  };
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={handleBack}
+          onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          {location.state?.fromOnboarding ? "Back to Onboarding" : "Back to Employees"}
+          Back to Employees
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
