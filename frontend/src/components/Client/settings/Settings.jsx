@@ -38,25 +38,25 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    // Try to load candidate info from localStorage
-    const candStr = localStorage.getItem("candidate");
-    console.log(candStr);
-    if (candStr) {
+    // Try to load client info from localStorage
+    const clientStr = localStorage.getItem("client");
+    console.log(clientStr);
+    if (clientStr) {
       try {
-        const cand = JSON.parse(candStr);
+        const client = JSON.parse(clientStr);
         setSettings((prev) => ({
           ...prev,
           profile: {
             ...prev.profile,
             name:
-              cand.firstName && cand.lastName
-                ? `${cand.firstName} ${cand.lastName}`
-                : cand.name || prev.profile.name,
-            email: cand.email || prev.profile.email,
-            role: cand.role || prev.profile.role,
-            department: cand.department || prev.profile.department,
-            phone: cand.phone || prev.profile.phone,
-            location: cand.location || prev.profile.location,
+              client.firstName && client.lastName
+                ? `${client.firstName} ${client.lastName}`
+                : client.name || prev.profile.name,
+            email: client.email || prev.profile.email,
+            role: client.role || prev.profile.role,
+            department: client.department || prev.profile.department,
+            phone: client.phone || prev.profile.phone,
+            location: client.location || prev.profile.location,
           },
         }));
       } catch (e) {

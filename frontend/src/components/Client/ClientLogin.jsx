@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const CandidateLogin = () => {
+const ClientLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,7 +20,7 @@ const CandidateLogin = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/candidates/login",
+        "http://localhost:5000/api/clients/login",
         {
           email,
           password,
@@ -28,11 +28,11 @@ const CandidateLogin = () => {
       );
 
       if (response.data.success) {
-        // Store token and candidate data in localStorage
-        localStorage.setItem("candidateToken", response.data.token);
+        // Store token and client data in localStorage
+        localStorage.setItem("clientToken", response.data.token);
         localStorage.setItem(
-          "candidate",
-          JSON.stringify(response.data.candidate)
+          "client",
+          JSON.stringify(response.data.client)
         );
 
         // Navigate to onboarding form with any existing token/email params
@@ -46,7 +46,7 @@ const CandidateLogin = () => {
 
         const queryString =
           queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
-        navigate(`/candidate/onboarding${queryString}`);
+        navigate(`/client/onboarding${queryString}`);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -129,4 +129,4 @@ const CandidateLogin = () => {
   );
 };
 
-export default CandidateLogin;
+export default ClientLogin;

@@ -74,6 +74,30 @@ export const verifyAndRefreshCandidateToken = async () => {
   }
 };
 
+// Function to verify and refresh token if needed (for clients)
+export const verifyAndRefreshClientToken = async () => {
+  const token = localStorage.getItem('clientToken');
+  if (!token) return { valid: false, expired: true };
+
+  try {
+    const response = await axios.post(`${API_URL}/clients/verify-token`, { token });
+
+    if (response.data.tokenRefreshed) {
+      // Update token in localStorage if it was refreshed
+      localStorage.setItem('clientToken', response.data.token);
+    }
+
+    return { valid: true, token: response.data.token };
+  } catch (error) {
+    if (error.response?.data?.expired) {
+      // Clear token if it's expired
+      localStorage.removeItem('clientToken');
+      return { valid: false, expired: true };
+    }
+    return { valid: false, expired: false };
+  }
+};
+
 // Function to handle API calls with automatic token refresh (for admins)
 export const adminApiCall = async (method, endpoint, data = null, config = {}) => {
   try {
@@ -179,6 +203,41 @@ export const candidateApiCall = async (method, endpoint, data = null, config = {
   }
 };
 
+// Function to handle API calls with automatic token refresh (for clients)
+export const clientApiCall = async (method, endpoint, data = null, config = {}) => {
+  try {
+    // Verify token before making the request
+    const { valid, expired, token } = await verifyAndRefreshClientToken();
+
+    if (!valid) {
+      if (expired) {
+        throw new Error('TOKEN_EXPIRED');
+      }
+      throw new Error('INVALID_TOKEN');
+    }
+
+    // Add token to request headers
+    const headers = {
+      ...config.headers,
+      'Authorization': `Bearer ${token || localStorage.getItem('clientToken')}`
+    };
+
+    const response = await axios({
+      method,
+      url: `${API_URL}${endpoint}`,
+      data,
+      headers
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.message === 'TOKEN_EXPIRED') {
+      throw { response: { data: { message: 'Session expired. Please log in again.' } } };
+    }
+    throw error;
+  }
+};
+
 // Function to handle admin token expiration
 export const handleAdminTokenExpiration = (navigate) => {
   localStorage.removeItem('adminToken');
@@ -195,4 +254,10 @@ export const handleEmployeeTokenExpiration = (navigate, token, email) => {
 export const handleCandidateTokenExpiration = (navigate, token, email) => {
   localStorage.removeItem('candidateToken');
   navigate(`/candidate/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
+}; 
+
+// Function to handle token expiration (for clients)
+export const handleClientTokenExpiration = (navigate, token, email) => {
+  localStorage.removeItem('clientToken');
+  navigate(`/client/login${token ? `?token=${token}${email ? `&email=${email}` : ''}` : ''}`);
 }; 

@@ -27,9 +27,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  verifyAndRefreshCandidateToken,
-  candidateApiCall,
-  handleCandidateTokenExpiration,
+  verifyAndRefreshClientToken,
+  clientApiCall,
+  handleClientTokenExpiration,
 } from "../../../utils/tokenManager";
 
 function formatDate(dateStr) {
@@ -370,18 +370,18 @@ export default function Onboarding() {
     0;
 
   useEffect(() => {
-    const candidateToken = localStorage.getItem("candidateToken");
-    if (!candidateToken) {
+    const clientToken = localStorage.getItem("clientToken");
+    if (!clientToken) {
       navigate(
-        `/candidate/login?token=${token}${email ? `&email=${email}` : ""}`
+        `/client/login?token=${token}${email ? `&email=${email}` : ""}`
       );
       return;
     }
 
     const verifyToken = async () => {
-      const { valid, expired } = await verifyAndRefreshCandidateToken();
+      const { valid, expired } = await verifyAndRefreshClientToken();
       if (!valid) {
-        handleCandidateTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       }
     };
 
@@ -392,27 +392,27 @@ export default function Onboarding() {
     if (token) {
       fetchFormData(token);
     } else {
-      // Fetch welcome messages for the logged-in candidate
-      fetchCandidateWelcomeMessages();
+      // Fetch welcome messages for the logged-in client
+      fetchClientWelcomeMessages();
       setLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
     if (!token) {
-      const candidateStr = localStorage.getItem("candidate");
-      let candidateEmail = null;
-      if (candidateStr) {
+      const clientStr = localStorage.getItem("client");
+      let clientEmail = null;
+      if (clientStr) {
         try {
-          const candidateObj = JSON.parse(candidateStr);
-          candidateEmail = candidateObj.email;
+          const clientObj = JSON.parse(clientStr);
+          clientEmail = clientObj.email;
         } catch (e) {}
       }
-      if (candidateEmail) {
+      if (clientEmail) {
         setFormsLoading(true);
-        candidateApiCall(
+        clientApiCall(
           "get",
-          `/onboarding/my-forms/${encodeURIComponent(candidateEmail)}?role=candidate`
+          `/onboarding/my-forms/${encodeURIComponent(clientEmail)}?role=client`
         )
           .then((res) => {
             console.log("FORMS RESPONSE:", res);
@@ -449,7 +449,7 @@ export default function Onboarding() {
   const fetchFormData = async (token) => {
     try {
       setLoading(true);
-      const response = await candidateApiCall("get", `/onboarding/form/${token}?role=candidate`);
+      const response = await clientApiCall("get", `/onboarding/form/${token}?role=client`);
 
       if (response.success) {
         const { title, fields, recipients } = response.form;
@@ -561,7 +561,7 @@ export default function Onboarding() {
         error.response?.data?.message ===
         "Session expired. Please log in again."
       ) {
-        handleCandidateTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       } else {
         setError(
           "Error loading the form. Please try again or contact support."
@@ -571,22 +571,22 @@ export default function Onboarding() {
     }
   };
 
-  const fetchCandidateWelcomeMessages = async () => {
+  const fetchClientWelcomeMessages = async () => {
     try {
       setWelcomeLoading(true);
-      const candidateStr = localStorage.getItem("candidate");
-      let candidateEmail = null;
-      if (candidateStr) {
+      const clientStr = localStorage.getItem("client");
+      let clientEmail = null;
+      if (clientStr) {
         try {
-          const candidateObj = JSON.parse(candidateStr);
-          candidateEmail = candidateObj.email;
+          const clientObj = JSON.parse(clientStr);
+          clientEmail = clientObj.email;
         } catch (e) {}
       }
 
-      if (candidateEmail) {
-        const response = await candidateApiCall(
+      if (clientEmail) {
+        const response = await clientApiCall(
           "get",
-          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(candidateEmail)}?role=candidate`
+          `/onboarding/welcome-messages-by-recipient/${encodeURIComponent(clientEmail)}?role=client`
         );
         if (response.success) {
           setWelcomeMessages(response.messages);
@@ -715,7 +715,7 @@ export default function Onboarding() {
           value: field.value,
         }));
 
-      const response = await candidateApiCall("post", `/onboarding/submit/${token}?role=candidate`, {
+      const response = await clientApiCall("post", `/onboarding/submit/${token}?role=client`, {
         completedFields,
         recipientEmail: searchParams.get("email"),
       });
@@ -761,7 +761,7 @@ export default function Onboarding() {
         error.response?.data?.message ===
         "Session expired. Please log in again."
       ) {
-        handleCandidateTokenExpiration(navigate, token, email);
+        handleClientTokenExpiration(navigate, token, email);
       } else {
         setSubmissionStatus({
           success: false,
@@ -850,16 +850,16 @@ export default function Onboarding() {
           </h2>
           <ul className="space-y-4">
             {availableForms.map((form) => {
-              const candidateStr = localStorage.getItem("candidate");
-              let candidateEmail = null;
-              if (candidateStr) {
+              const clientStr = localStorage.getItem("client");
+              let clientEmail = null;
+              if (clientStr) {
                 try {
-                  const candidateObj = JSON.parse(candidateStr);
-                  candidateEmail = candidateObj.email;
+                  const clientObj = JSON.parse(clientStr);
+                  clientEmail = clientObj.email;
                 } catch (e) {}
               }
               const recipient = form.recipients.find(
-                (r) => r.email === candidateEmail
+                (r) => r.email === clientEmail
               );
               let status = "Not Started";
               if (
@@ -943,7 +943,7 @@ export default function Onboarding() {
                       navigate(
                         `/candidate/onboarding?token=${
                           form.token
-                        }&email=${encodeURIComponent(candidateEmail)}`
+                        }&email=${encodeURIComponent(clientEmail)}`
                       )
                     }
                   >
