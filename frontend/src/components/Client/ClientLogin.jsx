@@ -63,7 +63,7 @@ const ClientLogin = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-[#FFD08E] dark:via-[#FF6868] dark:to-[#926FF3] dark:bg-clip-text dark:text-transparent">
-            Candidate Login
+            Client Login
           </h1>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

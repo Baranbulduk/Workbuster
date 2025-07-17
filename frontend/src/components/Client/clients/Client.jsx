@@ -198,12 +198,10 @@ export default function Clients() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Industry</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredClients.map((client) => {
-                  const isOwnProfile = loggedClient && (client._id === loggedClient._id || client.email === loggedClient.email);
                   return (
                     <tr
                       key={client._id}
@@ -256,19 +254,6 @@ export default function Clients() {
                             ? `${client.address.street || ""}${client.address.city ? `, ${client.address.city}` : ""}${client.address.state ? `, ${client.address.state}` : ""}${client.address.zipCode ? `, ${client.address.zipCode}` : ""}${client.address.country ? `, ${client.address.country}` : ""}`.replace(/^,\s*/, "").replace(/,\s*$/, "") || "No address"
                             : client.address || "No address"}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {isOwnProfile && (
-                          <button
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleUpdateClick(client);
-                            }}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                          >
-                            Update
-                          </button>
-                        )}
                       </td>
                     </tr>
                   );

@@ -130,6 +130,14 @@ const Login = () => {
           </p>
           <p className="text-center text-sm text-gray-600">
             <Link
+              to="/client/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Login as Client
+            </Link>
+          </p>
+          <p className="text-center text-sm text-gray-600">
+            <Link
               to="/register"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >

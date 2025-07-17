@@ -733,7 +733,7 @@ export default function Onboarding() {
           localStorage.removeItem(`formData_${token}`);
 
           // Clear URL parameters to show forms list when navigating back
-          navigate("/candidate/onboarding", { replace: true });
+          navigate("/client/onboarding", { replace: true });
 
           // Reset form only if all fields are completed
           const resetFields = fields.map((field) => ({
@@ -941,7 +941,7 @@ export default function Onboarding() {
                     className="mt-3 md:mt-0 inline-block px-4 py-2 text-white rounded-3xl font-medium bg-gradient-to-r from-[#FFD08E] via-[#FF6868] to-[#926FF3] hover:from-[#e0b77e] hover:via-[#e05959] hover:to-[#8565dd] transition-colors"
                     onClick={() =>
                       navigate(
-                        `/candidate/onboarding?token=${
+                        `/client/onboarding?token=${
                           form.token
                         }&email=${encodeURIComponent(clientEmail)}`
                       )
@@ -1027,7 +1027,7 @@ export default function Onboarding() {
                   {token && (
                     <button
                       type="button"
-                      onClick={() => navigate("/candidate/onboarding")}
+                      onClick={() => navigate("/client/onboarding")}
                       className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       title="Back to forms list"
                     >

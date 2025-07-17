@@ -119,16 +119,6 @@ export default function ClientDetails() {
     );
   }
 
-  const handleBack = () => {
-    if (location.state?.fromDashboard) {
-      navigate("/dashboard");
-    } else if (location.state?.fromOnboarding) {
-      navigate("/onboarding");
-    } else {
-      navigate("/client/clients");
-    }
-  };
-
   // Tab content rendering
   const renderTabContent = () => {
     switch (activeTab) {
@@ -258,7 +248,7 @@ export default function ClientDetails() {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={handleBack}
+          onClick={() => navigate("/client/clients")}
           className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
