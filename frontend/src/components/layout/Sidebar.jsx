@@ -24,6 +24,8 @@ import {
   ClipboardDocumentIcon,
   Bars3Icon,
   XMarkIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
 import {
   FiHome,
@@ -96,7 +98,7 @@ export default function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -166,7 +168,7 @@ export default function Sidebar() {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white hidden lg:block text-white"
+              className="p-2 rounded-md hover:bg-white/10  hidden lg:block text-white"
             >
               <svg
                 className={`w-5 h-5 text-white transform transition-transform duration-200 ${
@@ -231,6 +233,35 @@ export default function Sidebar() {
           </div>
         </nav>
 
+        {/* Theme Switcher */}
+        <div className="flex p-2">
+          {isSidebarOpen ? (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-md"
+              >
+                  {isDarkMode ? (
+                    <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+                  ) : (
+                    <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+                  )}
+                </button>
+            </div>
+          ) : (
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-center mb-2"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? (
+                <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+              ) : (
+                <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+              )}
+            </button>
+          )}
+        </div>
         {/* Logout Button */}
         <div className="p-4 bg-white/10">
           <button

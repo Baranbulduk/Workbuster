@@ -18,6 +18,8 @@ import {
   UserPlusIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
 import LogoutPopup from "./components/layout/LogoutPopup";
 
@@ -67,7 +69,7 @@ const LayoutWrapper = () => {
 const EmployeeLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -119,7 +121,7 @@ const EmployeeLayout = () => {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white text-white"
+              className="p-2 rounded-md hover:bg-white/10 text-white"
             >
               <svg
                 className={`w-5 h-5 text-white transform transition-transform duration-200 ${
@@ -187,6 +189,35 @@ const EmployeeLayout = () => {
           </div>
         </nav>
 
+        {/* Theme Switcher */}
+        <div className="flex p-2">
+          {isSidebarOpen ? (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-md"
+              >
+                {isDarkMode ? (
+                  <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+                ) : (
+                  <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+                )}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-center mb-2"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? (
+                <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+              ) : (
+                <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+              )}
+            </button>
+          )}
+        </div>
         {/* Logout Button */}
         <div className="p-4 bg-white/10">
           <button
@@ -233,7 +264,7 @@ const EmployeeLayout = () => {
 const CandidateLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -285,7 +316,7 @@ const CandidateLayout = () => {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white text-white"
+              className="p-2 rounded-md hover:bg-white/10 text-white"
             >
               <svg
                 className={`w-5 h-5 text-white transform transition-transform duration-200 ${
@@ -353,6 +384,35 @@ const CandidateLayout = () => {
           </div>
         </nav>
 
+        {/* Theme Switcher */}
+        <div className="flex p-2">
+          {isSidebarOpen ? (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-md"
+              >
+                {isDarkMode ? (
+                  <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+                ) : (
+                  <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+                )}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-center mb-2"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? (
+                <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+              ) : (
+                <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+              )}
+            </button>
+          )}
+        </div>
         {/* Logout Button */}
         <div className="p-4 bg-white/10">
           <button
@@ -398,7 +458,7 @@ const CandidateLayout = () => {
 const ClientLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -450,7 +510,7 @@ const ClientLayout = () => {
           >
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white text-white"
+              className="p-2 rounded-md hover:bg-white/10 text-white"
             >
               <svg
                 className={`w-5 h-5 text-white transform transition-transform duration-200 ${
@@ -518,6 +578,35 @@ const ClientLayout = () => {
           </div>
         </nav>
 
+        {/* Theme Switcher */}
+        <div className="flex p-2">
+          {isSidebarOpen ? (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-md"
+              >
+                {isDarkMode ? (
+                  <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+                ) : (
+                  <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+                )}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-center mb-2"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? (
+                <MoonIcon className="h-7 w-7 text-white bg-gray-700 rounded-full p-1" />
+              ) : (
+                <SunIcon className="h-7 w-7 text-white bg-yellow-500 rounded-full p-1" />
+              )}
+            </button>
+          )}
+        </div>
         {/* Logout Button */}
         <div className="p-4 bg-white/10">
           <button
