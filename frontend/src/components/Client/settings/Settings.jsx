@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../../context/ThemeContext";
+import axios from "../../../utils/axios";
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -36,6 +37,16 @@ export default function Settings() {
       lastPasswordChange: "2024-01-15",
     },
   });
+
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
     // Try to load client info from localStorage
@@ -78,6 +89,63 @@ export default function Settings() {
   const handleSaveSettings = (section) => {
     console.log(`Saving ${section} settings:`, settings[section]);
     alert(`${section} settings saved successfully!`);
+  };
+
+  const handlePasswordChange = (field, value) => {
+    setPasswordForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear error/success messages when user starts typing
+    setPasswordError("");
+    setPasswordSuccess("");
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    setIsUpdatingPassword(true);
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    try {
+      // Validate passwords match
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        setPasswordError("New passwords do not match");
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      // Validate password length
+      if (passwordForm.newPassword.length < 6) {
+        setPasswordError("New password must be at least 6 characters long");
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      const response = await axios.put('/auth/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
+      });
+
+      setPasswordSuccess("Password updated successfully!");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      if (error.response?.data?.message) {
+        setPasswordError(error.response.data.message);
+      } else if (error.response?.data?.errors) {
+        setPasswordError(error.response.data.errors[0].msg);
+      } else {
+        setPasswordError("Failed to update password. Please try again.");
+      }
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   return (
@@ -202,19 +270,28 @@ export default function Settings() {
                 Forgot Password?
               </button>
             </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Password updated successfully!");
-              }}
-              className="space-y-4"
-            >
+            
+            {/* Password Error/Success Messages */}
+            {passwordError && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {passwordError}
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                {passwordSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Current Password
                 </label>
                 <input
                   type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
                   className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
                   placeholder="Enter current password"
                   required
@@ -226,6 +303,8 @@ export default function Settings() {
                 </label>
                 <input
                   type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
                   className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
                   placeholder="Enter new password"
                   required
@@ -237,6 +316,8 @@ export default function Settings() {
                 </label>
                 <input
                   type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
                   className="mt-1 block w-full h-11 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-3 pr-3"
                   placeholder="Confirm new password"
                   required
@@ -245,9 +326,10 @@ export default function Settings() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
+                  disabled={isUpdatingPassword}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-3xl font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Update Password
+                  {isUpdatingPassword ? "Updating..." : "Update Password"}
                 </button>
               </div>
             </form>

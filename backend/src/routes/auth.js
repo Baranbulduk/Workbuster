@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
@@ -172,6 +173,78 @@ router.post('/verify-token', async (req, res) => {
       });
     }
     res.status(500).json({ valid: false, message: 'Error verifying token' });
+  }
+});
+
+// Update password
+router.put('/change-password', [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error('Password confirmation does not match password');
+    }
+    return true;
+  })
+], async (req, res) => {
+  try {
+    console.log('--- [CHANGE PASSWORD] Endpoint hit ---');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log('Token:', token);
+
+    if (!token) {
+      console.log('No token provided');
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // Verify token and get user
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      console.log('Decoded JWT:', decoded);
+    } catch (err) {
+      console.log('JWT verification error:', err);
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    const user = await User.findById(decoded.user.id);
+    console.log('User found:', !!user, user ? user.email : null);
+
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    console.log('Current password valid:', isCurrentPasswordValid);
+    if (!isCurrentPasswordValid) {
+      console.log('Current password is incorrect');
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    user.password = hashedNewPassword;
+    await user.save();
+    console.log('Password updated successfully for user:', user.email);
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
